@@ -49,7 +49,7 @@ class ReadLog:
                 try:
                     line = line.decode('gbk')
                 except UnicodeDecodeError:
-                    print(file, " L:",line_num+1, " is skipped due to decoding failure!", " ", line)
+                    print(file, "Skipped due to decoding failure!", " ", line)
                     continue
             self.lines.append(line)
 
@@ -89,7 +89,7 @@ class ReadLog:
                         break     
         else:
             line_caches = []
-            print("thread num:", self.thread_num, ' al:', al)
+            print("thread num:", self.thread_num, ' line_num:', line_num)
             for i in range(self.thread_num):
                 if i is self.thread_num -1:
                     line_caches.append(self.lines[i*al:])
@@ -116,7 +116,7 @@ class ReadLog:
                     self._readData(f,file)
             else:
                 with gzip.open(file,'rb') as f:
-                    self._readData(f, file)
+                    self._readData(f, file)    
         self._work(argv)
 
 
@@ -124,7 +124,7 @@ class Data:
     def __init__(self, info):
         self.type = info['type']
         self.regex = re.compile("\[(.*?)\].*\["+self.type+"\]\[(.*?)\]")
-        self.short_regx = re.compile("\["+self.type+"\]\[")
+        self.short_regx = "["+self.type
         self.info = info['content']
         self.data = dict()
         self.data['t'] = []
@@ -180,10 +180,9 @@ class Data:
                 else:
                     self.data[tmp['name']].append(0.0)
             except:
-                self.data[tmp['name']].append(0.0)        
+                self.data[tmp['name']].append(0.0)  
     def parse(self, line):
-        short_out = self.short_regx.search(line)
-        if short_out:
+        if self.short_regx in line:
             out = self.regex.match(line)
             if out:
                 datas = out.groups()
@@ -232,13 +231,12 @@ class Laser:
     def __init__(self, max_dist):
         """ max_dist 为激光点的最远距离，大于此距离激光点无效"""
         self.regex = re.compile('\[(.*?)\].*\[Laser:? ?(\d*?)\]\[(.*?)\]')
-        self.short_regx = re.compile("\[Laser")
+        self.short_regx = "[Laser"
         #self.data = [[] for _ in range(7)]
         self.datas = dict()
         self.max_dist = max_dist
     def parse(self, line):
-        short_out = self.short_regx.search(line)
-        if short_out:
+        if self.short_regx in line:
             out = self.regex.match(line)
             if out:
                 datas = out.groups()
@@ -306,12 +304,11 @@ class DepthCamera:
     def __init__(self):
         """ max_dist 为激光点的最远距离，大于此距离激光点无效"""
         self.regex = re.compile('\[(.*?)\].* \[DepthCamera\d*?\]\[(.*?)\]')
-        self.short_regx = re.compile("\[DepthCamera\d*?\]\[")
+        self.short_regx = "[DepthCamera"
         #self.data = [[] for _ in range(7)]
         self.datas =  [[] for _ in range(6)]
     def parse(self, line):
-        short_out = self.short_regx.search(line)
-        if short_out:
+        if self.short_regx in line:
             out = self.regex.match(line)
             if out:
                 datas = out.groups()
@@ -370,12 +367,11 @@ class ParticleState:
     def __init__(self):
         
         self.regex = re.compile('\[(.*?)\].* \[Particle State: \]\[(.*?)\]')
-        self.short_regx = re.compile("\[Particle State: \]\[")
+        self.short_regx = "[Particle State:"
         #self.data = [[] for _ in range(7)]
         self.datas =  [[] for _ in range(6)]
     def parse(self, line):
-        short_out = self.short_regx.search(line)
-        if short_out:
+        if self.short_regx in line:
             out = self.regex.match(line)
             if out:
                 datas = out.groups()
@@ -425,11 +421,10 @@ class ErrorLine:
     def __init__(self):
         self.general_regex = re.compile("\[(.*?)\].*\[error\].*")
         self.regex = re.compile("\[(.*?)\].*\[error\].*\[Alarm\]\[.*?\|(.*?)\|(.*?)\|.*")
-        self.short_regx = re.compile("\[error\]")
+        self.short_regx = "[error"
         self.data = [[] for _ in range(4)]
     def parse(self, line):
-        short_out = self.short_regx.search(line)
-        if short_out:       
+        if self.short_regx in line:       
             out = self.regex.match(line)
             if out:
                 self.data[0].append(rbktimetodate(out.group(1)))
@@ -473,11 +468,10 @@ class WarningLine:
     def __init__(self):
         self.general_regex = re.compile("\[(.*?)\].*\[warning\].*")
         self.regex = re.compile("\[(.*?)\].*\[warning\].*\[Alarm\]\[.*?\|(.*?)\|(.*?)\|.*")
-        self.short_regx = re.compile("\[warning\]")
+        self.short_regx = "[warning"
         self.data = [[] for _ in range(4)]
     def parse(self, line):
-        short_out = self.short_regx.search(line)
-        if short_out:              
+        if self.short_regx in line:              
             out = self.regex.match(line)
             if out:
                 self.data[0].append(rbktimetodate(out.group(1)))
@@ -520,11 +514,10 @@ class FatalLine:
     """
     def __init__(self):
         self.regex = re.compile("\[(.*?)\].*\[fatal\].*\[Alarm\]\[.*?\|(.*?)\|(.*?)\|.*")
-        self.short_regx = re.compile("\[fatal\]")       
+        self.short_regx = "[fatal"       
         self.data = [[] for _ in range(4)]
     def parse(self, line):
-        short_out = self.short_regx.search(line)
-        if short_out:                   
+        if self.short_regx in line:                   
             out = self.regex.match(line)
             if out:
                 self.data[0].append(rbktimetodate(out.group(1)))
@@ -558,11 +551,10 @@ class NoticeLine:
     """
     def __init__(self):
         self.regex = re.compile("\[(.*?)\].*\[Alarm\]\[Notice\|(.*?)\|(.*?)\|.*")
-        self.short_regx = re.compile("\[Alarm\]\[Notice\|")
+        self.short_regx = "[Alarm][Notice"
         self.data = [[] for _ in range(4)]
     def parse(self, line):
-        short_out = self.short_regx.search(line)
-        if short_out:              
+        if self.short_regx in line:              
             out = self.regex.match(line)
             if out:
                 self.data[0].append(rbktimetodate(out.group(1)))
@@ -593,11 +585,10 @@ class TaskStart:
     """
     def __init__(self):
         self.regex = re.compile("\[(.*?)\].*\[Text\]\[cnt:.*")
-        self.short_regx = re.compile("\[Text\]\[cnt:")
+        self.short_regx = "Text][cnt"
         self.data = [[] for _ in range(2)]
     def parse(self, line):
-        short_out = self.short_regx.search(line)
-        if short_out:                      
+        if self.short_regx in line:                      
             out = self.regex.match(line)
             if out:
                 self.data[0].append(rbktimetodate(out.group(1)))
@@ -620,11 +611,10 @@ class TaskFinish:
     """
     def __init__(self):
         self.regex = re.compile("\[(.*?)\].*\[Text\]\[Task finished.*")
-        self.short_regx = re.compile("\[Text\]\[Task finished.")       
+        self.short_regx = "Text][Task finished" 
         self.data = [[] for _ in range(2)]
     def parse(self, line):
-        short_out = self.short_regx.search(line)
-        if short_out:               
+        if self.short_regx in line:               
             out = self.regex.match(line)
             if out:
                 self.data[0].append(rbktimetodate(out.group(1)))
@@ -647,11 +637,10 @@ class Service:
     """
     def __init__(self):
         self.regex = re.compile("\[(.*?)\].*\[Service\].*")
-        self.short_regx = re.compile("\[Service\].")          
+        self.short_regx = "[Service"         
         self.data = [[] for _ in range(2)]
     def parse(self, line):
-        short_out = self.short_regx.search(line)
-        if short_out:               
+        if self.short_regx in line:               
             out = self.regex.match(line)
             if out:
                 self.data[0].append(rbktimetodate(out.group(1)))
@@ -691,12 +680,12 @@ class Memory:
                     re.compile("\[(.*?)\].*\[Text\]\[Robokit Max physical memory usage *: *(.*?) *([GM])B\]"),
                     re.compile("\[(.*?)\].*\[Text\]\[Robokit Max virtual memory usage *: *(.*?) *([GM])B\]"),
                     re.compile("\[(.*?)\].*\[Text\]\[Robokit CPU usage *: *(.*?)%\]")]
-        self.short_regx =  re.compile("memory|CPU")
+        self.short_regx1 =  " memory"
+        self.short_regx2 = " CPU"
         self.time = [[] for _ in range(7)]
         self.data = [[] for _ in range(7)]
     def parse(self, line):
-        short_out = self.short_regx.search(line)
-        if short_out:          
+        if self.short_regx1 in line or self.short_regx2 in line:          
             for iter in range(0,7):
                 out = self.regex[iter].match(line)
                 if out:
