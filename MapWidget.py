@@ -675,9 +675,14 @@ class MapWidget(QtWidgets.QWidget):
                 for key in self.read_model.laser.keys():
                     self.laser_pos[key] = [0,0,0]
                     laser_name = self.read_model.laser_id2name[key]
-                    self.laser_pos[key][0] = self.read_model.laser[key][0] + self.read_cp.laser[laser_name][0]
-                    self.laser_pos[key][1] = self.read_model.laser[key][1] + self.read_cp.laser[laser_name][1]
-                    self.laser_pos[key][2] = self.read_model.laser[key][2] + self.read_cp.laser[laser_name][2]
+                    if laser_name in self.read_cp.laser.keys():
+                        self.laser_pos[key][0] = self.read_model.laser[key][0] + self.read_cp.laser[laser_name][0]
+                        self.laser_pos[key][1] = self.read_model.laser[key][1] + self.read_cp.laser[laser_name][1]
+                        self.laser_pos[key][2] = self.read_model.laser[key][2] + self.read_cp.laser[laser_name][2]
+                    else:
+                        self.laser_pos[key][0] = self.read_model.laser[key][0]
+                        self.laser_pos[key][1] = self.read_model.laser[key][1]
+                        self.laser_pos[key][2] = self.read_model.laser[key][2]
                     laser_data = [self.laser_pos[key][0], self.laser_pos[key][1]]
                     if self.laser_org_data.any() and self.laser_index == key:
                         laser_data = GetGlobalPos(self.laser_org_data, self.laser_pos[self.laser_index])
