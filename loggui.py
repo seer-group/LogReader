@@ -22,6 +22,7 @@ import logging
 import numpy as np
 import traceback
 import json
+from multiprocessing import freeze_support
 
 class XYSelection:
     def __init__(self, num = 1):
@@ -92,6 +93,11 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.view_action.setShortcut(QtCore.Qt.CTRL + QtCore.Qt.Key_L)
         self.view_action.triggered.connect(self.openViewer)
         self.tools_menu.addAction(self.view_action)
+
+        self.json_action = QtWidgets.QAction('&Open Status', self.tools_menu, checkable = True)
+        self.json_action.setShortcut(QtCore.Qt.CTRL + QtCore.Qt.Key_J)
+        self.json_action.triggered.connect(self.openJsonView)
+        self.tools_menu.addAction(self.json_action)
 
         self.help_menu = QtWidgets.QMenu('&Help', self)
         self.help_menu.addAction('&About', self.about)
@@ -177,7 +183,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         splitter2 = QtWidgets.QSplitter(QtCore.Qt.Vertical)
         splitter2.addWidget(splitter1)
         splitter2.addWidget(self.log_info)
-        splitter2.setSizes([100,1])
+        splitter2.setSizes([100,0])
         self.layout.addWidget(splitter2)
 
         #选择消息框
@@ -441,12 +447,17 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.key_laser_channel = min_laser_channel
         if self.read_thread.reader:
             map_name = None
-            ts = np.array(self.read_thread.rstatus.chassis()[1])
-            idx = (np.abs(ts - mouse_time)).argmin()
-            j = json.loads(self.read_thread.rstatus.chassis()[0][idx])   
-            map_name = j.get("CURRENT_MAP",None)
-            if map_name:
-                map_name = map_name + ".smap"
+            if len(self.read_thread.rstatus.chassis()[1]) > 0:
+                ts = np.array(self.read_thread.rstatus.chassis()[1])
+                idx = (np.abs(ts - mouse_time)).argmin()
+                j = json.loads(self.read_thread.rstatus.chassis()[0][idx])   
+                map_name = j.get("CURRENT_MAP",None)
+                if map_name:
+                    map_name = map_name + ".smap"
+                if self.sts_widget:
+                    j["ROBOKIT_VERSION_REDISTRIBUTE"] = "{}.{}".format(self.read_thread.rstatus.version()[0][0],
+                                                                        j["ROBOKIT_VERSION_REDISTRIBUTE"])
+                    self.sts_widget.loadJson(json.dumps(j).encode())
             if self.log_widget:
                 if 'LocationEachFrame' in self.read_thread.content:
                     idx = self.read_thread.content['LocationEachFrame'].line_num[loc_idx]
@@ -461,10 +472,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                     self.log_widget.setLineNum(idx)
                 if 'Location' in self.read_thread.content:
                     self.log_widget.setLineNum(self.read_thread.content['Location'].line_num[loc_idx])
-            if self.sts_widget:
-                j["ROBOKIT_VERSION_REDISTRIBUTE"] = "{}.{}".format(self.read_thread.rstatus.version()[0][0],
-                                                                    j["ROBOKIT_VERSION_REDISTRIBUTE"])
-                self.sts_widget.loadJson(json.dumps(j).encode())
+
             if self.map_widget:
                 if self.filenames and map_name:
                     dir_name, _ = os.path.split(self.filenames[0])
@@ -482,7 +490,9 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                     cp_name = os.path.join(model_dir,"robot.cp")
                     if cp_name == self.map_widget.cp_name:
                         cp_name = None
-                    self.map_widget.dragFiles([map_name, model_name, cp_name]) 
+                    self.map_widget.readFiles([map_name, model_name, cp_name]) 
+                else:
+                    self.map_widget.readFiles([None, None, None])
 
                 
         if self.map_widget:
@@ -551,7 +561,9 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                     fn.write(d+'\n')
 
     def onpick(self, event):
-        if self.map_action.isChecked() or self.view_action.isChecked():
+        if self.map_action.isChecked() \
+        or self.view_action.isChecked() \
+        or self.json_action.isChecked():
             self.map_select_flag = True
         else:
             self.map_select_flag = False
@@ -756,6 +768,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             self.updateMapSelectLine()
             self.openMap(self.map_action.isChecked())
             self.openViewer(self.view_action.isChecked())
+            self.openJsonView(self.json_action.isChecked())
 
 
     def fileQuit(self):
@@ -1062,16 +1075,15 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                         self.updateMap(mouse_time, -1, -1, -1)
             else:
                 cur_t = self.map_select_lines[0].get_xdata()[0]
-                if type(cur_t) is float:
+                if type(cur_t) is not datetime:
                     cur_t = cur_t * 86400 - 62135712000
                     cur_t = datetime.fromtimestamp(cur_t)
-                if type(xmin) is float:
+                if type(xmin) is not datetime:
                     xmin = xmin * 86400 - 62135712000
                     xmin = datetime.fromtimestamp(xmin)
-                if type(xmax) is float:
+                if type(xmax) is not datetime:
                     xmax = xmax * 86400 - 62135712000
                     xmax = datetime.fromtimestamp(xmax)
-
                 if cur_t >= xmin and cur_t <= xmax:
                     for ln in self.map_select_lines:
                         ln.set_visible(True)
@@ -1102,16 +1114,12 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 self.log_widget.setText(self.read_thread.reader.lines)
             self.log_widget.show()
 
-            if not self.sts_widget:
-                self.sts_widget = JsonView()
-            self.sts_widget.show()
             (xmin,xmax) = self.axs[0].get_xlim()
             tmid = (xmin+xmax)/2.0 
             if len(self.map_select_lines) > 1:
                 for ln in self.map_select_lines:
                     ln.set_visible(True)
                 cur_t = self.map_select_lines[0].get_xdata()[0]
-                print(cur_t, type(cur_t))
                 self.updateMap(cur_t, self.key_loc_idx, self.key_laser_idx, self.key_laser_channel)
             else:
                 for ax in self.axs:
@@ -1124,9 +1132,32 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
         else:
             if self.log_widget:
-                self.log_widget.hide()  
+                self.log_widget.hide()      
+    
+    def openJsonView(self, checked):
+        if checked:
+            if not self.sts_widget:
+                self.sts_widget = JsonView()
+                self.sts_widget.hiddened.connect(self.jsonViewerClosed)
+            self.sts_widget.show()
+            (xmin,xmax) = self.axs[0].get_xlim()
+            tmid = (xmin+xmax)/2.0 
+            if len(self.map_select_lines) > 1:
+                for ln in self.map_select_lines:
+                    ln.set_visible(True)
+                cur_t = self.map_select_lines[0].get_xdata()[0]
+                self.updateMap(cur_t, self.key_loc_idx, self.key_laser_idx, self.key_laser_channel)
+            else:
+                for ax in self.axs:
+                    wl = ax.axvline(tmid, color = 'c', linewidth = 10, alpha = 0.5, picker = 10)
+                    self.map_select_lines.append(wl) 
+                    mouse_time = tmid * 86400 - 62135712000
+                    if mouse_time > 1e6:
+                        mouse_time = datetime.fromtimestamp(mouse_time)
+                        self.updateMap(mouse_time, -1, -1, -1)
+        else:
             if self.sts_widget:
-                self.sts_widget.hide()    
+                self.sts_widget.hide()           
 
     def updateMapSelectLine(self):
         if self.map_action.isChecked():
@@ -1151,6 +1182,10 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.view_action.setChecked(False)
         self.openViewer(False)
 
+    def jsonViewerClosed(self, event):
+        self.json_action.setChecked(False)
+        self.openJsonView(False)
+
     def closeEvent(self, event):
         if self.map_widget:
             self.map_widget.close()
@@ -1162,8 +1197,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
 
 if __name__ == "__main__":
+    freeze_support()
     ts = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    
     if not os.path.exists('log'):
         os.mkdir('log')
     log_name = "log\\loggui_" + str(ts).replace(':','-').replace(' ','_') + ".log"

@@ -54,10 +54,9 @@ class ReadLog:
                 try:
                     line = line.decode('gbk')
                 except UnicodeDecodeError:
-                    logging.debug(file, "Skipped due to decoding failure!", " ", line)
+                    logging.debug("{}: {} {}".format(file, " Skipped due to decoding failure!", line))
                     continue
             lines.append(line)
-        self.lines.extend(lines)
         for line in lines:
             out = self.regex.match(line)
             if out:
@@ -76,6 +75,7 @@ class ReadLog:
                 elif self.tmax < t:
                     self.tmax = t
                 break
+        self.lines.extend(lines)
 
     def _do(self, lines):
         l0 = lines["l0"]

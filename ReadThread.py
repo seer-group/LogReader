@@ -126,18 +126,8 @@ class ReadThread(QThread):
             #     self.log.append('The org unit of gx, gy, gz in IMU is LSB/s.')
             # tmax = max(self.laser.t() + self.err.t() + self.fatal.t() + self.notice.t() + self.memory.t() + self.service.t())
             # tmin = min(self.laser.t() + self.err.t() + self.fatal.t() + self.notice.t() + self.memory.t() + self.service.t())
-            tmax = datetime.fromtimestamp(100000000) 
-            tmin = datetime.now()
-            init_t = True
-            for k in self.content.keys():
-                if init_t:
-                    if len(self.content[k]['t']) > 0:
-                        tmax = max(self.content[k]['t'])
-                        tmin = min(self.content[k]['t'])
-                        init_t = False
-                else:
-                    tmax = max([tmax] + self.content[k]['t'])
-                    tmin = min([tmin] + self.content[k]['t'])
+            tmax = self.reader.tmax
+            tmin = self.reader.tmin
             dt = tmax - tmin
             self.tlist = [tmin + timedelta(microseconds=x) for x in range(0, int(dt.total_seconds()*1e6+1000),1000)]
             #save Error

@@ -3,7 +3,8 @@
 import sys
 
 from PyQt5.QtCore import QAbstractItemModel, QModelIndex, Qt, QAbstractListModel, QMimeData, \
-    QDataStream, QByteArray, QJsonDocument, QVariant, QJsonValue, QJsonParseError
+    QDataStream, QByteArray, QJsonDocument, QVariant, QJsonValue, QJsonParseError, \
+        pyqtSignal
 from PyQt5.QtWidgets import QApplication, QFileDialog, QTreeView
 import json
 class QJsonTreeItem(object):
@@ -177,6 +178,7 @@ class QJsonModel(QAbstractItemModel):
         return 2
 
 class JsonView(QTreeView):
+    hiddened = pyqtSignal('PyQt_PyObject')
     def __init__(self, parent =None):
         super().__init__(parent)
         self.model = QJsonModel()
@@ -187,6 +189,9 @@ class JsonView(QTreeView):
         self.model.loadJson(bytes_json)
     def loadJsonFile(self, fileName):
         self.model.load(fileName)
+    def closeEvent(self, event):
+        self.hide()
+        self.hiddened.emit(True)
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

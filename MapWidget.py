@@ -273,6 +273,94 @@ class Readmap(QThread):
                 self.p_names.append([pt['instanceName']])
         self.signal.emit(self.map_name)
 
+class PointWidget(QtWidgets.QWidget):
+    getdata = pyqtSignal('PyQt_PyObject')
+    def __init__(self):
+        super(QtWidgets.QWidget, self).__init__()
+        self.x_label = QtWidgets.QLabel('x(m)')
+        self.y_label = QtWidgets.QLabel('y(m)')
+        valid = QtGui.QDoubleValidator()
+        self.x_edit = QtWidgets.QLineEdit()
+        self.x_edit.setValidator(valid)
+        self.y_edit = QtWidgets.QLineEdit()
+        self.y_edit.setValidator(valid)
+        self.x_input = QtWidgets.QFormLayout()
+        self.x_input.addRow(self.x_label,self.x_edit)
+        self.y_input = QtWidgets.QFormLayout()
+        self.y_input.addRow(self.y_label,self.y_edit)
+        self.btn = QtWidgets.QPushButton("Yes")
+        self.btn.clicked.connect(self.getData)
+        vbox = QtWidgets.QVBoxLayout(self)
+        vbox.addLayout(self.x_input)
+        vbox.addLayout(self.y_input)
+        vbox.addWidget(self.btn)
+        self.setWindowTitle("Input")
+
+    def getData(self):
+        try:
+            x = float(self.x_edit.text())
+            y = float(self.y_edit.text())
+            self.hide()
+            self.getdata.emit([x,y])
+        except:
+            pass
+
+class LineWidget(QtWidgets.QWidget):
+    getdata = pyqtSignal('PyQt_PyObject')
+    def __init__(self):
+        super(QtWidgets.QWidget, self).__init__()
+        self.groupBox1 = QtWidgets.QGroupBox('P1')
+        x_label = QtWidgets.QLabel('x(m)')
+        y_label = QtWidgets.QLabel('y(m)')
+        valid = QtGui.QDoubleValidator()
+        self.x_edit1 = QtWidgets.QLineEdit()
+        self.x_edit1.setValidator(valid)
+        self.y_edit1 = QtWidgets.QLineEdit()
+        self.y_edit1.setValidator(valid)
+        x_input = QtWidgets.QFormLayout()
+        x_input.addRow(x_label,self.x_edit1)
+        y_input = QtWidgets.QFormLayout()
+        y_input.addRow(y_label,self.y_edit1)
+        vbox1 = QtWidgets.QVBoxLayout()
+        vbox1.addLayout(x_input)
+        vbox1.addLayout(y_input)
+        self.groupBox1.setLayout(vbox1)
+        
+        self.groupBox2 = QtWidgets.QGroupBox('P2')
+        x_label = QtWidgets.QLabel('x(m)')
+        y_label = QtWidgets.QLabel('y(m)')
+        valid = QtGui.QDoubleValidator()
+        self.x_edit2 = QtWidgets.QLineEdit()
+        self.x_edit2.setValidator(valid)
+        self.y_edit2 = QtWidgets.QLineEdit()
+        self.y_edit2.setValidator(valid)
+        x_input = QtWidgets.QFormLayout()
+        x_input.addRow(x_label,self.x_edit2)
+        y_input = QtWidgets.QFormLayout()
+        y_input.addRow(y_label,self.y_edit2)
+        vbox2 = QtWidgets.QVBoxLayout()
+        vbox2.addLayout(x_input)
+        vbox2.addLayout(y_input)
+        self.groupBox2.setLayout(vbox2)
+
+        vbox = QtWidgets.QVBoxLayout(self)
+        self.btn = QtWidgets.QPushButton("Yes") 
+        self.btn.clicked.connect(self.getData)
+        vbox.addWidget(self.groupBox1)
+        vbox.addWidget(self.groupBox2)
+        vbox.addWidget(self.btn)
+        self.setWindowTitle("Input")
+
+    def getData(self):
+        try:
+            x1 = float(self.x_edit1.text())
+            y1 = float(self.y_edit1.text())
+            x2 = float(self.x_edit2.text())
+            y2 = float(self.y_edit2.text())
+            self.hide()
+            self.getdata.emit([[x1,y1],[x2,y2]])
+        except:
+            pass
 
 class MapWidget(QtWidgets.QWidget):
     dropped = pyqtSignal('PyQt_PyObject')
@@ -322,6 +410,8 @@ class MapWidget(QtWidgets.QWidget):
         self.read_cp = Readcp()
         self.read_cp.signal.connect(self.readCPFinished)
         self.setupUI()
+        self.pointLists = dict()
+        self.lineLists = dict()
 
     def setupUI(self):
         self.static_canvas = FigureCanvas(Figure(figsize=(5,5)))
@@ -347,19 +437,33 @@ class MapWidget(QtWidgets.QWidget):
         MyToolBar.home = self.toolbarHome
         self.toolbar = MyToolBar(self.static_canvas, self, ruler = self.ruler)
         self.toolbar.fig_ratio = 1
+        self.userToolbar = QtWidgets.QToolBar(self)
+        self.autoMap = QtWidgets.QAction("AUTO", self.userToolbar)
+        self.autoMap.setCheckable(True)
+        self.autoMap.toggled.connect(self.changeAutoMap)
+        self.smap_action = QtWidgets.QAction("SMAP", self.userToolbar)
+        self.smap_action.triggered.connect(self.openMap)
+        self.model_action = QtWidgets.QAction("MODEL", self.userToolbar)
+        self.model_action.triggered.connect(self.openModel)
+        self.cp_action = QtWidgets.QAction("CP", self.userToolbar)
+        self.cp_action.triggered.connect(self.openCP)
+        self.draw_point = QtWidgets.QAction("POINT", self.userToolbar)
+        self.draw_point.triggered.connect(self.addPoint)
+        self.draw_line = QtWidgets.QAction("LINE", self.userToolbar)
+        self.draw_line.triggered.connect(self.addLine)
+        self.draw_clear = QtWidgets.QAction("CLEAR", self.userToolbar)
+        self.draw_clear.triggered.connect(self.drawClear)
+        self.userToolbar.addActions([self.autoMap, self.smap_action, self.model_action, self.cp_action])
+        self.userToolbar.addSeparator()
+        self.userToolbar.addActions([self.draw_point, self.draw_line, self.draw_clear])
+        self.getPoint = PointWidget()
+        self.getPoint.getdata.connect(self.getPointData)
+        self.getPoint.hide()
+        self.getLine = LineWidget()
+        self.getLine.getdata.connect(self.getLineData)
+        self.getLine.hide()
+        self.autoMap.setChecked(True)
         self.fig_layout = QtWidgets.QVBoxLayout(self)
-        self.file_lable = QtWidgets.QLabel(self)
-        self.file_lable.setText('1. 将地图(*.smap)文件拖入窗口')
-        self.file_lable.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
-        self.file_lable.setFixedHeight(16.0)
-        self.robot_lable = QtWidgets.QLabel(self)
-        self.robot_lable.setText('2. 机器人模型(*.model)文件拖入窗口')
-        self.robot_lable.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
-        self.robot_lable.setFixedHeight(16.0)
-        self.cp_lable = QtWidgets.QLabel(self)
-        self.cp_lable.setText('3. (可选)机器人标定(*.cp)文件拖入窗口')
-        self.cp_lable.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
-        self.cp_lable.setFixedHeight(16.0)
         self.timestamp_lable = QtWidgets.QLabel(self)
         self.timestamp_lable.setText('实框定位: ')
         self.timestamp_lable.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
@@ -373,9 +477,7 @@ class MapWidget(QtWidgets.QWidget):
         self.obs_lable.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
         self.obs_lable.setFixedHeight(16.0)
         self.fig_layout.addWidget(self.toolbar)
-        self.fig_layout.addWidget(self.file_lable)
-        self.fig_layout.addWidget(self.robot_lable)
-        self.fig_layout.addWidget(self.cp_lable)
+        self.fig_layout.addWidget(self.userToolbar)
         self.fig_layout.addWidget(self.timestamp_lable)
         self.fig_layout.addWidget(self.logt_lable)
         self.fig_layout.addWidget(self.obs_lable)
@@ -406,6 +508,77 @@ class MapWidget(QtWidgets.QWidget):
         self.fig_layout.addLayout(self.hbox)
         self.check_all.setChecked(True)
         
+    def changeAutoMap(self):
+        flag =  not self.autoMap.isChecked()
+        self.smap_action.setEnabled(flag)
+        self.model_action.setEnabled(flag)
+        self.cp_action.setEnabled(flag)
+
+    def openMap(self):
+        options = QtWidgets.QFileDialog.Options()
+        options |= QtWidgets.QFileDialog.DontUseNativeDialog
+        options |= QtCore.Qt.WindowStaysOnTopHint
+        filename, _ = QtWidgets.QFileDialog.getOpenFileName(self,"选取smap文件", "","smap Files (*.smap);;All Files (*)", options=options)
+        if filename:
+            self.map_name = filename
+            self.read_map.map_name = self.map_name
+            self.read_map.start()
+
+    def openModel(self):
+        options = QtWidgets.QFileDialog.Options()
+        options |= QtWidgets.QFileDialog.DontUseNativeDialog
+        options |= QtCore.Qt.WindowStaysOnTopHint
+        filename, _ = QtWidgets.QFileDialog.getOpenFileName(self,"选取model文件", "","model Files (*.model);;All Files (*)", options=options)
+        if filename:
+            self.model_name = filename
+            self.read_model.model_name = self.model_name
+            self.read_model.start()
+
+    def openCP(self):
+        options = QtWidgets.QFileDialog.Options()
+        options |= QtWidgets.QFileDialog.DontUseNativeDialog
+        options |= QtCore.Qt.WindowStaysOnTopHint
+        filename, _ = QtWidgets.QFileDialog.getOpenFileName(self,"选取cp文件", "","cp Files (*.cp);;All Files (*)", options=options)
+        if filename:
+            self.cp_name = filename
+            self.read_cp.cp_name = self.cp_name
+            self.read_cp.start()
+
+    def addPoint(self):
+        self.getPoint.show()
+
+    def getPointData(self, event):
+        point = lines.Line2D([],[], linestyle = '', marker = 'x', markersize = 8.0, color='r')
+        point.set_xdata(event[0])
+        point.set_ydata(event[1])
+        id = str(event)
+        self.pointLists[id] = point
+        self.ax.add_line(self.pointLists[id])
+        self.static_canvas.figure.canvas.draw() 
+
+    def addLine(self):
+        self.getLine.show()
+    
+    def getLineData(self, event):
+        l = lines.Line2D([],[], linestyle = '--', marker = '.', markersize = 6.0, color='r')
+        l.set_xdata([event[0][0],event[1][0]])
+        l.set_ydata([event[0][1],event[1][1]])
+        id = str(event)
+        self.lineLists[id] = l
+        self.ax.add_line(self.lineLists[id])
+        self.static_canvas.figure.canvas.draw() 
+
+    def drawClear(self):
+        for p in self.pointLists:
+            if self.pointLists[p] is not None:
+                self.pointLists[p].remove()
+                self.pointLists[p] = None
+        for l in self.lineLists:
+            if self.lineLists[l] is not None:
+                self.lineLists[l].remove()
+                self.lineLists[l] = None
+        self.static_canvas.figure.canvas.draw()    
+
     def add_laser_check(self, index):
         self.check_lasers[index] = QtWidgets.QCheckBox('Laser'+str(index),self)
         self.check_lasers[index].setFocusPolicy(QtCore.Qt.NoFocus)
@@ -519,26 +692,58 @@ class MapWidget(QtWidgets.QWidget):
         new_cp = False
         for file in files:
             if file and os.path.exists(file):
-                if os.path.splitext(file)[1] == ".smap":
+                if self.smap_action.isEnabled() and os.path.splitext(file)[1] == ".smap":
                     self.map_name = file
                     new_map = True
-                elif os.path.splitext(file)[1] == ".model":
+                elif self.model_action.isEnabled() and os.path.splitext(file)[1] == ".model":
                     self.model_name = file
                     new_model = True
-                elif os.path.splitext(file)[1] == ".cp":
+                elif self.cp_action.isEnabled() and os.path.splitext(file)[1] == ".cp":
                     self.cp_name = file
                     new_cp = True
         if new_map and self.map_name:
             self.read_map.map_name = self.map_name
-            self.file_lable.hide()
             self.read_map.start()
         if new_model and self.model_name:
             self.read_model.model_name = self.model_name
-            self.robot_lable.hide()
             self.read_model.start()
         if new_cp and self.cp_name:
             self.read_cp.cp_name = self.cp_name
-            self.cp_lable.hide()
+            self.read_cp.start()
+
+    def readFiles(self,files):
+        new_map = False
+        new_model = False
+        new_cp = False
+        for file in files:
+            if file and os.path.exists(file):
+                if not self.smap_action.isEnabled() and os.path.splitext(file)[1] == ".smap":
+                    self.map_name = file
+                    new_map = True
+                elif not self.model_action.isEnabled() and os.path.splitext(file)[1] == ".model":
+                    self.model_name = file
+                    new_model = True
+                elif not self.cp_action.isEnabled() and os.path.splitext(file)[1] == ".cp":
+                    self.cp_name = file
+                    new_cp = True
+            elif file:
+                try:
+                    if os.path.splitext(file)[1] == ".smap":
+                        self.smap_action.setEnabled(True)
+                    if os.path.splitext(file)[1] == ".model":
+                        self.model_action.setEnabled(True)
+                    if os.path.splitext(file)[1] == ".cp":
+                        self.cp_action.setEnabled(True)
+                except:
+                    self.autoMap.setChecked(False)
+        if new_map and self.map_name:
+            self.read_map.map_name = self.map_name
+            self.read_map.start()
+        if new_model and self.model_name:
+            self.read_model.model_name = self.model_name
+            self.read_model.start()
+        if new_cp and self.cp_name:
+            self.read_cp.cp_name = self.cp_name
             self.read_cp.start()
 
 
@@ -546,7 +751,7 @@ class MapWidget(QtWidgets.QWidget):
         if len(self.read_map.map_x) > 0:
             self.map_data.set_xdata(self.read_map.map_x)
             self.map_data.set_ydata(self.read_map.map_y)
-            self.ax.grid()
+            self.ax.grid(True)
             self.ax.axis('auto')
             xmin = min(self.read_map.map_x)
             xmax = max(self.read_map.map_x)
@@ -584,7 +789,10 @@ class MapWidget(QtWidgets.QWidget):
                 if pt[2] != None:
                     arrow = patches.Arrow(pt[0],pt[1], pr * np.cos(pt[2]), pr*np.sin(pt[2]), pr)
                     self.ax.add_patch(arrow)
-
+            self.setWindowTitle("{} : {}".format('MapViewer', os.path.split(self.map_name)[1]))
+            font = QtGui.QFont()
+            font.setBold(True)
+            self.smap_action.setFont(font)
             self.static_canvas.figure.canvas.draw()
 
     def readModelFinished(self, result):
@@ -661,6 +869,9 @@ class MapWidget(QtWidgets.QWidget):
                     self.draw_size = [xmin,xmax, ymin, ymax]
                     self.ax.set_xlim(xmin, xmax)
                     self.ax.set_ylim(ymin, ymax)
+                font = QtGui.QFont()
+                font.setBold(True)
+                self.model_action.setFont(font)
                 self.static_canvas.figure.canvas.draw()
             else:
                 print("read laser error! laser_index: ", self.laser_index, "; laser index in model: ", self.read_model.laser.keys())
@@ -687,6 +898,9 @@ class MapWidget(QtWidgets.QWidget):
                         self.laser_pos[key][1] = self.read_model.laser[key][1]
                         self.laser_pos[key][2] = self.read_model.laser[key][2]
                     laser_data = [self.laser_pos[key][0], self.laser_pos[key][1]]
+                    font = QtGui.QFont()
+                    font.setBold(True)
+                    self.cp_action.setFont(font)
                     if self.laser_org_data.any() and self.laser_index == key:
                         laser_data = GetGlobalPos(self.laser_org_data, self.laser_pos[self.laser_index])
                         laser_data = GetGlobalPos(laser_data, self.robot_pos)
