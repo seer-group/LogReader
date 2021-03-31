@@ -38,10 +38,15 @@ class ReadLog:
         """ 支持传入多个文件名称"""
         self.filenames = filenames
         self.lines = []
+        self.lines_num = 0
         self.thread_num = 4
         self.sum_argv = Manager().list()
         self.argv = []
+        self.tmin = None
+        self.tmax = None
+        self.regex = re.compile("\[(.*?)\].*")
     def _readData(self, f, file):
+        lines = []
         for line in f.readlines(): 
             try:
                 line = line.decode('utf-8')
@@ -49,17 +54,37 @@ class ReadLog:
                 try:
                     line = line.decode('gbk')
                 except UnicodeDecodeError:
-                    print(file, "Skipped due to decoding failure!", " ", line)
+                    logging.debug(file, "Skipped due to decoding failure!", " ", line)
                     continue
-            self.lines.append(line)
+            lines.append(line)
+        self.lines.extend(lines)
+        for line in lines:
+            out = self.regex.match(line)
+            if out:
+                t = rbktimetodate(out.group(1))
+                if self.tmin is None:
+                    self.tmin = t
+                elif self.tmin > t:
+                    self.tmin = t
+                break
+        for line in reversed(lines):
+            out = self.regex.match(line)
+            if out:
+                t = rbktimetodate(out.group(1))
+                if self.tmax is None:
+                    self.tmax = t
+                elif self.tmax < t:
+                    self.tmax = t
+                break
 
     def _do(self, lines):
-        for line in lines:
+        l0 = lines["l0"]
+        for ind, line in enumerate(lines["data"]):
             break_flag = False
             for data in self.argv:
                 if type(data).__name__ == 'dict':
                     for k in data.keys():
-                        if data[k].parse(line):
+                        if data[k].parse(line, ind + l0):
                             break_flag = True
                             break
                     if break_flag:
@@ -71,15 +96,15 @@ class ReadLog:
 
     def _work(self, argv):
         # pool = Pool(self.thread_num)
-        line_num = len(self.lines)
-        al = int(line_num/self.thread_num)
+        self.lines_num = len(self.lines)
+        al = int(self.lines_num/self.thread_num)
         if al < 1000:
-            for line in self.lines:
+            for ind, line in enumerate(self.lines):
                 break_flag = False
                 for data in argv:
                     if type(data).__name__ == 'dict':
                         for k in data.keys():
-                            if data[k].parse(line):
+                            if data[k].parse(line, ind):
                                 break_flag = True
                                 break
                         if break_flag:
@@ -89,12 +114,18 @@ class ReadLog:
                         break     
         else:
             line_caches = []
-            print("thread num:", self.thread_num, ' line_num:', line_num)
+            print("thread num:", self.thread_num, ' lines_num:', self.lines_num)
             for i in range(self.thread_num):
                 if i is self.thread_num -1:
-                    line_caches.append(self.lines[i*al:])
+                    tmp = dict()
+                    tmp['l0'] = i * al
+                    tmp['data'] = self.lines[i*al:]
+                    line_caches.append(tmp)
                 else:
-                    line_caches.append(self.lines[i*al:((i+1)*al)])
+                    tmp = dict()
+                    tmp['l0'] = i * al
+                    tmp['data'] = self.lines[i*al:((i+1)*al)]
+                    line_caches.append(tmp)
             pool = Pool(self.thread_num)
             self.argv = argv
             pool.map(self._do, line_caches)
@@ -131,6 +162,7 @@ class Data:
         self.description = dict()
         self.unit = dict()
         self.parse_error = False
+        self.line_num = []
         for tmp in self.info:
             self.data[tmp['name']] =  []
             if 'unit' in tmp:
@@ -181,7 +213,7 @@ class Data:
                     self.data[tmp['name']].append(0.0)
             except:
                 self.data[tmp['name']].append(0.0)  
-    def parse(self, line):
+    def parse(self, line, num):
         if self.short_regx in line:
             out = self.regex.match(line)
             if out:
@@ -204,6 +236,7 @@ class Data:
                         if not self.parse_error:
                             logging.error("Error in {} {} ".format(self.type, tmp.keys()))
                             self.parse_error = True
+                self.line_num.append(num)
                 return True
             return False
         return False
@@ -217,6 +250,7 @@ class Data:
                 self.data[key].extend(other.data[key])
             else:
                 self.data[key] = other.data[key]
+        self.line_num.extend(other.line_num)
 
 class Laser:
     """  激光雷达的数据
@@ -680,13 +714,19 @@ class Memory:
                     re.compile("\[(.*?)\].*\[Text\]\[Robokit Max physical memory usage *: *(.*?) *([GM])B\]"),
                     re.compile("\[(.*?)\].*\[Text\]\[Robokit Max virtual memory usage *: *(.*?) *([GM])B\]"),
                     re.compile("\[(.*?)\].*\[Text\]\[Robokit CPU usage *: *(.*?)%\]")]
-        self.short_regx1 =  " memory"
-        self.short_regx2 = " CPU"
+        self.short_regx =  ["Used system",
+                            "Free system",
+                            "Robokit physical memory",
+                            "Robokit physical memory",
+                            "Max physical memory",
+                            "Max virtual memory",
+                            "CPU usage"]
         self.time = [[] for _ in range(7)]
         self.data = [[] for _ in range(7)]
+
     def parse(self, line):
-        if self.short_regx1 in line or self.short_regx2 in line:          
-            for iter in range(0,7):
+        for iter in range(0,7):
+            if self.short_regx[iter] in line:
                 out = self.regex[iter].match(line)
                 if out:
                     self.time[iter].append(rbktimetodate(out.group(1)))
@@ -698,8 +738,9 @@ class Memory:
                         else:
                             self.data[iter].append(float(out.group(2)))
                     return True
-            return False
+                return False
         return False
+
     def t(self):
         return self.time[0]
     def used_sys(self):
@@ -721,3 +762,39 @@ class Memory:
             self.data[i].extend(other.data[i])
         for i in range(len(self.time)):
             self.time[i].extend(other.time[i])
+    
+class RobotStatus:
+    """  内存信息
+    t[0]: 
+    t[1]:
+    data[0]: version
+    data[1]: chassis
+    """
+    def __init__(self):
+        self.regex = [re.compile("\[(.*?)\].*\[Text\]\[Robokit version: *(.*?)\]"),
+                    re.compile("\[(.*?)\].*\[Text\]\[Chassis Info: (.*)\]")]
+        self.short_regx = ["Robokit version:",
+                           "Chassis Info:"]
+        self.time = [[] for _ in range(2)]
+        self.data = [[] for _ in range(2)]
+    def parse(self, line):
+        for iter in range(0,2):
+            if self.short_regx[iter] in line:
+                out = self.regex[iter].match(line)
+                if out:
+                    self.time[iter].append(rbktimetodate(out.group(1)))
+                    self.data[iter].append(out.group(2))
+                    return True
+                return False
+        return False
+    def t(self):
+        return self.time[0]
+    def version(self):
+        return self.data[0], self.time[0]
+    def chassis(self):
+        return self.data[1], self.time[1]
+    def insert_data(self, other):
+        for i in range(len(self.data)):
+            self.data[i].extend(other.data[i])
+        for i in range(len(self.time)):
+            self.time[i].extend(other.time[i])    

@@ -378,15 +378,15 @@
   "DPID": {
     "type": "DPID",
     "content": [
-      { "index": 0, "name": "vw", "type": "double" },
+      { "index": 0, "name": "vw", "type": "rad" },
       { "index": 1, "name": "vx", "type": "double"  },
-      { "index": 2, "name": "vw0", "type": "double"},
-      { "index": 3, "name": "dvw", "type": "double" },
+      { "index": 2, "name": "vw0", "type": "rad"},
+      { "index": 3, "name": "dvw", "type": "rad" },
       { "index": 4, "name": "ax", "type": "double" },
       { "index": 5, "name": "m_e", "type": "double"},
       { "index": 6, "name": "de", "type": "double"},
-      { "index": 7, "name": "th_e", "type": "double"},
-      { "index": 8, "name": "dthe", "type": "double" },
+      { "index": 7, "name": "th_e", "type": "rad"},
+      { "index": 8, "name": "dthe", "type": "rad" },
       { "index": 9, "name": "speed", "type": "double" },
       { "index": 10, "name": "aheadDist", "type": "double" },
       { "index": 11, "name": "wKp", "type": "double" },
@@ -739,7 +739,9 @@
     "content": [
       { "name": "motor", "type": "double", "description": "电机0速度", "unit":"m/s"  },
       { "name": "motor1", "type": "double", "description": "电机1速度", "unit":"m/s"  },
-      { "name": "motor2", "type": "double" , "description": "电机2速度", "unit":"m/s" }
+      { "name": "baojia", "type": "double" , "description": "baojia速度", "unit":"m/s" },
+      { "name": "shengjiang", "type": "double" , "description": "shengjiang速度", "unit":"m/s" },
+      { "name": "shengsuo", "type": "double" , "description": "shengsuo速度", "unit":"m/s" }
     ]
   },
   "pgv0": {

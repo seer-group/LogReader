@@ -280,9 +280,9 @@ class MapWidget(QtWidgets.QWidget):
     def __init__(self):
         super(QtWidgets.QWidget, self).__init__()
         self.setWindowTitle('MapViewer')
-        self.map_names = []
-        self.model_names = []
-        self.cp_names = []
+        self.map_name = None
+        self.model_name = None
+        self.cp_name = None
         self.draw_size = [] #xmin xmax ymin ymax
         self.map_data = lines.Line2D([],[], marker = '.', linestyle = '', markersize = 1.0)
         self.laser_data = lines.Line2D([],[], marker = 'o', markersize = 2.0, 
@@ -326,7 +326,7 @@ class MapWidget(QtWidgets.QWidget):
     def setupUI(self):
         self.static_canvas = FigureCanvas(Figure(figsize=(5,5)))
         self.static_canvas.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
-        # self.static_canvas.figure.subplots_adjust(left = 0.0, right = 1.0, bottom = 0.0, top = 1.0)
+        self.static_canvas.figure.subplots_adjust(left = 0.0, right = 1.0, bottom = 0.0, top = 1.0)
         self.static_canvas.figure.tight_layout()
         self.ax= self.static_canvas.figure.subplots(1, 1)
         self.ax.add_line(self.map_data)
@@ -514,27 +514,30 @@ class MapWidget(QtWidgets.QWidget):
             event.ignore()
 
     def dragFiles(self,files):
-        self.map_names = []
-        self.model_names = []
-        self.cp_names = []
+        new_map = False
+        new_model = False
+        new_cp = False
         for file in files:
-            if os.path.exists(file):
+            if file and os.path.exists(file):
                 if os.path.splitext(file)[1] == ".smap":
-                    self.map_names.append(file)
+                    self.map_name = file
+                    new_map = True
                 elif os.path.splitext(file)[1] == ".model":
-                    self.model_names.append(file)
+                    self.model_name = file
+                    new_model = True
                 elif os.path.splitext(file)[1] == ".cp":
-                    self.cp_names.append(file)
-        if self.map_names:
-            self.read_map.map_name = self.map_names[0]
+                    self.cp_name = file
+                    new_cp = True
+        if new_map and self.map_name:
+            self.read_map.map_name = self.map_name
             self.file_lable.hide()
             self.read_map.start()
-        if self.model_names:
-            self.read_model.model_name = self.model_names[0]
+        if new_model and self.model_name:
+            self.read_model.model_name = self.model_name
             self.robot_lable.hide()
             self.read_model.start()
-        if self.cp_names:
-            self.read_cp.cp_name = self.cp_names[0]
+        if new_cp and self.cp_name:
+            self.read_cp.cp_name = self.cp_name
             self.cp_lable.hide()
             self.read_cp.start()
 
@@ -759,12 +762,8 @@ class MapWidget(QtWidgets.QWidget):
             self.particle_points.set_xdata([])
             self.particle_points.set_ydata([])
 
-        if self.laser_index not in self.laser_pos.keys():
-            self.read_model.head = None 
-            self.read_model.tail = None
-            self.read_model.width = None
-            self.robot_lable.show()
-        if self.read_model.tail and self.read_model.head and self.read_model.width:
+        if self.laser_index in self.laser_pos.keys() \
+         and self.read_model.tail and self.read_model.head and self.read_model.width:
             xdata = [-self.read_model.tail, -self.read_model.tail, self.read_model.head, self.read_model.head, -self.read_model.tail]
             ydata = [self.read_model.width/2, -self.read_model.width/2, -self.read_model.width/2, self.read_model.width/2, self.read_model.width/2]
             robot_shape = np.array([xdata, ydata])

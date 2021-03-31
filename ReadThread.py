@@ -1,6 +1,6 @@
 from PyQt5.QtCore import QThread, pyqtSignal
-from loglib import Data, Laser, ErrorLine, WarningLine, ReadLog, FatalLine, NoticeLine, TaskStart, TaskFinish, Service, ParticleState
-from loglib import Memory, DepthCamera
+from loglibPlus import Data, Laser, ErrorLine, WarningLine, ReadLog, FatalLine, NoticeLine, TaskStart, TaskFinish, Service, ParticleState
+from loglibPlus import Memory, DepthCamera, RobotStatus
 from datetime import timedelta
 from datetime import datetime
 import os
@@ -48,8 +48,21 @@ class ReadThread(QThread):
         self.content = dict()
         self.data = dict()
         self.ylabel = dict()
+        self.laser = Laser(1000.0)
+        self.err = ErrorLine()
+        self.war = WarningLine()
+        self.fatal = FatalLine()
+        self.notice = NoticeLine()
+        self.taskstart = TaskStart()
+        self.taskfinish = TaskFinish()
+        self.service = Service()
+        self.memory = Memory()
+        self.depthcamera = DepthCamera()
+        self.particle = ParticleState()
+        self.rstatus = RobotStatus()
         self.log =  []
         self.tlist = []
+        self.reader = None
         try:
             f = open('log_config.json',encoding= 'UTF-8')
             self.js = js.load(f)
@@ -84,14 +97,20 @@ class ReadThread(QThread):
         self.memory = Memory()
         self.depthcamera = DepthCamera()
         self.particle = ParticleState()
+        self.rstatus = RobotStatus()
         self.tlist = []
         self.log =  []
         if self.filenames:
-            log = ReadLog(self.filenames)
+            self.reader = ReadLog(self.filenames)
             time_start=time.time()
-            log.parse(self.content, self.laser, self.err, self.war, self.fatal, self.notice, self.taskstart, self.taskfinish, self.service, self.memory, self.depthcamera, self.particle)
+            self.reader.parse(self.content, self.laser, self.err, 
+                              self.war, self.fatal, self.notice, 
+                              self.taskstart, self.taskfinish, self.service, 
+                              self.memory, self.depthcamera, self.particle,
+                              self.rstatus)
             time_end=time.time()
             self.log.append('read time cost: ' + str(time_end-time_start))
+            print("tmax {} tmin {}".format(self.reader.tmax, self.reader.tmin))
             #analyze content
             # old_imu_flag = False
             # if 'IMU' in self.js:

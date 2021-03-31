@@ -15,10 +15,13 @@ from Widget import Widget
 from ReadThread import ReadThread, Fdir2Flink
 from loglib import ErrorLine, WarningLine, ReadLog, FatalLine, NoticeLine, TaskStart, TaskFinish, Service
 from MapWidget import MapWidget, Readmap
+from LogViewer import LogViewer
+from JsonView import JsonView
 from MyToolBar import MyToolBar, RulerShapeMap, RulerShape
 import logging
 import numpy as np
 import traceback
+import json
 
 class XYSelection:
     def __init__(self, num = 1):
@@ -51,6 +54,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.map_select_lines = []
         self.mouse_pressed = False
         self.map_widget = None
+        self.log_widget = None
+        self.sts_widget = None
 
     def setupUI(self):
         """初始化窗口结构""" 
@@ -76,12 +81,17 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         group.triggered.connect(self.fignum_changed)
         self.menuBar().addMenu(self.fig_menu)
 
-        self.map_menu = QtWidgets.QMenu('&Map', self)
-        self.menuBar().addMenu(self.map_menu)
-        self.map_action = QtWidgets.QAction('&Open Map', self.map_menu, checkable = True)
+        self.tools_menu = QtWidgets.QMenu('&Tools', self)
+        self.menuBar().addMenu(self.tools_menu)
+        self.map_action = QtWidgets.QAction('&Open Map', self.tools_menu, checkable = True)
         self.map_action.setShortcut(QtCore.Qt.CTRL + QtCore.Qt.Key_M)
         self.map_action.triggered.connect(self.openMap)
-        self.map_menu.addAction(self.map_action)
+        self.tools_menu.addAction(self.map_action)
+
+        self.view_action = QtWidgets.QAction('&Open Log', self.tools_menu, checkable = True)
+        self.view_action.setShortcut(QtCore.Qt.CTRL + QtCore.Qt.Key_L)
+        self.view_action.triggered.connect(self.openViewer)
+        self.tools_menu.addAction(self.view_action)
 
         self.help_menu = QtWidgets.QMenu('&Help', self)
         self.help_menu.addAction('&About', self.about)
@@ -297,18 +307,20 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                     loc_idx = (np.abs(loc_ts - mouse_time)).argmin()
                 if loc_idx < 1:
                     loc_idx = 1
-                self.map_widget.readtrajectory(self.read_thread.content['LocationEachFrame']['x'][0:loc_idx], self.read_thread.content['LocationEachFrame']['y'][0:loc_idx],
-                                               self.read_thread.content['LocationEachFrame']['x'][loc_idx::], self.read_thread.content['LocationEachFrame']['y'][loc_idx::],
-                                               self.read_thread.content['LocationEachFrame']['x'][loc_idx], self.read_thread.content['LocationEachFrame']['y'][loc_idx], 
-                                               np.deg2rad(self.read_thread.content['LocationEachFrame']['theta'][loc_idx]))
+                if self.map_widget:
+                    self.map_widget.readtrajectory(self.read_thread.content['LocationEachFrame']['x'][0:loc_idx], self.read_thread.content['LocationEachFrame']['y'][0:loc_idx],
+                                                self.read_thread.content['LocationEachFrame']['x'][loc_idx::], self.read_thread.content['LocationEachFrame']['y'][loc_idx::],
+                                                self.read_thread.content['LocationEachFrame']['x'][loc_idx], self.read_thread.content['LocationEachFrame']['y'][loc_idx], 
+                                                np.deg2rad(self.read_thread.content['LocationEachFrame']['theta'][loc_idx]))
         else :
             if 'Location' in self.read_thread.content:
                 loc_ts = np.array(self.read_thread.content['Location']['t'])
                 loc_idx = (np.abs(loc_ts - mouse_time)).argmin()
-                self.map_widget.readtrajectory(self.read_thread.content['Location']['x'][0:loc_idx], self.read_thread.content['Location']['y'][0:loc_idx],
-                                               self.read_thread.content['Location']['x'][loc_idx::], self.read_thread.content['Location']['y'][loc_idx::],
-                                               self.read_thread.content['Location']['x'][loc_idx], self.read_thread.content['Location']['y'][loc_idx], 
-                                               np.deg2rad(self.read_thread.content['Location']['theta'][loc_idx]))
+                if self.map_widget:
+                    self.map_widget.readtrajectory(self.read_thread.content['Location']['x'][0:loc_idx], self.read_thread.content['Location']['y'][0:loc_idx],
+                                                self.read_thread.content['Location']['x'][loc_idx::], self.read_thread.content['Location']['y'][loc_idx::],
+                                                self.read_thread.content['Location']['x'][loc_idx], self.read_thread.content['Location']['y'][loc_idx], 
+                                                np.deg2rad(self.read_thread.content['Location']['theta'][loc_idx]))
         if 'LocationEachFrame' in self.read_thread.content:
             if self.read_thread.content['LocationEachFrame']['timestamp']:
                 #最近的定位时间
@@ -421,13 +433,60 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                                         + ' , ' + str(self.read_thread.content['LocationEachFrame']['x'][pos_idx])
                                         + ' , ' + str(self.read_thread.content['LocationEachFrame']['y'][pos_idx])
                                         + ' , ' + str(self.read_thread.content['LocationEachFrame']['theta'][pos_idx]))
-                    
-                self.map_widget.updateRobotLaser(laser_points,min_laser_channel,robot_pos,robot_loc_pos, laser_info, loc_info, obs_pos, obs_info, depth_pos, particle_pos)
+                if self.map_widget:
+                    self.map_widget.updateRobotLaser(laser_points,min_laser_channel,robot_pos,robot_loc_pos, laser_info, loc_info, obs_pos, obs_info, depth_pos, particle_pos)
         # print("min_laser_channer: ", min_laser_channel, " laser_idx: " , laser_idx)
         self.key_loc_idx = loc_idx
         self.key_laser_idx = laser_idx
         self.key_laser_channel = min_laser_channel
-        self.map_widget.redraw()
+        if self.read_thread.reader:
+            map_name = None
+            ts = np.array(self.read_thread.rstatus.chassis()[1])
+            idx = (np.abs(ts - mouse_time)).argmin()
+            j = json.loads(self.read_thread.rstatus.chassis()[0][idx])   
+            map_name = j.get("CURRENT_MAP",None)
+            if map_name:
+                map_name = map_name + ".smap"
+            if self.log_widget:
+                if 'LocationEachFrame' in self.read_thread.content:
+                    idx = self.read_thread.content['LocationEachFrame'].line_num[loc_idx]
+                    dt1 = (mouse_time - self.read_thread.reader.tmin).total_seconds()
+                    dt2 = (self.read_thread.content['LocationEachFrame']['t'][loc_idx] - self.read_thread.reader.tmin).total_seconds()
+                    ratio = dt1/ dt2
+                    idx = idx * ratio
+                    if idx > self.read_thread.reader.lines_num:
+                        idx = self.read_thread.reader.lines_num
+                    if idx < 0:
+                        idx = 0
+                    self.log_widget.setLineNum(idx)
+                if 'Location' in self.read_thread.content:
+                    self.log_widget.setLineNum(self.read_thread.content['Location'].line_num[loc_idx])
+            if self.sts_widget:
+                j["ROBOKIT_VERSION_REDISTRIBUTE"] = "{}.{}".format(self.read_thread.rstatus.version()[0][0],
+                                                                    j["ROBOKIT_VERSION_REDISTRIBUTE"])
+                self.sts_widget.loadJson(json.dumps(j).encode())
+            if self.map_widget:
+                if self.filenames and map_name:
+                    dir_name, _ = os.path.split(self.filenames[0])
+                    pdir_name, _ = os.path.split(dir_name)
+                    map_dir = os.path.join(pdir_name,"maps")
+                    map_name = os.path.join(map_dir,map_name)
+                    if map_name == self.map_widget.map_name:
+                        map_name = None
+
+                    model_dir = os.path.join(pdir_name,"models")
+                    model_name = os.path.join(model_dir,"robot.model")
+                    if model_name == self.map_widget.model_name:
+                        model_name = None
+
+                    cp_name = os.path.join(model_dir,"robot.cp")
+                    if cp_name == self.map_widget.cp_name:
+                        cp_name = None
+                    self.map_widget.dragFiles([map_name, model_name, cp_name]) 
+
+                
+        if self.map_widget:
+            self.map_widget.redraw()
 
 
     def mouse_press(self, event):
@@ -492,7 +551,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                     fn.write(d+'\n')
 
     def onpick(self, event):
-        if self.map_action.isChecked():
+        if self.map_action.isChecked() or self.view_action.isChecked():
             self.map_select_flag = True
         else:
             self.map_select_flag = False
@@ -696,6 +755,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                                 self.read_thread.ylabel[xy.y_combo.currentText()], True)
             self.updateMapSelectLine()
             self.openMap(self.map_action.isChecked())
+            self.openViewer(self.view_action.isChecked())
 
 
     def fileQuit(self):
@@ -996,14 +1056,35 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 for ax in self.axs:
                     wl = ax.axvline(tmid, color = 'c', linewidth = 10, alpha = 0.5, picker = 10)
                     self.map_select_lines.append(wl) 
+                    mouse_time = tmid * 86400 - 62135712000
+                    if mouse_time > 1e6:
+                        mouse_time = datetime.fromtimestamp(mouse_time)
+                        self.updateMap(mouse_time, -1, -1, -1)
             else:
-                for ln in self.map_select_lines:
-                    ln.set_visible(True)
-                    ln.set_xdata([tmid, tmid])
-            mouse_time = tmid * 86400 - 62135712000
-            if mouse_time > 1e6:
-                mouse_time = datetime.fromtimestamp(mouse_time)
-                self.updateMap(mouse_time, -1, -1, -1)
+                cur_t = self.map_select_lines[0].get_xdata()[0]
+                if type(cur_t) is float:
+                    cur_t = cur_t * 86400 - 62135712000
+                    cur_t = datetime.fromtimestamp(cur_t)
+                if type(xmin) is float:
+                    xmin = xmin * 86400 - 62135712000
+                    xmin = datetime.fromtimestamp(xmin)
+                if type(xmax) is float:
+                    xmax = xmax * 86400 - 62135712000
+                    xmax = datetime.fromtimestamp(xmax)
+
+                if cur_t >= xmin and cur_t <= xmax:
+                    for ln in self.map_select_lines:
+                        ln.set_visible(True)
+                    self.updateMap(cur_t, self.key_loc_idx, self.key_laser_idx, self.key_laser_channel)
+                else:
+                    for ln in self.map_select_lines:
+                        ln.set_visible(True)
+                        ln.set_xdata([tmid, tmid])
+                        mouse_time = tmid * 86400 - 62135712000
+                        if mouse_time > 1e6:
+                            mouse_time = datetime.fromtimestamp(mouse_time)
+                            self.updateMap(mouse_time, -1, -1, -1)
+
 
         else:
             if self.map_widget:
@@ -1011,6 +1092,41 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 for ln in self.map_select_lines:
                     ln.set_visible(False)
         self.static_canvas.figure.canvas.draw()
+
+    def openViewer(self, checked):
+        if checked:
+            if not self.log_widget:
+                self.log_widget = LogViewer()
+                self.log_widget.hiddened.connect(self.viewerClosed)
+            if self.read_thread.reader:
+                self.log_widget.setText(self.read_thread.reader.lines)
+            self.log_widget.show()
+
+            if not self.sts_widget:
+                self.sts_widget = JsonView()
+            self.sts_widget.show()
+            (xmin,xmax) = self.axs[0].get_xlim()
+            tmid = (xmin+xmax)/2.0 
+            if len(self.map_select_lines) > 1:
+                for ln in self.map_select_lines:
+                    ln.set_visible(True)
+                cur_t = self.map_select_lines[0].get_xdata()[0]
+                print(cur_t, type(cur_t))
+                self.updateMap(cur_t, self.key_loc_idx, self.key_laser_idx, self.key_laser_channel)
+            else:
+                for ax in self.axs:
+                    wl = ax.axvline(tmid, color = 'c', linewidth = 10, alpha = 0.5, picker = 10)
+                    self.map_select_lines.append(wl) 
+                    mouse_time = tmid * 86400 - 62135712000
+                    if mouse_time > 1e6:
+                        mouse_time = datetime.fromtimestamp(mouse_time)
+                        self.updateMap(mouse_time, -1, -1, -1)
+
+        else:
+            if self.log_widget:
+                self.log_widget.hide()  
+            if self.sts_widget:
+                self.sts_widget.hide()    
 
     def updateMapSelectLine(self):
         if self.map_action.isChecked():
@@ -1024,18 +1140,24 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 self.map_select_lines.append(wl) 
             self.static_canvas.figure.canvas.draw()
 
-
-    
     def mapClosed(self,info):
         self.map_widget.hide()
         for ln in self.map_select_lines:
             ln.set_visible(False)
         self.map_action.setChecked(False)
         self.openMap(False)
-    
+
+    def viewerClosed(self):
+        self.view_action.setChecked(False)
+        self.openViewer(False)
+
     def closeEvent(self, event):
         if self.map_widget:
             self.map_widget.close()
+        if self.log_widget:
+            self.log_widget.close()
+        if self.sts_widget:
+            self.sts_widget.close()
         self.close()
 
 
