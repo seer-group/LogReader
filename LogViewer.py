@@ -2,9 +2,12 @@ from PyQt5 import QtGui
 from PyQt5.QtWidgets import QApplication, QWidget, QPlainTextEdit, QVBoxLayout, QHBoxLayout
 from PyQt5 import QtGui, QtCore,QtWidgets
 import gzip
+import re
+from loglibPlus import rbktimetodate
 
 class LogViewer(QWidget):
     hiddened = QtCore.pyqtSignal('PyQt_PyObject')
+    moveHereSignal = QtCore.pyqtSignal('PyQt_PyObject')
     def __init__(self):
         super().__init__()
         self.lines = []
@@ -22,6 +25,7 @@ class LogViewer(QWidget):
         self.plainText.setLineWrapMode(QPlainTextEdit.NoWrap)
         self.plainText.setBackgroundVisible(True)
         self.plainText.ensureCursorVisible()
+        self.plainText.contextMenuEvent = self.contextMenuEvent
         
         hbox = QHBoxLayout()
         self.find_edit = QtWidgets.QLineEdit()
@@ -60,6 +64,28 @@ class LogViewer(QWidget):
                         self.readData(f, file) 
         self.setText(self.lines)  
         
+    # def mousePressEvent(self, event):
+    #     self.popMenu = self.plainText.createStandardContextMenu()
+    #     self.popMenu.addAction('&Move Here',self.moveHere)
+    #     cursor = QtGui.QCursor()
+    #     self.popMenu.exec_(cursor.pos())   
+    
+    def contextMenuEvent(self, event):
+        popMenu = self.plainText.createStandardContextMenu()
+        popMenu.addAction('&Move Here',self.moveHere)
+        cursor = QtGui.QCursor()
+        popMenu.exec_(cursor.pos()) 
+
+    def moveHere(self):
+        cur_cursor = self.plainText.textCursor()
+        cur_cursor.select(QtGui.QTextCursor.LineUnderCursor)
+        line = cur_cursor.selectedText()
+        regex = re.compile("\[(.*?)\].*")
+        out = regex.match(line)
+        if out:
+            mtime = rbktimetodate(out.group(1))
+            self.moveHereSignal.emit(mtime)
+
     def readData(self, f, file):
         for line in f.readlines(): 
             try:
@@ -137,7 +163,7 @@ if __name__ == "__main__":
     import os
     app = QApplication(sys.argv)
     view = LogViewer()
-    filenames = ["14.log"]
+    filenames = ["test1.log"]
     view.readFilies(filenames)
     view.show()
     app.exec_()

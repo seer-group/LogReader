@@ -551,6 +551,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                     if not self.toolBar.isActive():
                         self.popMenu = QtWidgets.QMenu(self)
                         self.popMenu.addAction('&Save Data',lambda:self.savePlotData(event.inaxes))
+                        self.popMenu.addAction('&Move Here',lambda:self.moveHere(event.xdata))
                         cursor = QtGui.QCursor()
                         self.popMenu.exec_(cursor.pos())
                     # show info
@@ -577,6 +578,13 @@ class ApplicationWindow(QtWidgets.QMainWindow):
     def mouse_release(self, event):
         self.mouse_pressed = False
         self.map_select_flag = False
+
+    def moveHere(self, mtime):
+        mouse_time = mtime
+        if type(mouse_time) is not datetime:
+            mouse_time = mtime * 86400 - 62135712000
+            mouse_time = datetime.fromtimestamp(mouse_time)
+        self.updateMap(mouse_time, -1, -1, -1)
 
     def savePlotData(self, cur_ax):
         indx = self.axs.tolist().index(cur_ax)
@@ -805,6 +813,9 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 self.drawdata(ax, self.read_thread.getData(xy.y_combo.currentText()),
                                 self.read_thread.ylabel[xy.y_combo.currentText()], True)
             self.updateMapSelectLine()
+            self.key_laser_channel = -1
+            self.key_laser_idx = -1
+            self.key_loc_idx = -1
             self.openMap(self.map_action.isChecked())
             self.openViewer(self.view_action.isChecked())
             self.openJsonView(self.json_action.isChecked())
@@ -1151,6 +1162,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             if not self.log_widget:
                 self.log_widget = LogViewer()
                 self.log_widget.hiddened.connect(self.viewerClosed)
+                self.log_widget.moveHereSignal.connect(self.moveHere)
             if self.read_thread.reader:
                 self.log_widget.setText(self.read_thread.reader.lines)
             self.log_widget.show()
