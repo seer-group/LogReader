@@ -84,6 +84,7 @@ class ReadLog:
             for data in self.argv:
                 if type(data).__name__ == 'dict':
                     for k in data.keys():
+                        data[k].parsed_flag = True
                         if data[k].parse(line, ind + l0):
                             break_flag = True
                             break
@@ -95,15 +96,15 @@ class ReadLog:
         self.sum_argv.append(self.argv)
 
     def _work(self, argv):
-        # pool = Pool(self.thread_num)
         self.lines_num = len(self.lines)
         al = int(self.lines_num/self.thread_num)
-        if al < 1000:
+        if al < 1000 or self.thread_num <= 1:
             for ind, line in enumerate(self.lines):
                 break_flag = False
                 for data in argv:
                     if type(data).__name__ == 'dict':
                         for k in data.keys():
+                            data[k].parsed_flag = True
                             if data[k].parse(line, ind):
                                 break_flag = True
                                 break
@@ -162,6 +163,7 @@ class Data:
         self.description = dict()
         self.unit = dict()
         self.parse_error = False
+        self.parsed_flag = False
         self.line_num = []
         for tmp in self.info:
             self.data[tmp['name']] =  []
@@ -240,6 +242,11 @@ class Data:
                 return True
             return False
         return False
+    def parse_now(self, lines):
+        if not self.parsed_flag:
+            for ind, line in enumerate(lines):
+                self.parse(line, ind)
+                
     def __getitem__(self,k):
         return self.data[k]
     def __setitem__(self,k,value):

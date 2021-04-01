@@ -69,7 +69,10 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                                  QtCore.Qt.CTRL + QtCore.Qt.Key_Q)
         self.menuBar().addMenu(self.file_menu)
 
-        self.fig_menu = QtWidgets.QMenu('&Numer', self)
+        self.num_menu = QtWidgets.QMenu('&Num', self)
+        self.menuBar().addMenu(self.num_menu)
+
+        self.fig_menu = QtWidgets.QMenu('&Fig', self)
         group = QtWidgets.QActionGroup(self.fig_menu)
         texts = [str(i) for i in range(2,self.max_fig_num+1)]
         cur_id = 1
@@ -80,7 +83,21 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             group.addAction(action)
         group.setExclusive(True)
         group.triggered.connect(self.fignum_changed)
-        self.menuBar().addMenu(self.fig_menu)
+        self.num_menu.addMenu(self.fig_menu)
+
+        self.cpu_menu = QtWidgets.QMenu('&CPU', self)
+        group = QtWidgets.QActionGroup(self.cpu_menu)
+        texts = [str(i) for i in range(1, 9)]
+        cur_id = 3
+        cur_cpu_num = int(texts[cur_id])
+        self.read_thread.cpu_num = cur_cpu_num
+        for text in texts:
+            action = QtWidgets.QAction(text, self.cpu_menu, checkable=True, checked=text==texts[cur_id])
+            self.cpu_menu.addAction(action)
+            group.addAction(action)
+        group.setExclusive(True)
+        group.triggered.connect(self.cpunum_changed)
+        self.num_menu.addMenu(self.cpu_menu)
 
         self.tools_menu = QtWidgets.QMenu('&Tools', self)
         self.menuBar().addMenu(self.tools_menu)
@@ -474,23 +491,45 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                     self.log_widget.setLineNum(self.read_thread.content['Location'].line_num[loc_idx])
 
             if self.map_widget:
-                if self.filenames and map_name:
+                if self.filenames:
+                    full_map_name = None
                     dir_name, _ = os.path.split(self.filenames[0])
                     pdir_name, _ = os.path.split(dir_name)
-                    map_dir = os.path.join(pdir_name,"maps")
-                    map_name = os.path.join(map_dir,map_name)
-                    if map_name == self.map_widget.map_name:
-                        map_name = None
+                    if map_name:
+                        map_dir = os.path.join(pdir_name,"maps")
+                        full_map_name = os.path.join(map_dir,map_name)
+                        if not os.path.exists(full_map_name):
+                            map_dir = dir_name
+                            full_map_name = os.path.join(map_dir,map_name)
+                            if not os.path.exists(full_map_name):
+                                map_dir = os.path.join(dir_name,"maps")
+                                full_map_name = os.path.join(map_dir,map_name)
+                                if not os.path.exists(full_map_name):
+                                    full_map_name = None
+                        if full_map_name == self.map_widget.map_name:
+                            full_map_name = None
 
                     model_dir = os.path.join(pdir_name,"models")
                     model_name = os.path.join(model_dir,"robot.model")
+                    cp_name = os.path.join(model_dir,"robot.cp")
+                    if not os.path.exists(model_name):
+                        model_dir = dir_name
+                        model_name = os.path.join(model_dir,"robot.model")
+                        cp_name = os.path.join(model_dir,"robot.cp")
+                        if not os.path.exists(model_name):
+                            model_dir = os.path.join(dir_name,"models")
+                            model_name = os.path.join(model_dir,"robot.model")
+                            cp_name = os.path.join(model_dir,"robot.cp")
+                            if not os.path.exists(model_name):
+                                model_name = None      
+
                     if model_name == self.map_widget.model_name:
                         model_name = None
 
-                    cp_name = os.path.join(model_dir,"robot.cp")
                     if cp_name == self.map_widget.cp_name:
                         cp_name = None
-                    self.map_widget.readFiles([map_name, model_name, cp_name]) 
+
+                    self.map_widget.readFiles([full_map_name, model_name, cp_name]) 
                 else:
                     self.map_widget.readFiles([None, None, None])
 
@@ -545,12 +584,12 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         group_name = xy.y_combo.currentText().split('.')[0]
         outdata = []
         if xy.x_combo.currentText() == 't':
-            tmpdata = self.read_thread.data[xy.y_combo.currentText()]
+            tmpdata = self.read_thread.getData(xy.y_combo.currentText())
             for t, d in zip(tmpdata[1], tmpdata[0]):
                 outdata.append("{},{}".format(t.strftime('%Y-%m-%d %H:%M:%S.%f'), d))
         elif xy.x_combo.currentText() == 'timestamp':
-            org_t = self.read_thread.data[group_name + '.timestamp'][0]
-            tmpdata = (self.read_thread.data[xy.y_combo.currentText()][0], org_t)
+            org_t = self.read_thread.getData(group_name + '.timestamp')[0]
+            tmpdata = (self.read_thread.getData(xy.y_combo.currentText())[0], org_t)
             for t, d in zip(tmpdata[1], tmpdata[0]):
                 outdata.append("{},{}".format(t, d))
         fname, _ = QtWidgets.QFileDialog.getSaveFileName(self,"选取log文件", "","CSV Files (*.csv);;All Files (*)")
@@ -634,7 +673,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         for ax, xy in zip(self.axs, self.xys):
             text = xy.y_combo.currentText()
             if text in self.read_thread.data:
-                data = self.read_thread.data[text][0]
+                data = self.read_thread.getData(text)[0]
                 if data:
                     tmpd = np.array(data)
                     tmpd = tmpd[~np.isnan(tmpd)]
@@ -763,7 +802,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 if group_name in self.read_thread.content:
                     if 'timestamp' in self.read_thread.content[group_name].data:
                         xy.x_combo.addItems(['timestamp'])
-                self.drawdata(ax, self.read_thread.data[xy.y_combo.currentText()],
+                self.drawdata(ax, self.read_thread.getData(xy.y_combo.currentText()),
                                 self.read_thread.ylabel[xy.y_combo.currentText()], True)
             self.updateMapSelectLine()
             self.openMap(self.map_action.isChecked())
@@ -775,7 +814,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.close()
 
     def about(self):
-        QtWidgets.QMessageBox.about(self, "关于", """Log Viewer V2.1.3a""")
+        QtWidgets.QMessageBox.about(self, "关于", """Log Viewer V2.2.0a""")
 
     def ycombo_onActivated(self):
         curcombo = self.sender()
@@ -796,14 +835,14 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         ax = self.axs[index]
         if self.xys[index].x_combo.count() == 1 or current_x_index == 0:
             logging.info('Fig.' + str(index+1) + ' : ' + text + ' ' + 't')
-            self.drawdata(ax, self.read_thread.data[text], self.read_thread.ylabel[text], False)
+            self.drawdata(ax, self.read_thread.getData(text), self.read_thread.ylabel[text], False)
         else:
             logging.info('Fig.' + str(index+1) + ' : ' + text + ' ' + 'timestamp')
-            org_t = self.read_thread.data[group_name + '.timestamp'][0]
+            org_t = self.read_thread.getData(group_name + '.timestamp')[0]
             t = []
             dt = [timedelta(seconds = (tmp_t/1e9 - org_t[0]/1e9)) for tmp_t in org_t]
-            t = [self.read_thread.data[text][1][0] + tmp for tmp in dt]
-            self.drawdata(ax, (self.read_thread.data[text][0], t), self.read_thread.ylabel[text], False)
+            t = [self.read_thread.getData(text)[1][0] + tmp for tmp in dt]
+            self.drawdata(ax, (self.read_thread.getData(text)[0], t), self.read_thread.ylabel[text], False)
 
 
     def xcombo_onActivated(self):
@@ -818,15 +857,17 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         y_label = self.xys[index].y_combo.currentText()
         logging.info('Fig.' + str(index+1) + ' : ' + y_label + ' ' + text)
         if text == 't':
-            self.drawdata(ax, self.read_thread.data[y_label], self.read_thread.ylabel[y_label], False)
+            self.drawdata(ax, self.read_thread.getData(y_label), self.read_thread.ylabel[y_label], False)
         elif text == 'timestamp':
             group_name = y_label.split('.')[0]
-            org_t = self.read_thread.data[group_name + '.timestamp'][0]
+            org_t = self.read_thread.getData(group_name + '.timestamp')[0]
             t = []
             dt = [timedelta(seconds = (tmp_t/1e9 - org_t[0]/1e9)) for tmp_t in org_t]
-            t = [self.read_thread.data[y_label][1][0] + tmp for tmp in dt]
-            self.drawdata(ax, (self.read_thread.data[y_label][0], t), self.read_thread.ylabel[y_label], False)
+            t = [self.read_thread.getData(y_label)[1][0] + tmp for tmp in dt]
+            self.drawdata(ax, (self.read_thread.getData(y_label)[0], t), self.read_thread.ylabel[y_label], False)
 
+    def cpunum_changed(self, action):
+        self.read_thread.cpu_num = int(action.text())
 
     def fignum_changed(self,action):
         new_fig_num = int(action.text())
@@ -878,14 +919,14 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                     ax.set_xlim(xmin, xmax)
                     #TO DO
                     if xy.x_combo.currentText() == 't':
-                        self.drawdata(ax, self.read_thread.data[xy.y_combo.currentText()],
+                        self.drawdata(ax, self.read_thread.getData(xy.y_combo.currentText()),
                                    self.read_thread.ylabel[xy.y_combo.currentText()], False)
                     elif xy.x_combo.currentText() == 'timestamp':
-                        org_t = self.read_thread.data[group_name + '.timestamp'][0]
+                        org_t = self.read_thread.getData(group_name + '.timestamp')[0]
                         t = []
                         dt = [timedelta(seconds = (tmp_t/1e9 - org_t[0]/1e9))-org_t[0] for tmp_t in org_t]
-                        t = [self.read_thread.data[xy.y_combo.currentText()][1][0] + tmp for tmp in dt]
-                        data = (self.read_thread.data[xy.y_combo.currentText()][0], t)
+                        t = [self.read_thread.getData(xy.y_combo.currentText())[1][0] + tmp for tmp in dt]
+                        data = (self.read_thread.getData(xy.y_combo.currentText())[0], t)
                         self.drawdata(ax, data,
                                     self.read_thread.ylabel[xy.y_combo.currentText()], False)
                 self.updateMapSelectLine()

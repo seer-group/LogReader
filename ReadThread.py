@@ -47,6 +47,7 @@ class ReadThread(QThread):
         self.js = dict()
         self.content = dict()
         self.data = dict()
+        self.data_org_key = dict()
         self.ylabel = dict()
         self.laser = Laser(1000.0)
         self.err = ErrorLine()
@@ -62,6 +63,7 @@ class ReadThread(QThread):
         self.rstatus = RobotStatus()
         self.log =  []
         self.tlist = []
+        self.cpu_num = 4
         self.reader = None
         try:
             f = open('log_config.json',encoding= 'UTF-8')
@@ -84,8 +86,12 @@ class ReadThread(QThread):
             logging.error("Failed to open {}".format(self.log_config))
             self.log.append("Failed to open {}".format(self.log_config))
         self.content = dict()
+        content_delay = dict()
         for k in list(self.js):
-            self.content[k] = Data(self.js[k])
+            if k == "LocationEachFrame" or k == "StopPoints":
+                self.content[k] = Data(self.js[k])
+            else:
+                content_delay[k] = Data(self.js[k])
         self.laser = Laser(1000.0)
         self.err = ErrorLine()
         self.war = WarningLine()
@@ -102,6 +108,7 @@ class ReadThread(QThread):
         self.log =  []
         if self.filenames:
             self.reader = ReadLog(self.filenames)
+            self.reader.thread_num = self.cpu_num
             time_start=time.time()
             self.reader.parse(self.content, self.laser, self.err, 
                               self.war, self.fatal, self.notice, 
@@ -110,7 +117,7 @@ class ReadThread(QThread):
                               self.rstatus)
             time_end=time.time()
             self.log.append('read time cost: ' + str(time_end-time_start))
-            print("tmax {} tmin {}".format(self.reader.tmax, self.reader.tmin))
+            self.content.update(content_delay)
             #analyze content
             # old_imu_flag = False
             # if 'IMU' in self.js:
@@ -157,17 +164,13 @@ class ReadThread(QThread):
                 printData(data, fid)
             fid.close()
         #creat dic
-        self.data = {"memory.used_sys":self.memory.used_sys(), "memory.free_sys":self.memory.free_sys(), "memory.rbk_phy": self.memory.rbk_phy(),
-                     "memory.rbk_vir":self.memory.rbk_vir(),"memory.rbk_max_phy":self.memory.rbk_max_phy(),"memory.rbk_max_vir":self.memory.rbk_max_vir(),
-                     "memory.cpu":self.memory.rbk_cpu()}
-        self.ylabel = {"memory.used_sys": "used_sys MB", "memory.free_sys":"free_sys MB", "memory.rbk_phy": "rbk_phy MB",
-                     "memory.rbk_vir":"rbk_vir MB","memory.rbk_max_phy":"rbk_max_phy MB","memory.rbk_max_vir":"rbk_max_vir MB",
-                     "memory.cpu":"cpu %"}
         for k in self.content.keys():
             for name in self.content[k].data.keys():
                 if name != 't':
                     self.data[k+'.'+name] = (self.content[k][name], self.content[k]['t'])
                     self.ylabel[k+'.'+name] = self.content[k].description[name]
+                    self.data_org_key[k+'.'+name] = k
+
         if 'IMU' in self.js:
             self.data["IMU.org_gx"] = ([i+j for (i,j) in zip(self.content['IMU']['gx'],self.content['IMU']['offx'])], self.content['IMU']['t'])
             self.data["IMU.org_gy"] = ([i+j for (i,j) in zip(self.content['IMU']['gy'],self.content['IMU']['offy'])], self.content['IMU']['t'])
@@ -175,11 +178,23 @@ class ReadThread(QThread):
             self.ylabel["IMU.org_gx"] = "原始的gx degree/s"
             self.ylabel["IMU.org_gy"] = "原始的gy degree/s"
             self.ylabel["IMU.org_gz"] = "原始的gz degree/s"
+            self.data_org_key["IMU.org_gx"] = "IMU"
+            self.data_org_key["IMU.org_gy"] = "IMU"
+            self.data_org_key["IMU.org_gz"] = "IMU"
+
+        self.data.update({"memory.used_sys":self.memory.used_sys(), "memory.free_sys":self.memory.free_sys(), "memory.rbk_phy": self.memory.rbk_phy(),
+                     "memory.rbk_vir":self.memory.rbk_vir(),"memory.rbk_max_phy":self.memory.rbk_max_phy(),"memory.rbk_max_vir":self.memory.rbk_max_vir(),
+                     "memory.cpu":self.memory.rbk_cpu()})
+        self.ylabel.update({"memory.used_sys": "used_sys MB", "memory.free_sys":"free_sys MB", "memory.rbk_phy": "rbk_phy MB",
+                     "memory.rbk_vir":"rbk_vir MB","memory.rbk_max_phy":"rbk_max_phy MB","memory.rbk_max_vir":"rbk_max_vir MB",
+                     "memory.cpu":"cpu %"})
+
         for k in self.laser.datas.keys():
             self.data["laser"+str(k)+'.'+"ts"] = self.laser.ts(k)
             self.data["laser"+str(k)+'.'+"number"] = self.laser.number(k)
             self.ylabel["laser"+str(k)+'.'+"ts"] = "激光的时间戳"
             self.ylabel["laser"+str(k)+'.'+"number"] = "激光的id"
+
         self.data["depthcamera.number"] = self.depthcamera.number()
         self.data["depthcamera.ts"] = self.depthcamera.ts()
         self.ylabel["depthcamera.number"] = "深度摄像头id"
@@ -188,6 +203,32 @@ class ReadThread(QThread):
         self.data["particle.number"] = self.particle.number()
         self.data["particle.ts"] = self.particle.ts()
         self.ylabel["particle.number"] = "粒子数目"
-        self.ylabel["particle.ts"] = "粒子时间戳"    
+        self.ylabel["particle.ts"] = "粒子时间戳"
 
         self.signal.emit(self.filenames)
+
+    def getData(self, vkey):
+        if not self.data[vkey][0]:
+            if vkey in self.data_org_key:
+                org_key = self.data_org_key[vkey]
+                if not self.content[org_key].parsed_flag:
+                    time_start=time.time()
+                    self.content[org_key].parse_now(self.reader.lines)
+                    time_end=time.time()
+                    # print('real read time cost: ' + str(time_end-time_start))
+                tmp = vkey.split(".")
+                k = tmp[0]
+                name = tmp[1]
+                if k == "IMU" and "org" in name:
+                    if len(name) == 6:
+                        g = name[4::]  #org_gx, org_gy, org_gz
+                        off = "off" + name[-1] #offx, offy, offz
+                        self.data[vkey] = ([i+j for (i,j) in zip(self.content[k][g],self.content[k][off])], self.content[k]['t'])   
+                    else:
+                        self.data[vkey] = ([], [])              
+                else:
+                    self.data[vkey] = (self.content[k][name], self.content[k]['t'])
+        return self.data[vkey]
+
+
+
