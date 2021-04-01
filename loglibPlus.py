@@ -144,11 +144,17 @@ class ReadLog:
         """依据输入的正则进行解析"""
         for file in self.filenames:
             if file.endswith(".log"):
-                with open(file,'rb') as f:
-                    self._readData(f,file)
+                try:
+                    with open(file,'rb') as f:
+                        self._readData(f,file)
+                except:
+                    continue
             else:
-                with gzip.open(file,'rb') as f:
-                    self._readData(f, file)    
+                try:
+                    with gzip.open(file,'rb') as f:
+                        self._readData(f, file)    
+                except:
+                    continue
         self._work(argv)
 
 
@@ -777,16 +783,40 @@ class RobotStatus:
     t[1]:
     data[0]: version
     data[1]: chassis
+    data[2]: fatal num
+    data[3]: fatal
+    data[4]: error num
+    data[5]: erros
+    data[6]: warning num
+    data[7]: warning nums
+    data[8]: notice num
+    data[9]: notices    
     """
     def __init__(self):
         self.regex = [re.compile("\[(.*?)\].*\[Text\]\[Robokit version: *(.*?)\]"),
-                    re.compile("\[(.*?)\].*\[Text\]\[Chassis Info: (.*)\]")]
+                    re.compile("\[(.*?)\].*\[Text\]\[Chassis Info: (.*)\]"),
+                    re.compile("\[(.*?)\].*\[Text\]\[FatalNum: (.*)\]"),
+                    re.compile("\[(.*?)\].*\[Text\]\[Fatals: (.*)\]"),
+                    re.compile("\[(.*?)\].*\[Text\]\[ErrorNum: (.*)\]"),
+                    re.compile("\[(.*?)\].*\[Text\]\[Errors: (.*)\]"),
+                    re.compile("\[(.*?)\].*\[Text\]\[WarningNum: (.*)\]"),
+                    re.compile("\[(.*?)\].*\[Text\]\[Warnings: (.*)\]"),
+                    re.compile("\[(.*?)\].*\[Text\]\[NoticeNum: (.*)\]"),
+                    re.compile("\[(.*?)\].*\[Text\]\[Notices: (.*)\]")]
         self.short_regx = ["Robokit version:",
-                           "Chassis Info:"]
-        self.time = [[] for _ in range(2)]
-        self.data = [[] for _ in range(2)]
+                           "Chassis Info:",
+                           "FatalNum:",
+                           "Fatals:",
+                           "ErrorNum:",
+                           "Errors:",
+                           "WarningNum:",
+                           "Warnings:",
+                           "NoticeNum:",
+                           "Notices"]
+        self.time = [[] for _ in range(10)]
+        self.data = [[] for _ in range(10)]
     def parse(self, line):
-        for iter in range(0,2):
+        for iter in range(0,10):
             if self.short_regx[iter] in line:
                 out = self.regex[iter].match(line)
                 if out:
@@ -801,6 +831,22 @@ class RobotStatus:
         return self.data[0], self.time[0]
     def chassis(self):
         return self.data[1], self.time[1]
+    def fatalNum(self):
+        return self.data[2], self.time[1]
+    def fatals(self):
+        return self.data[3], self.time[1]
+    def errorNum(self):
+        return self.data[4], self.time[1]
+    def errors(self):
+        return self.data[5], self.time[1]
+    def warningNum(self):
+        return self.data[6], self.time[1]
+    def warnings(self):
+        return self.data[7], self.time[1]
+    def noticeNum(self):
+        return self.data[8], self.time[1]
+    def notices(self):
+        return self.data[9], self.time[1]
     def insert_data(self, other):
         for i in range(len(self.data)):
             self.data[i].extend(other.data[i])

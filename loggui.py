@@ -472,8 +472,37 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 if map_name:
                     map_name = map_name + ".smap"
                 if self.sts_widget:
-                    j["ROBOKIT_VERSION_REDISTRIBUTE"] = "{}.{}".format(self.read_thread.rstatus.version()[0][0],
-                                                                        j["ROBOKIT_VERSION_REDISTRIBUTE"])
+                    if idx < len(self.read_thread.rstatus.version()[0]):
+                        j["ROBOKIT_VERSION_REDISTRIBUTE"] = "{}.{}".format(self.read_thread.rstatus.version()[0][idx],
+                                                                            j["ROBOKIT_VERSION_REDISTRIBUTE"])
+                    if idx < len(self.read_thread.rstatus.fatalNum()[0]):
+                        j["fatalNums"] = self.read_thread.rstatus.fatalNum()[0][idx]
+                    if idx < len(self.read_thread.rstatus.fatals()[0]):
+                        try:
+                            j["fatals"] = json.loads(self.read_thread.rstatus.fatals()[0][idx])
+                        except:
+                            j["fatals"] = self.read_thread.rstatus.fatals()[0][idx]
+                    if idx < len(self.read_thread.rstatus.errorNum()[0]):
+                        j["errorNums"] = self.read_thread.rstatus.errorNum()[0][idx]
+                    if idx < len(self.read_thread.rstatus.errors()[0]):
+                        try:
+                            j["errors"] = json.loads(self.read_thread.rstatus.errors()[0][idx])
+                        except:
+                            j["errors"] = self.read_thread.rstatus.errors()[0][idx]
+                    if idx < len(self.read_thread.rstatus.warningNum()[0]):
+                        j["warningNum"] = self.read_thread.rstatus.warningNum()[0][idx]
+                    if idx < len(self.read_thread.rstatus.warnings()[0]):
+                        try:
+                            j["warnings"] = json.loads(self.read_thread.rstatus.warnings()[0][idx])
+                        except:
+                            j["warnings"] = self.read_thread.rstatus.warnings()[0][idx]
+                    if idx < len(self.read_thread.rstatus.noticeNum()[0]):
+                        j["noticeNum"] = self.read_thread.rstatus.noticeNum()[0][idx]
+                    if idx < len(self.read_thread.rstatus.notices()[0]):
+                        try:
+                            j["notices"] = json.loads(self.read_thread.rstatus.notices()[0][idx])
+                        except:
+                            j["notices"] = self.read_thread.rstatus.notices()[0][idx]
                     self.sts_widget.loadJson(json.dumps(j).encode())
             if self.log_widget:
                 if 'LocationEachFrame' in self.read_thread.content:

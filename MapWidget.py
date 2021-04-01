@@ -552,9 +552,10 @@ class MapWidget(QtWidgets.QWidget):
         point.set_xdata(event[0])
         point.set_ydata(event[1])
         id = str(event)
-        self.pointLists[id] = point
-        self.ax.add_line(self.pointLists[id])
-        self.static_canvas.figure.canvas.draw() 
+        if id not in self.pointLists or self.pointLists[id] is None:
+            self.pointLists[id] = point
+            self.ax.add_line(self.pointLists[id])
+            self.static_canvas.figure.canvas.draw() 
 
     def addLine(self):
         self.getLine.show()
@@ -564,9 +565,10 @@ class MapWidget(QtWidgets.QWidget):
         l.set_xdata([event[0][0],event[1][0]])
         l.set_ydata([event[0][1],event[1][1]])
         id = str(event)
-        self.lineLists[id] = l
-        self.ax.add_line(self.lineLists[id])
-        self.static_canvas.figure.canvas.draw() 
+        if id not in self.lineLists or self.lineLists[id] is None:
+            self.lineLists[id] = l
+            self.ax.add_line(self.lineLists[id])
+            self.static_canvas.figure.canvas.draw() 
 
     def drawClear(self):
         for p in self.pointLists:

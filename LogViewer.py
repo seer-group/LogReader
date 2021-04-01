@@ -57,13 +57,19 @@ class LogViewer(QWidget):
         for file in files:
             if os.path.exists(file):
                 if file.endswith(".log"):
-                    with open(file,'rb') as f:
-                        self.readData(f,file)
+                    try:
+                        with open(file,'rb') as f:
+                            self.readData(f,file)
+                    except:
+                        continue
                 else:
-                    with gzip.open(file,'rb') as f:
-                        self.readData(f, file) 
+                    try:
+                        with gzip.open(file,'rb') as f:
+                            self.readData(f, file) 
+                    except:
+                        continue
         self.setText(self.lines)  
-        
+
     # def mousePressEvent(self, event):
     #     self.popMenu = self.plainText.createStandardContextMenu()
     #     self.popMenu.addAction('&Move Here',self.moveHere)
