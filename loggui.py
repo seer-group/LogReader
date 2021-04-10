@@ -622,13 +622,17 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         outdata = []
         if xy.x_combo.currentText() == 't':
             tmpdata = self.read_thread.getData(xy.y_combo.currentText())
-            for t, d in zip(tmpdata[1], tmpdata[0]):
-                outdata.append("{},{}".format(t.strftime('%Y-%m-%d %H:%M:%S.%f'), d))
+            list_tmpdata = [(t,d) for t,d in zip(tmpdata[1], tmpdata[0])]
+            list_tmpdata.sort(key=lambda d: d[0])
+            for data in list_tmpdata:
+                outdata.append("{},{}".format(data[0].strftime('%Y-%m-%d %H:%M:%S.%f'), data[1]))
         elif xy.x_combo.currentText() == 'timestamp':
             org_t = self.read_thread.getData(group_name + '.timestamp')[0]
             tmpdata = (self.read_thread.getData(xy.y_combo.currentText())[0], org_t)
-            for t, d in zip(tmpdata[1], tmpdata[0]):
-                outdata.append("{},{}".format(t, d))
+            list_tmpdata = [(t,d) for t,d in zip(tmpdata[1], tmpdata[0])]
+            list_tmpdata.sort(key=lambda d: d[0])
+            for data in list_tmpdata:
+                outdata.append("{},{}".format(data[0], data[1]))
         fname, _ = QtWidgets.QFileDialog.getSaveFileName(self,"选取log文件", "","CSV Files (*.csv);;All Files (*)")
         logging.debug('Save ' + xy.y_combo.currentText() + ' and ' + xy.x_combo.currentText() + ' in ' + fname)
         if fname:
