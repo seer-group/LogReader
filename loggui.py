@@ -654,6 +654,9 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 if (event.key() == QtCore.Qt.Key_A or event.key() == QtCore.Qt.Key_D
                     or event.key() == QtCore.Qt.Key_Left or event.key() == QtCore.Qt.Key_Right):
                     cur_t = self.map_select_lines[0].get_xdata()[0]
+                    if type(cur_t) is not datetime:
+                        cur_t = cur_t * 86400 - 62135712000
+                        cur_t = datetime.fromtimestamp(cur_t)
                     if event.key() == QtCore.Qt.Key_A or event.key() == QtCore.Qt.Key_D:
                         self.key_laser_idx = -1
                         self.key_laser_channel = -1
@@ -1206,6 +1209,9 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 for ln in self.map_select_lines:
                     ln.set_visible(True)
                 cur_t = self.map_select_lines[0].get_xdata()[0]
+                if type(cur_t) is not datetime:
+                    cur_t = cur_t * 86400 - 62135712000
+                    cur_t = datetime.fromtimestamp(cur_t)
                 self.updateMap(cur_t, self.key_loc_idx, self.key_laser_idx, self.key_laser_channel)
             else:
                 for ax in self.axs:
@@ -1232,6 +1238,9 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 for ln in self.map_select_lines:
                     ln.set_visible(True)
                 cur_t = self.map_select_lines[0].get_xdata()[0]
+                if type(cur_t) is not datetime:
+                    cur_t = cur_t * 86400 - 62135712000
+                    cur_t = datetime.fromtimestamp(cur_t)
                 self.updateMap(cur_t, self.key_loc_idx, self.key_laser_idx, self.key_laser_channel)
             else:
                 for ax in self.axs:
