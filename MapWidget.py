@@ -17,6 +17,7 @@ from matplotlib.textpath import TextPath
 import math
 import logging
 import copy
+import time
 
 def GetGlobalPos(p2b, b2g):
     x = p2b[0] * np.cos(b2g[2]) - p2b[1] * np.sin(b2g[2])
@@ -294,7 +295,7 @@ class PointWidget(QtWidgets.QWidget):
         vbox.addLayout(self.x_input)
         vbox.addLayout(self.y_input)
         vbox.addWidget(self.btn)
-        self.setWindowTitle("Input")
+        self.setWindowTitle("Point Input")
 
     def getData(self):
         try:
@@ -349,7 +350,7 @@ class LineWidget(QtWidgets.QWidget):
         vbox.addWidget(self.groupBox1)
         vbox.addWidget(self.groupBox2)
         vbox.addWidget(self.btn)
-        self.setWindowTitle("Input")
+        self.setWindowTitle("Line Input")
 
     def getData(self):
         try:
@@ -360,6 +361,31 @@ class LineWidget(QtWidgets.QWidget):
             self.hide()
             self.getdata.emit([[x1,y1],[x2,y2]])
         except:
+            pass
+
+class CurveWidget(QtWidgets.QWidget):
+    getdata = pyqtSignal('PyQt_PyObject')
+    def __init__(self):
+        super(QtWidgets.QWidget, self).__init__()
+        self.data_label = QtWidgets.QLabel('The python script must have x and y:')
+        self.data_edit = QtWidgets.QTextEdit()
+        self.btn = QtWidgets.QPushButton("Yes")
+        self.btn.clicked.connect(self.getData)
+        vbox = QtWidgets.QVBoxLayout(self)
+        vbox.addWidget(self.data_label)
+        vbox.addWidget(self.data_edit)
+        vbox.addWidget(self.btn)
+        self.setWindowTitle("Curve Input")
+
+    def getData(self):
+        code = self.data_edit.toPlainText()
+        try:
+            l = locals()
+            exec(code,globals(),l)
+            self.hide()
+            self.getdata.emit([l['x'],l['y']])
+        except Exception as err:
+            print(err.args)
             pass
 
 class MapWidget(QtWidgets.QWidget):
@@ -451,17 +477,22 @@ class MapWidget(QtWidgets.QWidget):
         self.draw_point.triggered.connect(self.addPoint)
         self.draw_line = QtWidgets.QAction("LINE", self.userToolbar)
         self.draw_line.triggered.connect(self.addLine)
+        self.draw_curve = QtWidgets.QAction("CURVE", self.userToolbar)
+        self.draw_curve.triggered.connect(self.addCurve)
         self.draw_clear = QtWidgets.QAction("CLEAR", self.userToolbar)
         self.draw_clear.triggered.connect(self.drawClear)
         self.userToolbar.addActions([self.autoMap, self.smap_action, self.model_action, self.cp_action])
         self.userToolbar.addSeparator()
-        self.userToolbar.addActions([self.draw_point, self.draw_line, self.draw_clear])
+        self.userToolbar.addActions([self.draw_point, self.draw_line, self.draw_curve, self.draw_clear])
         self.getPoint = PointWidget()
         self.getPoint.getdata.connect(self.getPointData)
         self.getPoint.hide()
         self.getLine = LineWidget()
         self.getLine.getdata.connect(self.getLineData)
         self.getLine.hide()
+        self.getCurve = CurveWidget()
+        self.getCurve.getdata.connect(self.getCurveData)
+        self.getCurve.hide()
         self.autoMap.setChecked(True)
         self.fig_layout = QtWidgets.QVBoxLayout(self)
         self.timestamp_lable = QtWidgets.QLabel(self)
@@ -551,7 +582,7 @@ class MapWidget(QtWidgets.QWidget):
         point = lines.Line2D([],[], linestyle = '', marker = 'x', markersize = 8.0, color='r')
         point.set_xdata(event[0])
         point.set_ydata(event[1])
-        id = str(event)
+        id = str(int(round(time.time()*1000)))
         if id not in self.pointLists or self.pointLists[id] is None:
             self.pointLists[id] = point
             self.ax.add_line(self.pointLists[id])
@@ -560,15 +591,28 @@ class MapWidget(QtWidgets.QWidget):
     def addLine(self):
         self.getLine.show()
     
+    def addCurve(self):
+        self.getCurve.show()
+
     def getLineData(self, event):
         l = lines.Line2D([],[], linestyle = '--', marker = '.', markersize = 6.0, color='r')
         l.set_xdata([event[0][0],event[1][0]])
         l.set_ydata([event[0][1],event[1][1]])
-        id = str(event)
+        id = str(int(round(time.time()*1000)))
         if id not in self.lineLists or self.lineLists[id] is None:
             self.lineLists[id] = l
             self.ax.add_line(self.lineLists[id])
             self.static_canvas.figure.canvas.draw() 
+
+    def getCurveData(self, event):
+        l = lines.Line2D([],[], linestyle = '--', marker = '.', markersize = 6.0, color='r')
+        l.set_xdata(event[0])
+        l.set_ydata(event[1])     
+        id = str(int(round(time.time()*1000)))
+        if id not in self.lineLists or self.lineLists[id] is None:
+            self.lineLists[id] = l
+            self.ax.add_line(self.lineLists[id])
+            self.static_canvas.figure.canvas.draw()
 
     def drawClear(self):
         for p in self.pointLists:
