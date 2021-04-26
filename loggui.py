@@ -581,6 +581,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                         self.popMenu = QtWidgets.QMenu(self)
                         self.popMenu.addAction('&Save Data',lambda:self.savePlotData(event.inaxes))
                         self.popMenu.addAction('&Move Here',lambda:self.moveHere(event.xdata))
+                        self.popMenu.addAction('&Diff Time', lambda:self.diffData(event.inaxes))
                         cursor = QtGui.QCursor()
                         self.popMenu.exec_(cursor.pos())
                     # show info
@@ -628,7 +629,9 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 outdata.append("{},{}".format(data[0].strftime('%Y-%m-%d %H:%M:%S.%f'), data[1]))
         elif xy.x_combo.currentText() == 'timestamp':
             org_t = self.read_thread.getData(group_name + '.timestamp')[0]
-            tmpdata = (self.read_thread.getData(xy.y_combo.currentText())[0], org_t)
+            dt = [timedelta(seconds = (tmp_t/1e9 - org_t[0]/1e9)) for tmp_t in org_t]
+            t = [self.read_thread.getData(xy.y_combo.currentText())[1][0] + tmp for tmp in dt]
+            tmpdata = (self.read_thread.getData(xy.y_combo.currentText())[0], t)
             list_tmpdata = [(t,d) for t,d in zip(tmpdata[1], tmpdata[0])]
             list_tmpdata.sort(key=lambda d: d[0])
             for data in list_tmpdata:
@@ -636,9 +639,37 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         fname, _ = QtWidgets.QFileDialog.getSaveFileName(self,"选取log文件", "","CSV Files (*.csv);;All Files (*)")
         logging.debug('Save ' + xy.y_combo.currentText() + ' and ' + xy.x_combo.currentText() + ' in ' + fname)
         if fname:
-            with open(fname, 'w') as fn:
-                for d in outdata:
-                    fn.write(d+'\n')
+            try:
+                with open(fname, 'w') as fn:
+                    for d in outdata:
+                        fn.write(d+'\n')
+            except:
+                pass
+
+    def diffData(self, cur_ax):
+        indx = self.axs.tolist().index(cur_ax)
+        xy = self.xys[indx]        
+        group_name = xy.y_combo.currentText().split('.')[0]
+        list_tmpdata = []
+        if xy.x_combo.currentText() == 't':
+            tmpdata = self.read_thread.getData(xy.y_combo.currentText())
+            list_tmpdata = [(t,d) for t,d in zip(tmpdata[1], tmpdata[0])]
+        elif xy.x_combo.currentText() == 'timestamp':
+            org_t = self.read_thread.getData(group_name + '.timestamp')[0]
+            dt = [timedelta(seconds = (tmp_t/1e9 - org_t[0]/1e9)) for tmp_t in org_t]
+            t = [self.read_thread.getData(xy.y_combo.currentText())[1][0] + tmp for tmp in dt]
+            tmpdata = (self.read_thread.getData(xy.y_combo.currentText())[0], t)
+            list_tmpdata = [(t,d) for t,d in zip(tmpdata[1], tmpdata[0])]
+        if len(list_tmpdata) < 2:
+            return
+        list_tmpdata.sort(key=lambda d: d[0])
+        dts = [(a[0]-b[0]).total_seconds() for a, b in zip(list_tmpdata[1::], list_tmpdata[0:-1])]
+        dvs = [a[1]-b[1] for a, b in zip(list_tmpdata[1::], list_tmpdata[0:-1])]
+        try:
+            dv_dt = [a/b for a, b in zip(dvs, dts)]
+            self.drawdata(cur_ax, (dv_dt, list_tmpdata[1::]), 'diff_'+group_name, False)
+        except ZeroDivisionError:
+            pass
 
     def onpick(self, event):
         if self.map_action.isChecked() \
@@ -971,7 +1002,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                     elif xy.x_combo.currentText() == 'timestamp':
                         org_t = self.read_thread.getData(group_name + '.timestamp')[0]
                         t = []
-                        dt = [timedelta(seconds = (tmp_t/1e9 - org_t[0]/1e9))-org_t[0] for tmp_t in org_t]
+                        dt = [timedelta(seconds = (tmp_t/1e9 - org_t[0]/1e9)) for tmp_t in org_t]
                         t = [self.read_thread.getData(xy.y_combo.currentText())[1][0] + tmp for tmp in dt]
                         data = (self.read_thread.getData(xy.y_combo.currentText())[0], t)
                         self.drawdata(ax, data,

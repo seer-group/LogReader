@@ -367,7 +367,7 @@ class CurveWidget(QtWidgets.QWidget):
     getdata = pyqtSignal('PyQt_PyObject')
     def __init__(self):
         super(QtWidgets.QWidget, self).__init__()
-        self.data_label = QtWidgets.QLabel('The python script must have x and y:')
+        self.data_label = QtWidgets.QLabel('Script: x,y,linestype,marker,markersize,color:')
         self.data_edit = QtWidgets.QTextEdit()
         self.btn = QtWidgets.QPushButton("Yes")
         self.btn.clicked.connect(self.getData)
@@ -383,7 +383,11 @@ class CurveWidget(QtWidgets.QWidget):
             l = locals()
             exec(code,globals(),l)
             self.hide()
-            self.getdata.emit([l['x'],l['y']])
+            self.getdata.emit([l['x'],l['y'],
+            l.get('linestyle','--'),
+            l.get('marker','.'), 
+            l.get('markersize',6),
+            l.get('color','r')])
         except Exception as err:
             print(err.args)
             pass
@@ -525,15 +529,26 @@ class MapWidget(QtWidgets.QWidget):
         self.check_robot.setFocusPolicy(QtCore.Qt.NoFocus)
         self.check_partical = QtWidgets.QCheckBox('Paritical',self)
         self.check_partical.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.check_3dHole = QtWidgets.QCheckBox('3DHole',self)
+        self.check_3dHole.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.check_3dObs = QtWidgets.QCheckBox('3DObs',self)
+        self.check_3dObs.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.check_traj = QtWidgets.QCheckBox('TRAJ',self)
+        self.check_traj.setFocusPolicy(QtCore.Qt.NoFocus)
         self.hbox.addWidget(self.check_all)
         self.hbox.addWidget(self.check_map)
         self.hbox.addWidget(self.check_robot)
         self.hbox.addWidget(self.check_partical)
+        self.hbox.addWidget(self.check_3dHole)
+        self.hbox.addWidget(self.check_3dObs)
+        self.hbox.addWidget(self.check_traj)
         self.check_all.stateChanged.connect(self.changeCheckBoxAll)
         self.check_map.stateChanged.connect(self.changeCheckBox)
         self.check_robot.stateChanged.connect(self.changeCheckBox)
         self.check_partical.stateChanged.connect(self.changeCheckBox)
-
+        self.check_3dHole.stateChanged.connect(self.changeCheckBox)
+        self.check_3dObs.stateChanged.connect(self.changeCheckBox)
+        self.check_traj.stateChanged.connect(self.changeCheckBox)
         self.check_lasers = dict()
         self.hbox.setAlignment(QtCore.Qt.AlignLeft)
         self.fig_layout.addLayout(self.hbox)
@@ -605,7 +620,7 @@ class MapWidget(QtWidgets.QWidget):
             self.static_canvas.figure.canvas.draw() 
 
     def getCurveData(self, event):
-        l = lines.Line2D([],[], linestyle = '--', marker = '.', markersize = 6.0, color='r')
+        l = lines.Line2D([],[], linestyle = event[2], marker = event[3], markersize = event[4], color=event[5])
         l.set_xdata(event[0])
         l.set_ydata(event[1])     
         id = str(int(round(time.time()*1000)))
@@ -636,12 +651,18 @@ class MapWidget(QtWidgets.QWidget):
             self.check_map.setChecked(True)
             self.check_robot.setChecked(True)
             self.check_partical.setChecked(True)
+            self.check_3dHole.setChecked(True)
+            self.check_3dObs.setChecked(True)
+            self.check_traj.setChecked(True)
             for k in self.check_lasers.keys():
                 self.check_lasers[k].setChecked(True)
         elif self.check_all.checkState() == QtCore.Qt.Unchecked:
             self.check_map.setChecked(False)
             self.check_robot.setChecked(False)
             self.check_partical.setChecked(False)
+            self.check_3dHole.setChecked(False)
+            self.check_3dObs.setChecked(False)
+            self.check_traj.setChecked(False)
             for k in self.check_lasers.keys():
                 self.check_lasers[k].setChecked(False)
 
@@ -654,10 +675,16 @@ class MapWidget(QtWidgets.QWidget):
             else:
                 all_laser_check = False
         if self.check_map.isChecked() and self.check_robot.isChecked() and all_laser_check\
-            and self.check_partical.isChecked():
+            and self.check_partical.isChecked()\
+                and self.check_3dHole.isChecked()\
+                    and self.check_3dObs.isChecked()\
+                        and self.check_traj.isChecked():
             self.check_all.setCheckState(QtCore.Qt.Checked)
         elif self.check_map.isChecked() or self.check_robot.isChecked() or part_laser_check\
-            or self.check_partical.isChecked():
+            or self.check_partical.isChecked()\
+                or self.check_3dObs.isChecked()\
+                    or self.check_3dHole.isChecked()\
+                        or self.check_traj.isChecked():
             self.check_all.setTristate()
             self.check_all.setCheckState(QtCore.Qt.PartiallyChecked)
         else:
@@ -673,6 +700,13 @@ class MapWidget(QtWidgets.QWidget):
             self.map_data.set_visible(cur_check.isChecked())
         elif cur_check is self.check_partical:
             self.particle_points.set_visible(cur_check.isChecked())
+        elif cur_check is self.check_3dObs:
+            self.depthCamera_obs_points.set_visible(cur_check.isChecked())
+        elif cur_check is self.check_3dHole:
+            self.depthCamera_hole_points.set_visible(cur_check.isChecked())
+        elif cur_check is self.check_traj:
+            self.trajectory.set_visible(cur_check.isChecked())
+            self.trajectory_next.set_visible(cur_check.isChecked())
         else:
             for k in self.check_lasers.keys():
                 if cur_check is self.check_lasers[k]:
@@ -857,14 +891,27 @@ class MapWidget(QtWidgets.QWidget):
                 self.check_robot.setFocusPolicy(QtCore.Qt.NoFocus)
                 self.check_partical = QtWidgets.QCheckBox('Paritical',self)
                 self.check_partical.setFocusPolicy(QtCore.Qt.NoFocus)
+                self.check_3dHole = QtWidgets.QCheckBox('3DHole',self)
+                self.check_3dHole.setFocusPolicy(QtCore.Qt.NoFocus)
+                self.check_3dObs = QtWidgets.QCheckBox('3DObs',self)
+                self.check_3dObs.setFocusPolicy(QtCore.Qt.NoFocus)
+                self.check_traj = QtWidgets.QCheckBox('TRAJ',self)
+                self.check_traj.setFocusPolicy(QtCore.Qt.NoFocus)
                 self.hbox.addWidget(self.check_all)
                 self.hbox.addWidget(self.check_map)
                 self.hbox.addWidget(self.check_robot)
                 self.hbox.addWidget(self.check_partical)
+                self.hbox.addWidget(self.check_3dHole)
+                self.hbox.addWidget(self.check_3dObs)
+                self.hbox.addWidget(self.check_traj)
                 self.check_all.stateChanged.connect(self.changeCheckBoxAll)
                 self.check_map.stateChanged.connect(self.changeCheckBox)
                 self.check_robot.stateChanged.connect(self.changeCheckBox)
                 self.check_partical.stateChanged.connect(self.changeCheckBox)
+                self.check_3dHole.stateChanged.connect(self.changeCheckBox)
+                self.check_3dObs.stateChanged.connect(self.changeCheckBox)
+                self.check_traj.stateChanged.connect(self.changeCheckBox)
+                self.check_lasers = dict()
                 for k in self.read_model.laser.keys():
                     self.add_laser_check(k)
                 self.check_all.setChecked(True)
