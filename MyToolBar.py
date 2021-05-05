@@ -238,12 +238,27 @@ class RulerShape:
         indx = self._axs.index(ax)
         self._lines[indx].set_xdata([data[0][0],data[1][0]])
         self._lines[indx].set_ydata([data[0][1],data[1][1]])
-        self._texts[indx].set_x(data[1][0])
-        self._texts[indx].set_y(data[1][1])
+        (xmin, xmax) = ax.get_xlim()
+        (ymin, ymax) = ax.get_ylim()
+        xmid = (xmin + xmax)/2.0
+        ymid = (ymin + ymax)/2.0
+        text_x = (data[1][0]+data[0][0])/2.0
+        text_y = (data[1][1]+data[0][1])/2.0
+        if ymid < text_y:
+            self._texts[indx].set_verticalalignment("top")
+        else:
+            self._texts[indx].set_verticalalignment("bottom")
+        if xmid < text_x:
+            self._texts[indx].set_horizontalalignment("right")
+        else:
+            self._texts[indx].set_horizontalalignment("left")
+        self._texts[indx].set_x(text_x)
+        self._texts[indx].set_y(text_y)        
         dx = data[1][0] - data[0][0]
         dy = data[1][1] - data[0][1]
         ds = math.sqrt(dx * dx + dy * dy)
-        self._texts[indx].set_text('X:{:.3f} m\nY:{:.3f} m\nD:{:.3f} m'.format(dx, dy, ds))
+        degree = math.atan2(dy, dx) * 180.0 /math.pi
+        self._texts[indx].set_text('X:{:.3f} m\nY:{:.3f} m\nD:{:.3f} m\nA:{:.3f}$\degree$'.format(dx, dy, ds, degree))
 
     def set_visible(self, ax, value):
         indx = self._axs.index(ax)
@@ -263,8 +278,22 @@ class RulerShapeMap(RulerShape):
         indx = self._axs.index(ax)
         self._lines[indx].set_xdata([data[0][0],data[1][0]])
         self._lines[indx].set_ydata([data[0][1],data[1][1]])
-        self._texts[indx].set_x(data[1][0])
-        self._texts[indx].set_y(data[1][1])
+        (xmin, xmax) = ax.get_xlim()
+        (ymin, ymax) = ax.get_ylim()
+        xmid = (xmin + xmax)/2.0
+        ymid = (ymin + ymax)/2.0
+        text_x = (data[1][0]+data[0][0])/2.0
+        text_y = (data[1][1]+data[0][1])/2.0
+        if ymid < text_y:
+            self._texts[indx].set_verticalalignment("top")
+        else:
+            self._texts[indx].set_verticalalignment("bottom")
+        if xmid < text_x:
+            self._texts[indx].set_horizontalalignment("right")
+        else:
+            self._texts[indx].set_horizontalalignment("left")
+        self._texts[indx].set_x(text_x)
+        self._texts[indx].set_y(text_y)  
         dt = data[1][0] - data[0][0]
         try:
             t1 = datetime.fromtimestamp(data[1][0] * 86400 - 62135712000)
