@@ -507,6 +507,12 @@
       { "index": 5, "name": "dw2", "type": "double" }
     ]
   },
+  "Skid_detector": {
+    "type": "Skid_detector",
+    "content": [
+      { "index": 0, "name": "skidding", "type": "bool" }
+    ]
+  },
   "DualDiffGet": {
     "type": "DualDiffGet",
     "content": [
@@ -592,7 +598,10 @@
       { "index": 16, "name": "di16", "type": "double", "description": "di16状态", "unit":""  },
       { "index": 17, "name": "di17", "type": "double", "description": "di17状态", "unit":""  },
       { "index": 18, "name": "di18", "type": "double", "description": "di18状态", "unit":""  },
-      { "index": 19, "name": "di19", "type": "double", "description": "di19状态", "unit":""  }
+      { "index": 19, "name": "di19", "type": "double", "description": "di19状态", "unit":""  },
+      { "index": 19, "name": "di29", "type": "double", "description": "di29状态", "unit":""  },
+      { "index": 20, "name": "di20", "type": "double", "description": "di20状态", "unit":""  },
+      { "index": 30, "name": "di30", "type": "double", "description": "di30状态", "unit":""  }
     ]
   },
   "DO": {
@@ -613,7 +622,9 @@
       { "index": 12, "name": "do12", "type": "double", "description": "do12状态", "unit":""  },
       { "index": 13, "name": "do13", "type": "double", "description": "do13状态", "unit":""  },
       { "index": 14, "name": "do14", "type": "double", "description": "do14状态", "unit":""  },
-      { "index": 15, "name": "do15", "type": "double", "description": "do15状态", "unit":""  }
+      { "index": 15, "name": "do15", "type": "double", "description": "do15状态", "unit":""  },
+      { "index": 19, "name": "do19", "type": "double", "description": "do15状态", "unit":""  },
+      { "index": 18, "name": "do18", "type": "double", "description": "do15状态", "unit":""  }
     ]
   },
   "JackStatus": {
