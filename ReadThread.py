@@ -208,27 +208,30 @@ class ReadThread(QThread):
         self.signal.emit(self.filenames)
 
     def getData(self, vkey):
-        if not self.data[vkey][0]:
-            if vkey in self.data_org_key:
-                org_key = self.data_org_key[vkey]
-                if not self.content[org_key].parsed_flag:
-                    time_start=time.time()
-                    self.content[org_key].parse_now(self.reader.lines)
-                    time_end=time.time()
-                    # print('real read time cost: ' + str(time_end-time_start))
-                tmp = vkey.split(".")
-                k = tmp[0]
-                name = tmp[1]
-                if k == "IMU" and "org" in name:
-                    if len(name) == 6:
-                        g = name[4::]  #org_gx, org_gy, org_gz
-                        off = "off" + name[-1] #offx, offy, offz
-                        self.data[vkey] = ([i+j for (i,j) in zip(self.content[k][g],self.content[k][off])], self.content[k]['t'])   
+        if vkey in self.data:
+            if not self.data[vkey][0]:
+                if vkey in self.data_org_key:
+                    org_key = self.data_org_key[vkey]
+                    if not self.content[org_key].parsed_flag:
+                        # time_start=time.time()
+                        self.content[org_key].parse_now(self.reader.lines)
+                        # time_end=time.time()
+                        # print('real read time cost: ' + str(time_end-time_start))
+                    tmp = vkey.split(".")
+                    k = tmp[0]
+                    name = tmp[1]
+                    if k == "IMU" and "org" in name:
+                        if len(name) == 6:
+                            g = name[4::]  #org_gx, org_gy, org_gz
+                            off = "off" + name[-1] #offx, offy, offz
+                            self.data[vkey] = ([i+j for (i,j) in zip(self.content[k][g],self.content[k][off])], self.content[k]['t'])   
+                        else:
+                            self.data[vkey] = ([], [])              
                     else:
-                        self.data[vkey] = ([], [])              
-                else:
-                    self.data[vkey] = (self.content[k][name], self.content[k]['t'])
-        return self.data[vkey]
+                        self.data[vkey] = (self.content[k][name], self.content[k]['t'])
+            return self.data[vkey]
+        else:
+            return [[],[]]
 
 
 
