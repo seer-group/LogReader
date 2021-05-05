@@ -557,7 +557,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
                     if cp_name == self.map_widget.cp_name:
                         cp_name = None
-
                     self.map_widget.readFiles([full_map_name, model_name, cp_name]) 
                 else:
                     self.map_widget.readFiles([None, None, None])
@@ -651,14 +650,14 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         xy = self.xys[indx]        
         group_name = xy.y_combo.currentText().split('.')[0]
         list_tmpdata = []
-        if xy.x_combo.currentText() == 't':
-            tmpdata = self.read_thread.getData(xy.y_combo.currentText())
-            list_tmpdata = [(t,d) for t,d in zip(tmpdata[1], tmpdata[0])]
-        elif xy.x_combo.currentText() == 'timestamp':
-            org_t = self.read_thread.getData(group_name + '.timestamp')[0]
+        org_t = self.read_thread.getData(group_name + '.timestamp')[0]
+        if len(org_t) > 0:
             dt = [timedelta(seconds = (tmp_t/1e9 - org_t[0]/1e9)) for tmp_t in org_t]
             t = [self.read_thread.getData(xy.y_combo.currentText())[1][0] + tmp for tmp in dt]
             tmpdata = (self.read_thread.getData(xy.y_combo.currentText())[0], t)
+            list_tmpdata = [(t,d) for t,d in zip(tmpdata[1], tmpdata[0])]
+        else:
+            tmpdata = self.read_thread.getData(xy.y_combo.currentText())
             list_tmpdata = [(t,d) for t,d in zip(tmpdata[1], tmpdata[0])]
         if len(list_tmpdata) < 2:
             return
@@ -666,7 +665,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         dts = [(a[0]-b[0]).total_seconds() for a, b in zip(list_tmpdata[1::], list_tmpdata[0:-1])]
         dvs = [a[1]-b[1] for a, b in zip(list_tmpdata[1::], list_tmpdata[0:-1])]
         try:
-            dv_dt = [a/b for a, b in zip(dvs, dts)]
+            dv_dt = [a/b if abs(b) > 1e-12 else np.nan for a, b in zip(dvs, dts)]
             self.drawdata(cur_ax, (dv_dt, list_tmpdata[1::]), 'diff_'+group_name, False)
         except ZeroDivisionError:
             pass
