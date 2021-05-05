@@ -35,26 +35,30 @@ class Readcp (QThread):
         self.laser = []
     # run method gets called when we start the thread
     def run(self):
+        time.sleep(1.0)
         fid = open(self.cp_name, encoding= 'UTF-8')
         self.js = js.load(fid)
         fid.close()
         self.laser = dict()
         x, y, r = 0, 0, 0
-        if 'deviceTypes' in self.js:
-            for device in self.js['deviceTypes']:
-                if device['name'] == 'laser':
-                    for laser in device['devices']:
-                        for param in laser['deviceParams']:
-                            if param['key'] == 'basic':
-                                for p in param['arrayParam']['params']:
-                                    if p['key'] == 'x':
-                                        x = p['doubleValue']
-                                    elif p['key'] == 'y':
-                                        y = p['doubleValue']
-                                    elif p['key'] == 'yaw':
-                                        r = p['doubleValue']
-                        self.laser[laser['name']] = [float(x), float(y), np.deg2rad(r)]
-                    break
+        try:
+            if 'deviceTypes' in self.js:
+                for device in self.js['deviceTypes']:
+                    if device['name'] == 'laser':
+                        for laser in device['devices']:
+                            for param in laser['deviceParams']:
+                                if param['key'] == 'basic':
+                                    for p in param['arrayParam']['params']:
+                                        if p['key'] == 'x':
+                                            x = p['doubleValue']
+                                        elif p['key'] == 'y':
+                                            y = p['doubleValue']
+                                        elif p['key'] == 'yaw':
+                                            r = p['doubleValue']
+                            self.laser[laser['name']] = [float(x), float(y), np.deg2rad(r)]
+                        break
+        except:
+            logging.error('Cannot Open robot.cp: ' + self.cp_name)
         self.signal.emit(self.cp_name)
 
 class Readmodel(QThread):
@@ -820,12 +824,17 @@ class MapWidget(QtWidgets.QWidget):
             self.read_map.map_name = self.map_name
             self.read_map.start()
         if new_model and self.model_name:
+            font = QtGui.QFont()
+            font.setBold(False)
+            self.cp_action.setFont(font)
             self.read_model.model_name = self.model_name
             self.read_model.start()
         if new_cp and self.cp_name:
+            font = QtGui.QFont()
+            font.setBold(False)
+            self.cp_action.setFont(font)
             self.read_cp.cp_name = self.cp_name
             self.read_cp.start()
-
 
     def readMapFinished(self, result):
         if len(self.read_map.map_x) > 0:
@@ -965,6 +974,9 @@ class MapWidget(QtWidgets.QWidget):
                 font = QtGui.QFont()
                 font.setBold(True)
                 self.model_action.setFont(font)
+                font = QtGui.QFont()
+                font.setBold(False)
+                self.cp_action.setFont(font)
                 self.static_canvas.figure.canvas.draw()
             else:
                 print("read laser error! laser_index: ", self.laser_index, "; laser index in model: ", self.read_model.laser.keys())
@@ -972,9 +984,6 @@ class MapWidget(QtWidgets.QWidget):
         else:
             print("readModel error!")
             logging.debug("readModel error!")
-    
-
-    
 
     def readCPFinished(self, result):
         if self.read_model.laser:
@@ -1098,6 +1107,7 @@ class MapWidget(QtWidgets.QWidget):
             robot_shape = GetGlobalPos(robot_shape,robot_loc_pos)
             self.robot_loc_data.set_xdata(robot_shape[0])
             self.robot_loc_data.set_ydata(robot_shape[1])
+
     def redraw(self):
         self.static_canvas.figure.canvas.draw()
 
