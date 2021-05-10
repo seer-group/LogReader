@@ -165,6 +165,21 @@
       { "index": 5, "name": "block_di", "type": "double", "description": "DI障碍物id", "unit":""   }
     ]
   },
+  "SoundState": {
+    "type": "SoundState",
+    "content": [
+      { "index": 0, "name": "blocked", "type": "int64", "description": "block状态", "unit":""  },
+      { "index": 1, "name": "battery", "type": "int64", "description": "电池状态", "unit":""   },
+      { "index": 2, "name": "error", "type": "int64", "description": "错误状态", "unit":"m"   },
+      { "index": 3, "name": "rot", "type": "int64", "description": "旋转状态", "unit":""   },
+      { "index": 4, "name": "sound_state", "type": "int64", "description": "音频状态\n(0 = Stopped 1 = Paused 2 = Playing)", "unit":""},
+      { "index": 5, "name": "move_status", "type": "int64", "description": "导航状态", "unit":""   },
+      { "index": 6, "name": "task_status", "type": "int64", "description": "任务状态", "unit":""   },
+      { "index": 7, "name": "stopSound", "type": "int64", "description": "停止播放音频", "unit":""   },
+      { "index": 8, "name": "soundLoop", "type": "int64", "description": "循环播放音频", "unit":""   },
+      { "index": 12, "name": "scriptSound", "type": "int64", "description": "是否脚本播放音频", "unit":""   }
+    ]
+  },
   "Battery": {
     "type": "Battery",
     "content": [

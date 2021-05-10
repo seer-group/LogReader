@@ -2,6 +2,16 @@
 __pycache__/
 *.py[cod]
 *$py.class
+*.txt
+*.csv
+*.bat
+*.rar
+*.smap
+*.model
+*.zip
+*.7z
+*.xml
+*.iml
 
 # C extensions
 *.so
