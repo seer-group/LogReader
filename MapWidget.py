@@ -26,6 +26,18 @@ def GetGlobalPos(p2b, b2g):
     y = y + b2g[1]
     return np.array([x, y])
 
+def normalize_theta(theta):
+    if theta >= -math.pi and theta < math.pi:
+        return theta
+    multiplier = math.floor(theta / (2 * math.pi))
+    theta = theta - multiplier * 2 * math.pi
+    if theta >= math.pi:
+        theta = theta - 2 * math.pi
+    if theta < -math.pi:
+        theta = theta + 2 * math.pi
+    return theta
+
+
 class Readcp (QThread):
     signal = pyqtSignal('PyQt_PyObject')
     def __init__(self):
@@ -171,6 +183,20 @@ class Readmap(QThread):
         self.points = []
         self.p_names = []
         # print(self.js.keys())
+        def addStr(startPos, endPos):
+            x1 = 0
+            y1 = 0
+            x2 = 0
+            y2 = 0
+            if 'x' in startPos:
+                x1 = startPos['x']
+            if 'y' in startPos:
+                y1 = startPos['y']
+            if 'x' in endPos:
+                x2 = endPos['x']
+            if 'y' in endPos:
+                y2 = endPos['y']
+            self.straights.append([(x1,y1),(x2,y2)])            
         for pos in self.js['normalPosList']:
             if 'x' in pos:
                 self.map_x.append(float(pos['x']))
@@ -247,19 +273,29 @@ class Readmap(QThread):
                     else:
                         self.straights.append([(x1,y1),(x3,y3)])
                 elif line['className'] == 'StraightPath':
-                    x1 = 0
-                    y1 = 0
-                    x2 = 0
-                    y2 = 0
-                    if 'x' in line['startPos']['pos']:
-                        x1 = line['startPos']['pos']['x']
-                    if 'y' in line['startPos']['pos']:
-                        y1 = line['startPos']['pos']['y']
-                    if 'x' in line['endPos']['pos']:
-                        x2 = line['endPos']['pos']['x']
-                    if 'y' in line['endPos']['pos']:
-                        y2 = line['endPos']['pos']['y']
-                    self.straights.append([(x1,y1),(x2,y2)])
+                    addStr(line['startPos']['pos'],line['endPos']['pos'])
+        if 'primitiveList' in self.js:
+            for line in self.js['primitiveList']:
+                if line['className'] == 'RoundLine':
+                    cL = line['controlPosList']
+                    critical_dist = math.hypot(cL[1]['x'] - cL[3]['x'], cL[1]['y'] - cL[3]['y'])
+                    angle1 = math.atan2(cL[0]['y'] - cL[1]['y'], cL[0]['x'] - cL[1]['x'])
+                    angle2 = math.atan2(cL[3]['y'] - cL[1]['y'], cL[3]['x'] - cL[1]['x'])
+                    angle3 = math.atan2(cL[2]['y'] - cL[1]['y'], cL[2]['x'] - cL[1]['x'])
+                    delta_angle = normalize_theta(angle2 - angle1)
+                    delta_angle2 = normalize_theta(angle3 - angle2)
+                    if critical_dist < 0.0001 or math.fabs(math.fabs(delta_angle) - math.fabs(delta_angle2) > 0.1):
+                        addStr(line['startPos']['pos'],line['endPos']['pos'])                     
+                    else:
+                        addStr(line['startPos']['pos'],cL[0])
+                        addStr(cL[2],line['endPos']['pos'])
+                        r0 = math.hypot(cL[1]['x'] - cL[0]['x'], cL[1]['y'] - cL[0]['y'])
+                        r1 = math.hypot(cL[1]['x'] - cL[2]['x'], cL[1]['y'] - cL[2]['y'])
+                        r = (r0 + r1)/2.0
+                        if angle1 < angle3:
+                            self.circles.append([cL[1]['x'], cL[1]['y'], r, np.rad2deg(angle1), np.rad2deg(angle3)])
+                        else:
+                            self.circles.append([cL[1]['x'], cL[1]['y'], r, np.rad2deg(angle3), np.rad2deg(angle1)])
         if 'advancedPointList' in self.js:
             for pt in self.js['advancedPointList']:
                 x0 = 0

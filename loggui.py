@@ -403,7 +403,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                         theta = self.read_thread.particle.theta()[0][particle_idx]
                         particle_pos = np.array([pos_x, pos_y, theta])
 
-                laser_points = []
+                laser_points = np.array([])
                 robot_pos = []
                 laser_info = ""
                 if self.read_thread.laser.datas:
