@@ -464,7 +464,7 @@ class MapWidget(QtWidgets.QWidget):
         self.cur_arrow.set_zorder(100)
         self.org_arrow_xy = self.cur_arrow.get_xy().copy()
 
-        self.robot_pos = []
+        self.robot_pos = [0., 0., 0.]
         self.robot_loc_pos = []
         self.laser_pos = dict()
         self.laser_org_data = np.array([])
@@ -525,9 +525,16 @@ class MapWidget(QtWidgets.QWidget):
         self.draw_curve.triggered.connect(self.addCurve)
         self.draw_clear = QtWidgets.QAction("CLEAR", self.userToolbar)
         self.draw_clear.triggered.connect(self.drawClear)
+        self.draw_center = QtWidgets.QAction("CENTER", self.userToolbar)
+        self.draw_center.triggered.connect(self.drawCenter)
+        self.draw_center.setCheckable(True)
+        self.draw_center.setChecked(False)
         self.userToolbar.addActions([self.autoMap, self.smap_action, self.model_action, self.cp_action])
         self.userToolbar.addSeparator()
         self.userToolbar.addActions([self.draw_point, self.draw_line, self.draw_curve, self.draw_clear])
+        self.userToolbar.addSeparator()
+        self.userToolbar.addActions([self.draw_center])
+
         self.getPoint = PointWidget()
         self.getPoint.getdata.connect(self.getPointData)
         self.getPoint.hide()
@@ -680,6 +687,18 @@ class MapWidget(QtWidgets.QWidget):
                 self.lineLists[l] = None
         self.static_canvas.figure.canvas.draw()    
 
+    def drawCenter(self):
+        if self.draw_center.isChecked():
+            (xmin, xmax) = self.ax.get_xlim()
+            (ymin, ymax) = self.ax.get_ylim()
+            x0 = (xmin + xmax)/2.0
+            y0 = (ymin + ymax)/2.0
+            dx = self.robot_pos[0] - x0
+            dy = self.robot_pos[1] - y0
+            self.ax.set_xlim(xmin + dx, xmax + dx)
+            self.ax.set_ylim(ymin + dy, ymax + dy)      
+            self.redraw()
+  
     def add_laser_check(self, index):
         self.check_lasers[index] = QtWidgets.QCheckBox('Laser'+str(index),self)
         self.check_lasers[index].setFocusPolicy(QtCore.Qt.NoFocus)
@@ -1143,6 +1162,15 @@ class MapWidget(QtWidgets.QWidget):
             robot_shape = GetGlobalPos(robot_shape,robot_loc_pos)
             self.robot_loc_data.set_xdata(robot_shape[0])
             self.robot_loc_data.set_ydata(robot_shape[1])
+        if self.draw_center.isChecked():
+            (xmin, xmax) = self.ax.get_xlim()
+            (ymin, ymax) = self.ax.get_ylim()
+            x0 = (xmin + xmax)/2.0
+            y0 = (ymin + ymax)/2.0
+            dx = self.robot_pos[0] - x0
+            dy = self.robot_pos[1] - y0
+            self.ax.set_xlim(xmin + dx, xmax + dx)
+            self.ax.set_ylim(ymin + dy, ymax + dy)
 
     def redraw(self):
         self.static_canvas.figure.canvas.draw()
