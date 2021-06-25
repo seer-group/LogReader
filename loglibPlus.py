@@ -45,6 +45,20 @@ class ReadLog:
         self.tmin = None
         self.tmax = None
         self.regex = re.compile("\[(.*?)\].*")
+    def _startTime(self, f, file):
+        for line in f.readlines(): 
+            try:
+                line = line.decode('utf-8')
+            except UnicodeDecodeError:
+                try:
+                    line = line.decode('gbk')
+                except UnicodeDecodeError:
+                    logging.debug("{}: {} {}".format(file, " Skipped due to decoding failure!", line))
+                    continue
+            out = self.regex.match(line)
+            if out:
+                return rbktimetodate(out.group(1))
+        return None   
     def _readData(self, f, file):
         lines = []
         for line in f.readlines(): 
@@ -142,7 +156,37 @@ class ReadLog:
 
     def parse(self,*argv):
         """依据输入的正则进行解析"""
-        for file in self.filenames:
+        file_ind = []
+        file_stime = []
+        for (ind,file) in enumerate(self.filenames):
+            if file.endswith(".log"):
+                try:
+                    with open(file,'rb') as f:
+                        st = self._startTime(f, file_ind)
+                        if st != None:
+                            file_ind.append(ind)
+                            file_stime.append(st)
+                except:
+                    continue
+            else:
+                try:
+                    with gzip.open(file,'rb') as f:
+                        st = self._startTime(f, file_ind)
+                        if st != None:
+                            file_ind.append(ind)
+                            file_stime.append(st) 
+                except:
+                    continue       
+        
+        max_location =sorted(enumerate(file_stime), key=lambda y:y[1])
+        #print(max_location)
+        
+        new_file_ind = []
+        for i in range(len(max_location)):
+            new_file_ind.append(file_ind[max_location[i][0]])
+
+        for i in new_file_ind:
+            file = self.filenames[i]
             if file.endswith(".log"):
                 try:
                     with open(file,'rb') as f:
