@@ -775,6 +775,22 @@
       { "index": 5, "name": "is_DMT_detected", "type": "bool", "description": "是否检测到Data Matrix", "unit":""  }
     ]
   },
+
+  "MotorInfoISO": {
+    "type": "MotorInfoISO",
+    "content": [
+      { "index": 1, "name": "steer_offset", "type": "rad", "description": "插值器offset", "unit":"degree"  },
+      { "index": 2, "name": "steer_angle", "type": "rad", "description": "舵角值", "unit":"degree"  }
+    ]
+  },
+
+  "NavspeedISO": {
+    "type": "NavspeedISO",
+    "content": [
+      { "index": 1, "name": "steer_offset", "type": "rad", "description": "插值器offset", "unit":"degree"  },
+      { "index": 2, "name": "steer_angle", "type": "rad", "description": "舵角值", "unit":"degree"  }
+    ]
+  },
   
   "MotorInfo0": {
     "type": "MotorInfo0",
@@ -788,7 +804,9 @@
       { "index": 6, "name": "err", "type": "bool", "description": "错误", "unit":"m/s"  },
       { "index": 7, "name": "emc", "type": "bool", "description": "急停", "unit":"m/s"  },
       { "index": 8, "name": "temperature", "type": "double", "description": "温度值", "unit":"degree"  },
-      { "index": 9, "name": "encodercnt", "type": "int64", "description": "编码器", "unit":""  }
+      { "index": 9, "name": "encodercnt", "type": "int64", "description": "编码器", "unit":""  },
+      { "index": 11, "name": "errcode", "type": "int64", "description": "错误码", "unit":""  },
+      { "index": 12, "name": "raw_position", "type": "double", "description": "原始位置", "unit":""  }
     ]
   },
   "MotorInfo1": {
@@ -803,7 +821,9 @@
       { "index": 6, "name": "err", "type": "bool", "description": "错误", "unit":"m/s"  },
       { "index": 7, "name": "emc", "type": "bool", "description": "急停", "unit":"m/s"  },
       { "index": 8, "name": "temperature", "type": "double", "description": "温度值", "unit":"degree"  },
-      { "index": 9, "name": "encodercnt", "type": "int64", "description": "编码器", "unit":""  }
+      { "index": 9, "name": "encodercnt", "type": "int64", "description": "编码器", "unit":""  },
+      { "index": 11, "name": "errcode", "type": "int64", "description": "错误码", "unit":""  },
+      { "index": 12, "name": "raw_position", "type": "double", "description": "原始位置", "unit":""  }
     ]
   },
   "MotorInfo2": {
@@ -818,7 +838,9 @@
       { "index": 6, "name": "err", "type": "bool", "description": "错误", "unit":"m/s"  },
       { "index": 7, "name": "emc", "type": "bool", "description": "急停", "unit":"m/s"  },
       { "index": 8, "name": "temperature", "type": "double", "description": "温度值", "unit":"degree"  },
-      { "index": 9, "name": "encodercnt", "type": "int64", "description": "编码器", "unit":""  }
+      { "index": 9, "name": "encodercnt", "type": "int64", "description": "编码器", "unit":""  },
+      { "index": 11, "name": "errcode", "type": "int64", "description": "错误码", "unit":""  },
+      { "index": 12, "name": "raw_position", "type": "double", "description": "原始位置", "unit":""  }
     ]
   },
   "MotorInfo3": {
@@ -833,7 +855,9 @@
       { "index": 6, "name": "err", "type": "bool", "description": "错误", "unit":"m/s"  },
       { "index": 7, "name": "emc", "type": "bool", "description": "急停", "unit":"m/s"  },
       { "index": 8, "name": "temperature", "type": "double", "description": "温度值", "unit":"degree"  },
-      { "index": 9, "name": "encodercnt", "type": "int64", "description": "编码器", "unit":""  }
+      { "index": 9, "name": "encodercnt", "type": "int64", "description": "编码器", "unit":""  },
+      { "index": 11, "name": "errcode", "type": "int64", "description": "错误码", "unit":""  },
+      { "index": 12, "name": "raw_position", "type": "double", "description": "原始位置", "unit":""  }
     ]
   },
   "MotorInfo4": {
@@ -848,7 +872,9 @@
       { "index": 6, "name": "err", "type": "bool", "description": "错误", "unit":"m/s"  },
       { "index": 7, "name": "emc", "type": "bool", "description": "急停", "unit":"m/s"  },
       { "index": 8, "name": "temperature", "type": "double", "description": "温度值", "unit":"degree"  },
-      { "index": 9, "name": "encodercnt", "type": "int64", "description": "编码器", "unit":""  }
+      { "index": 9, "name": "encodercnt", "type": "int64", "description": "编码器", "unit":""  },
+      { "index": 11, "name": "errcode", "type": "int64", "description": "错误码", "unit":""  },
+      { "index": 12, "name": "raw_position", "type": "double", "description": "原始位置", "unit":""  }
     ]
   },
   "MotorInfo5": {
@@ -863,7 +889,9 @@
       { "index": 6, "name": "err", "type": "bool", "description": "错误", "unit":"m/s"  },
       { "index": 7, "name": "emc", "type": "bool", "description": "急停", "unit":"m/s"  },
       { "index": 8, "name": "temperature", "type": "double", "description": "温度值", "unit":"degree"  },
-      { "index": 9, "name": "encodercnt", "type": "int64", "description": "编码器", "unit":""  }
+      { "index": 9, "name": "encodercnt", "type": "int64", "description": "编码器", "unit":""  },
+      { "index": 11, "name": "errcode", "type": "int64", "description": "错误码", "unit":""  },
+      { "index": 12, "name": "raw_position", "type": "double", "description": "原始位置", "unit":""  }
     ]
   },
   "buzzer":{
