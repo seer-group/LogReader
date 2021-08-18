@@ -581,6 +581,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                         self.popMenu.addAction('&Save Data',lambda:self.savePlotData(event.inaxes))
                         self.popMenu.addAction('&Move Here',lambda:self.moveHere(event.xdata))
                         self.popMenu.addAction('&Diff Time', lambda:self.diffData(event.inaxes))
+                        self.popMenu.addAction('&-y', lambda:self.negData(event.inaxes))
                         cursor = QtGui.QCursor()
                         self.popMenu.exec_(cursor.pos())
                     # show info
@@ -669,6 +670,22 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             self.drawdata(cur_ax, (dv_dt, list_tmpdata[1::]), 'diff_'+group_name, False)
         except ZeroDivisionError:
             pass
+
+    def negData(self, cur_ax):
+        indx = self.axs.tolist().index(cur_ax)
+        xy = self.xys[indx]        
+        group_name = xy.y_combo.currentText().split('.')[0]
+        org_t = self.read_thread.getData(group_name + '.timestamp')[0]
+        if len(org_t) > 0:
+            dt = [timedelta(seconds = (tmp_t/1e9 - org_t[0]/1e9)) for tmp_t in org_t]
+            t = [self.read_thread.getData(xy.y_combo.currentText())[1][0] + tmp for tmp in dt]
+            tmpdata = [self.read_thread.getData(xy.y_combo.currentText())[0], t]
+            tmpdata[0] = [-a for a in tmpdata[0]]
+            self.drawdata(cur_ax, (tmpdata[0], tmpdata[1]), group_name, False)
+        else:
+            tmpdata = self.read_thread.getData(xy.y_combo.currentText())
+            data = [-a for a in tmpdata[0]]
+            self.drawdata(cur_ax, (data, tmpdata[1]), '-'+xy.y_combo.currentText(), False)
 
     def onpick(self, event):
         if self.map_action.isChecked() \
