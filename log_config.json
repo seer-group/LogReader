@@ -18,11 +18,9 @@
       { "index": 0, "name": "getvx", "type": "double", "description": "接收到的x速度", "unit":"m/s" },
       { "index": 1, "name": "getvy", "type": "double", "description": "接收到的y速度", "unit":"m/s" },
       { "index": 2, "name": "getvw", "type": "rad", "description": "接收的角速度", "unit":"degree/s" },
-      { "index": 3, "name": "getsteer", "type": "rad", "description": "接收的舵角", "unit":"degree"},
-      { "index": 4, "name": "sendvx", "type": "int64", "description": "下发的x速度", "unit":"m/s" },
-      { "index": 5, "name": "sendvy", "type": "int64", "description": "下发的y速度", "unit":"m/s" },
-      { "index": 6, "name": "sendvw", "type": "rad", "description": "下发的角速度", "unit":"degree/s" },
-      { "index": 7, "name": "sendsteer", "type": "rad","description": "下发的舵角", "unit":"degree" }
+      { "index": 4, "name": "sendvx", "type": "double", "description": "下发的x速度", "unit":"m/s" },
+      { "index": 5, "name": "sendvy", "type": "double", "description": "下发的y速度", "unit":"m/s" },
+      { "index": 6, "name": "sendvw", "type": "rad", "description": "下发的角速度", "unit":"degree/s" }
     ]
   },
   "IMU": {
@@ -722,14 +720,14 @@
   "MotorCmd": {
     "type": "MotorCmd",
     "content": [
-      { "index": 1, "name": "motor1", "type": "double", "description": "电机1", "unit":""},
-      { "index": 3, "name": "motor2", "type": "double", "description": "电机2", "unit":""},   
-      { "index": 5, "name": "motor3", "type": "double", "description": "电机3", "unit":""},
-      { "index": 7, "name": "motor4", "type": "double", "description": "电机4", "unit":""},
-      { "index": 9, "name": "motor5", "type": "double", "description": "电机5", "unit":""},
-      { "index": 11, "name": "motor6", "type": "double", "description": "电机6", "unit":""},
-      { "index": 13, "name": "motor7", "type": "double", "description": "电机7", "unit":""},
-      { "index": 15, "name": "motor8", "type": "double", "description": "电机8", "unit":""}
+      { "index": 1, "name": "motor0", "type": "double", "description": "电机0", "unit":""},
+      { "index": 3, "name": "motor1", "type": "double", "description": "电机1", "unit":""},   
+      { "index": 5, "name": "motor2", "type": "double", "description": "电机2", "unit":""},
+      { "index": 7, "name": "motor3", "type": "double", "description": "电机3", "unit":""},
+      { "index": 9, "name": "motor4", "type": "double", "description": "电机4", "unit":""},
+      { "index": 11, "name": "motor5", "type": "double", "description": "电机5", "unit":""},
+      { "index": 13, "name": "motor6", "type": "double", "description": "电机6", "unit":""},
+      { "index": 15, "name": "motor7", "type": "double", "description": "电机7", "unit":""}
     ]
   },
   "pgv0": {
@@ -847,7 +845,7 @@
     "type": "MotorInfo3",
     "content": [
       { "index": 0, "name": "timestamp", "type": "int64", "description": "里程时间戳", "unit":""  },
-      { "index": 1, "name": "postion", "type": "rad", "description": "位置", "unit":"m" },
+      { "index": 1, "name": "postion", "type": "double", "description": "位置", "unit":"m" },
       { "index": 2, "name": "speed", "type": "double", "description": "速度", "unit":"m"  },
       { "index": 3, "name": "current", "type": "double", "description": "电流", "unit":"degree"  },
       { "index": 4, "name": "voltage", "type": "double", "description": "电压", "unit":""  },
@@ -904,33 +902,41 @@
   "DistanceNode0":{
     "type":"DistanceNode0",
     "content":[
-      { "index":0, "name":"dist", "type":"double", "description": "距离", "unit":"" },
-      { "index":1, "name":"rssi", "type":"int64", "description": "信号强度", "unit":"" },
-      { "index":2, "name":"valid", "type":"bool", "description": "是否有效", "unit":"" }
+      { "index":1, "name":"dist", "type":"double", "description": "距离", "unit":"" },
+      { "index":2, "name":"rssi", "type":"int64", "description": "信号强度", "unit":"" },
+      { "index":3, "name":"valid", "type":"bool", "description": "是否有效", "unit":"" }
     ]
   },
   "DistanceNode1":{
     "type":"DistanceNode1",
     "content":[
-      { "index":0, "name":"dist", "type":"double", "description": "距离", "unit":"" },
-      { "index":1, "name":"rssi", "type":"int64", "description": "信号强度", "unit":"" },
-      { "index":2, "name":"valid", "type":"bool", "description": "是否有效", "unit":"" }
+      { "index":1, "name":"dist", "type":"double", "description": "距离", "unit":"" },
+      { "index":2, "name":"rssi", "type":"int64", "description": "信号强度", "unit":"" },
+      { "index":3, "name":"valid", "type":"bool", "description": "是否有效", "unit":"" }
     ]
   },
   "DistanceNode2":{
     "type":"DistanceNode2",
     "content":[
-      { "index":0, "name":"dist", "type":"double", "description": "距离", "unit":"" },
-      { "index":1, "name":"rssi", "type":"int64", "description": "信号强度", "unit":"" },
-      { "index":2, "name":"valid", "type":"bool", "description": "是否有效", "unit":"" }
+      { "index":1, "name":"dist", "type":"double", "description": "距离", "unit":"" },
+      { "index":2, "name":"rssi", "type":"int64", "description": "信号强度", "unit":"" },
+      { "index":3, "name":"valid", "type":"bool", "description": "是否有效", "unit":"" }
     ]
   },
   "DistanceNode3":{
     "type":"DistanceNode3",
     "content":[
-      { "index":0, "name":"dist", "type":"double", "description": "距离", "unit":"" },
-      { "index":1, "name":"rssi", "type":"int64", "description": "信号强度", "unit":"" },
-      { "index":2, "name":"valid", "type":"bool", "description": "是否有效", "unit":"" }
+      { "index":1, "name":"dist", "type":"double", "description": "距离", "unit":"" },
+      { "index":2, "name":"rssi", "type":"int64", "description": "信号强度", "unit":"" },
+      { "index":3, "name":"valid", "type":"bool", "description": "是否有效", "unit":"" }
+    ]
+  },
+  "DistanceNode4":{
+    "type":"DistanceNode4",
+    "content":[
+      { "index":1, "name":"dist", "type":"double", "description": "距离", "unit":"" },
+      { "index":2, "name":"rssi", "type":"int64", "description": "信号强度", "unit":"" },
+      { "index":3, "name":"valid", "type":"bool", "description": "是否有效", "unit":"" }
     ]
   },
   "manualSteer": {
@@ -979,6 +985,13 @@
       { "index": 3, "name": "switchMap", "type": "bool"}
     ]
   },
+  "LoopTime":{
+    "type": "LoopTime",
+    "content": [
+      { "index": 0, "name": "real", "type": "double"},
+      { "index": 1, "name": "set", "type": "double"}
+    ]
+  },
   "HaiRou":{
     "type":"HaiRou",
     "content":[
@@ -995,6 +1008,62 @@
       {"index": 10, "name":"finger_right", "type":"double"},
       {"index": 11, "name":"finger_state", "type":"double"},
       {"index": 12, "name":"vision_state", "type":"double"}
+    ]
+  },
+  "TianTian":{
+    "type":"TianTian",
+    "content":[
+      {"index": 0, "name":"lift", "type": "double"},
+      {"index": 1, "name":"rotate", "type":"double"},
+      {"index": 2, "name":"stretch_inDI", "type":"double"},
+      {"index": 3, "name":"stretch_outDI", "type": "double"},
+      {"index": 4, "name":"reachDI", "type":"double"},
+      {"index": 5, "name":"status", "type":"double"},
+      {"index": 6, "name":"task_id", "type": "double"},
+      {"index": 7, "name":"task_list", "type":"double"},
+      {"index": 8, "name":"operation_status", "type":"double"}
+    ]
+  },
+  "ZhiChe":{
+    "type":"ZhiChe",
+    "content":[
+      {"index": 0, "name":"lift", "type": "double"},
+      {"index": 1, "name":"stretch", "type":"double"},
+      {"index": 2, "name":"rotate", "type":"double"},
+      {"index": 3, "name":"status", "type": "double"},
+      {"index": 4, "name":"task_id", "type":"double"},
+      {"index": 5, "name":"task_list", "type":"double"},
+      {"index": 6, "name":"operation_status", "type":"double"}
+    ]
+  },
+  "ForkWeigth":{
+    "type":"ForkWeigth",
+    "content":[
+      {"index": 0, "name":"cur", "type": "double"},
+      {"index": 1, "name":"sum", "type":"double"},
+      {"index": 2, "name":"count", "type":"double"},
+      {"index": 3, "name":"time", "type": "double"},
+      {"index": 4, "name":"avg", "type":"double"}
+    ]
+  },
+  "DT":{
+    "type":"DT",
+    "content":[
+      {"index":0, "name":"total_dt", "type":"double"},
+      {"index":1, "name":"loc_dt", "type":"double"},
+      {"index":2, "name":"loc_dx", "type":"double"},
+      {"index":3, "name":"loc_dy", "type":"double"},
+      {"index":4, "name":"loc_dtheta", "type":"double"}
+    ]
+  },
+  "safeMoveStatus":{
+    "type":"safeMoveStatus",
+    "content":[
+      {"index":0, "name":"status", "type":"double"},
+      {"index":1, "name":"to_move", "type":"bool"},
+      {"index":2, "name":"in_runScript", "type":"bool"},
+      {"index":3, "name":"in_manual", "type":"bool"},
+      {"index":4, "name":"script_status", "type":"double"}      
     ]
   }
 }
