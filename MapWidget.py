@@ -547,11 +547,11 @@ class MapWidget(QtWidgets.QWidget):
         self.autoMap.setChecked(True)
         self.fig_layout = QtWidgets.QVBoxLayout(self)
         self.timestamp_lable = QtWidgets.QLabel(self)
-        self.timestamp_lable.setText('实框定位: ')
+        self.timestamp_lable.setText('当前激光时刻定位（实框）: ')
         self.timestamp_lable.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
         self.timestamp_lable.setFixedHeight(16.0)
         self.logt_lable = QtWidgets.QLabel(self)
-        self.logt_lable.setText('虚框定位: ')
+        self.logt_lable.setText('当前时刻定位(虚框): ')
         self.logt_lable.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
         self.logt_lable.setFixedHeight(16.0)
         self.obs_lable = QtWidgets.QLabel(self)
@@ -1086,8 +1086,8 @@ class MapWidget(QtWidgets.QWidget):
                 self.ax.set_ylim(ymin, ymax)
 
     def updateRobotLaser(self, laser_org_data, laser_index, robot_pos, robot_loc_pos, laser_info, loc_info, obs_pos, obs_info, depthcamera_pos, particle_pos):
-        self.timestamp_lable.setText('实框定位: '+ laser_info)
-        self.logt_lable.setText('虚框定位: '+ loc_info)
+        self.timestamp_lable.setText('当前激光时刻定位（实框）: '+ laser_info)
+        self.logt_lable.setText('当前时刻定位(虚框): '+ loc_info)
         if obs_info != '':
             self.obs_lable.setText('障碍物信息: ' + obs_info)
             self.obs_lable.show()

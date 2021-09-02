@@ -222,7 +222,12 @@ class Data:
             else:
                 self.unit[tmp['name']] = ""
             if 'description' in tmp:
-                self.description[tmp['name']] = tmp['description'] + " " + self.unit[tmp['name']]
+                if type(tmp['description']) is str:
+                    self.description[tmp['name']] = tmp['description'] + " " + self.unit[tmp['name']]
+                elif type(tmp['description']) is int:
+                    self.description[tmp['name']] = tmp['description']
+                else:
+                    self.description[tmp['name']] = self.type + '.' + tmp['name'] + " " + self.unit[tmp['name']]
             else:
                 self.description[tmp['name']] = self.type + '.' + tmp['name'] + " " + self.unit[tmp['name']]
 
@@ -274,16 +279,26 @@ class Data:
                 self.data['t'].append(rbktimetodate(datas[0]))
                 for tmp in self.info:
                     if 'type' in tmp and 'index' in tmp and 'name' in tmp:
+                        if type(self.description[tmp['name']]) is int:
+                            if 'description' in tmp:
+                                tmp_type = type(tmp['description'])
+                                description = ""
+                                has_description = False
+                                if tmp_type is str:
+                                    description = tmp['description']
+                                    has_description = True
+                                elif tmp_type is int:
+                                    if tmp['description'] < len(values):
+                                        description = values[tmp['description']]
+                                        has_description = True
+                                if has_description:
+                                    self.description[tmp['name']] = self.type + '.' + description + " " + self.unit[tmp['name']]
+
                         if tmp['index'] < len(values):
                             self._storeData(tmp, int(tmp['index']), values)
                         else:
                             self.data[tmp['name']].append(np.nan)
-                    elif 'type' in tmp and 'name' in tmp:
-                        ind = values.index(tmp['name']) if tmp['name'] in values else -1
-                        if ind >= 0 and ind + 1 < len(values):
-                            self._storeData(tmp, ind+1, values)                        
-                        else:
-                            self.data[tmp['name']].append(np.nan)
+
                     else:
                         if not self.parse_error:
                             logging.error("Error in {} {} ".format(self.type, tmp.keys()))
@@ -306,7 +321,7 @@ class Data:
             if key in self.data.keys():
                 self.data[key].extend(other.data[key])
             else:
-                self.data[key] = other.data[key]
+                self.data[key] = other.data[key]     
         self.line_num.extend(other.line_num)
 
 class Laser:

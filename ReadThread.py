@@ -215,6 +215,9 @@ class ReadThread(QThread):
                     if not self.content[org_key].parsed_flag:
                         # time_start=time.time()
                         self.content[org_key].parse_now(self.reader.lines)
+                        for name in self.content[org_key].data.keys():
+                            if name != 't':
+                                self.ylabel[org_key+'.'+name] = self.content[org_key].description[name]                    
                         # time_end=time.time()
                         # print('real read time cost: ' + str(time_end-time_start))
                     tmp = vkey.split(".")

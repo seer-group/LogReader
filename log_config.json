@@ -720,14 +720,14 @@
   "MotorCmd": {
     "type": "MotorCmd",
     "content": [
-      { "index": 1, "name": "motor0", "type": "double", "description": "电机0", "unit":""},
-      { "index": 3, "name": "motor1", "type": "double", "description": "电机1", "unit":""},   
-      { "index": 5, "name": "motor2", "type": "double", "description": "电机2", "unit":""},
-      { "index": 7, "name": "motor3", "type": "double", "description": "电机3", "unit":""},
-      { "index": 9, "name": "motor4", "type": "double", "description": "电机4", "unit":""},
-      { "index": 11, "name": "motor5", "type": "double", "description": "电机5", "unit":""},
-      { "index": 13, "name": "motor6", "type": "double", "description": "电机6", "unit":""},
-      { "index": 15, "name": "motor7", "type": "double", "description": "电机7", "unit":""}
+      { "index": 1, "name": "motor0", "type": "double", "description": 0, "unit":""},
+      { "index": 3, "name": "motor1", "type": "double", "description": 2, "unit":""},   
+      { "index": 5, "name": "motor2", "type": "double", "description": 4, "unit":""},
+      { "index": 7, "name": "motor3", "type": "double", "description": 6, "unit":""},
+      { "index": 9, "name": "motor4", "type": "double", "description": 8, "unit":""},
+      { "index": 11, "name": "motor5", "type": "double", "description": 10, "unit":""},
+      { "index": 13, "name": "motor6", "type": "double", "description": 12, "unit":""},
+      { "index": 15, "name": "motor7", "type": "double", "description": 14, "unit":""}
     ]
   },
   "pgv0": {
