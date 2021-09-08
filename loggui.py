@@ -23,7 +23,7 @@ import numpy as np
 import traceback
 import json
 from multiprocessing import freeze_support
-
+from PyQt5.QtCore import pyqtSignal
 class XYSelection:
     def __init__(self, num = 1):
         self.num = num 
@@ -40,6 +40,37 @@ class XYSelection:
         vbox.addLayout(y_form)
         vbox.addLayout(x_form)
         self.groupBox.setLayout(vbox)
+
+
+class DataSelection(QtWidgets.QWidget):
+    getdata = pyqtSignal('PyQt_PyObject')
+    def __init__(self):
+        super(QtWidgets.QWidget, self).__init__()
+        self.groupBox = QtWidgets.QGroupBox('增加曲线')
+        self.y_label = QtWidgets.QLabel('Data')
+        self.y_combo = ExtendedComboBox()
+        y_form = QtWidgets.QFormLayout()
+        y_form.addRow(self.y_label,self.y_combo)
+        self.groupBox.setLayout(y_form)
+
+        vbox = QtWidgets.QVBoxLayout(self)
+        self.btn = QtWidgets.QPushButton("Yes") 
+        self.btn.clicked.connect(self.getData)
+        vbox.addWidget(self.groupBox)
+        vbox.addWidget(self.btn)
+        self.setWindowTitle("Line Input")
+        self.ax = None
+    def initForm(self, ax, keys):
+        self.ax = ax
+        self.y_combo.clear()
+        self.y_combo.addItems(keys)
+    def getData(self):
+        try:
+            name = self.y_combo.currentText()
+            self.hide()
+            self.getdata.emit([self.ax, name])
+        except:
+            pass
 
 class ApplicationWindow(QtWidgets.QMainWindow):
     def __init__(self):
@@ -232,6 +263,10 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.check_service.stateChanged.connect(self.changeCheckBox)
         self.check_all.stateChanged.connect(self.changeCheckBoxAll)
         self.check_all.setChecked(True)
+
+        self.dataSelection = DataSelection()
+        self.dataSelection.getdata.connect(self.addNewData)
+        self.dataSelection.hide()
 
     def static_canvas_resizeEvent(self, event):
         self.static_canvas_ORG_resizeEvent(event)
@@ -580,8 +615,10 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                         self.popMenu = QtWidgets.QMenu(self)
                         self.popMenu.addAction('&Save Data',lambda:self.savePlotData(event.inaxes))
                         self.popMenu.addAction('&Move Here',lambda:self.moveHere(event.xdata))
+                        self.popMenu.addAction('&reset Data', lambda:self.resetData(event.inaxes))
                         self.popMenu.addAction('&Diff Time', lambda:self.diffData(event.inaxes))
-                        self.popMenu.addAction('&-y', lambda:self.negData(event.inaxes))
+                        self.popMenu.addAction('&- Data', lambda:self.negData(event.inaxes))
+                        self.popMenu.addAction('&Add Data', lambda:self.addData(event.inaxes))
                         cursor = QtGui.QCursor()
                         self.popMenu.exec_(cursor.pos())
                     # show info
@@ -646,6 +683,20 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             except:
                 pass
 
+    def resetData(self, cur_ax):
+        indx = self.axs.tolist().index(cur_ax)
+        xy = self.xys[indx]        
+        group_name = xy.y_combo.currentText().split('.')[0]
+        org_t = self.read_thread.getData(group_name + '.timestamp')[0]
+        if len(org_t) > 0:
+            dt = [timedelta(seconds = (tmp_t/1e9 - org_t[0]/1e9)) for tmp_t in org_t]
+            t = [self.read_thread.getData(xy.y_combo.currentText())[1][0] + tmp for tmp in dt]
+            tmpdata = [self.read_thread.getData(xy.y_combo.currentText())[0], t]
+            self.drawdata(cur_ax, tmpdata, self.read_thread.ylabel[xy.y_combo.currentText()], False)
+        else:
+            tmpdata = self.read_thread.getData(xy.y_combo.currentText())
+            self.drawdata(cur_ax, tmpdata,  self.read_thread.ylabel[xy.y_combo.currentText()], False)
+
     def diffData(self, cur_ax):
         indx = self.axs.tolist().index(cur_ax)
         xy = self.xys[indx]        
@@ -667,7 +718,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         dvs = [a[1]-b[1] for a, b in zip(list_tmpdata[1::], list_tmpdata[0:-1])]
         try:
             dv_dt = [a/b if abs(b) > 1e-12 else np.nan for a, b in zip(dvs, dts)]
-            self.drawdata(cur_ax, (dv_dt, list_tmpdata[1::]), 'diff_'+group_name, False)
+            self.drawdata(cur_ax, (dv_dt, list_tmpdata[1::]), 'diff_'+self.read_thread.ylabel[xy.y_combo.currentText()], False)
         except ZeroDivisionError:
             pass
 
@@ -681,11 +732,23 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             t = [self.read_thread.getData(xy.y_combo.currentText())[1][0] + tmp for tmp in dt]
             tmpdata = [self.read_thread.getData(xy.y_combo.currentText())[0], t]
             tmpdata[0] = [-a for a in tmpdata[0]]
-            self.drawdata(cur_ax, (tmpdata[0], tmpdata[1]), group_name, False)
+            self.drawdata(cur_ax, (tmpdata[0], tmpdata[1]), '-'+self.read_thread.ylabel[xy.y_combo.currentText()], False)
         else:
             tmpdata = self.read_thread.getData(xy.y_combo.currentText())
             data = [-a for a in tmpdata[0]]
-            self.drawdata(cur_ax, (data, tmpdata[1]), '-'+xy.y_combo.currentText(), False)
+            self.drawdata(cur_ax, (data, tmpdata[1]), '-'+self.read_thread.ylabel[xy.y_combo.currentText()], False)
+
+    def addData(self, cur_ax):
+        keys = list(self.read_thread.data.keys())
+        self.dataSelection.initForm(cur_ax, keys)
+        self.dataSelection.show()
+    
+    def addNewData(self, event):
+        cur_ax = event[0]
+        current_text = event[1]
+        tmpdata = self.read_thread.getData(current_text)
+        self.drawdata(cur_ax, tmpdata, self.read_thread.ylabel[current_text], False, False)
+
 
     def onpick(self, event):
         if self.map_action.isChecked() \
@@ -908,7 +971,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.close()
 
     def about(self):
-        QtWidgets.QMessageBox.about(self, "关于", """Log Viewer V2.2.1a""")
+        QtWidgets.QMessageBox.about(self, "关于", """Log Viewer V2.2.1b""")
 
     def ycombo_onActivated(self):
         curcombo = self.sender()
@@ -1026,27 +1089,40 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 self.updateMapSelectLine()
 
 
-    def drawdata(self, ax, data, ylabel, resize = False):
+    def drawdata(self, ax, data, ylabel, resize = False, replot = True):
         xmin,xmax =  ax.get_xlim()
-        ax.cla()
-        self.drawFEWN(ax)
-        if data[1] and data[0]:
-            ax.plot(data[1], data[0], '.')
-            tmpd = np.array(data[0])
-            tmpd = tmpd[~np.isnan(tmpd)]
-            if len(tmpd) > 0:
-                max_range = max(max(tmpd) - min(tmpd), 1.0)
-                ax.set_ylim(min(tmpd) - 0.05 * max_range, max(tmpd) + 0.05 * max_range)
-        if resize:
-            ax.set_xlim(self.read_thread.tlist[0], self.read_thread.tlist[-1])
+        if replot:
+            ax.cla()
+            self.drawFEWN(ax)
+            if data[1] and data[0]:
+                ax.plot(data[1], data[0], '.', label="data0")
+                tmpd = np.array(data[0])
+                tmpd = tmpd[~np.isnan(tmpd)]
+                if len(tmpd) > 0:
+                    max_range = max(max(tmpd) - min(tmpd), 1.0)
+                    ax.set_ylim(min(tmpd) - 0.05 * max_range, max(tmpd) + 0.05 * max_range)
+            if resize:
+                ax.set_xlim(self.read_thread.tlist[0], self.read_thread.tlist[-1])
+            else:
+                ax.set_xlim(xmin, xmax)
+            ax.set_ylabel(ylabel)
+            ax.grid()
+            ind = np.where(self.axs == ax)[0][0]
+            if self.map_select_lines:
+                ax.add_line(self.map_select_lines[ind])
+            self.ruler.add_ruler(ax)
         else:
-            ax.set_xlim(xmin, xmax)
-        ax.set_ylabel(ylabel)
-        ax.grid()
-        ind = np.where(self.axs == ax)[0][0]
-        if self.map_select_lines:
-            ax.add_line(self.map_select_lines[ind])
-        self.ruler.add_ruler(ax)
+            if data[1] and data[0]:
+                ax.plot(data[1], data[0], '.', label="data1")
+                n = len(ax.get_ylabel().split("\n"))
+                if n == 1:
+                    ax.set_ylabel("1 " + ax.get_ylabel() + "\n 2 " + ylabel)
+                else:
+                    ax.set_ylabel("{} \n {} {}".format(ax.get_ylabel(), n+1, ylabel))
+        # 用于遍历绘制的数据的特定artist
+        # for art in ax.get_children():
+        #     if art.get_label() == "data1":
+        #         print(art)
         self.static_canvas.figure.canvas.draw()
 
     def drawFEWN(self,ax):
