@@ -971,7 +971,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.close()
 
     def about(self):
-        QtWidgets.QMessageBox.about(self, "关于", """Log Viewer V2.2.1b""")
+        QtWidgets.QMessageBox.about(self, "关于", """Log Viewer V2.2.1c""")
 
     def ycombo_onActivated(self):
         curcombo = self.sender()
@@ -1095,7 +1095,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             ax.cla()
             self.drawFEWN(ax)
             if data[1] and data[0]:
-                ax.plot(data[1], data[0], '.', label="data0")
+                ax.plot(data[1], data[0], '.', url = ylabel)
                 tmpd = np.array(data[0])
                 tmpd = tmpd[~np.isnan(tmpd)]
                 if len(tmpd) > 0:
@@ -1113,16 +1113,14 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             self.ruler.add_ruler(ax)
         else:
             if data[1] and data[0]:
-                ax.plot(data[1], data[0], '.', label="data1")
-                n = len(ax.get_ylabel().split("\n"))
-                if n == 1:
-                    ax.set_ylabel("1 " + ax.get_ylabel() + "\n 2 " + ylabel)
-                else:
-                    ax.set_ylabel("{} \n {} {}".format(ax.get_ylabel(), n+1, ylabel))
-        # 用于遍历绘制的数据的特定artist
-        # for art in ax.get_children():
-        #     if art.get_label() == "data1":
-        #         print(art)
+                ax.plot(data[1], data[0], '.', url = ylabel)
+                #用于遍历绘制的数据的特定artist
+                art_list = [[],[]]
+                for art in ax.get_children():
+                    if art.get_url() is not None:
+                        art_list[0].append(art)
+                        art_list[1].append(art.get_url())
+                ax.legend(art_list[0], art_list[1], loc='upper right')
         self.static_canvas.figure.canvas.draw()
 
     def drawFEWN(self,ax):
