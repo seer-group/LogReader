@@ -62,7 +62,7 @@ def getNameMotorInfoDict(file_name, motor_name_list):
         regex = re.compile("\[(.*?)\].*\[(.*?)\]\[(.*?)\]")
         out = regex.match(line)
         if out:
-            if "MotorInfo" in out.group(2):
+            if ("MotorInfo" in out.group(2)) and (not "MotorInfoISO" in out.group(2)):
                 motor_name = out.group(3).split("|")[10]
                 match_dict[motor_name] = True
                 name_motorinfo[motor_name] = out.group(2)
