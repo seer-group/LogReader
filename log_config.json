@@ -52,7 +52,11 @@
   "moveTask": {
     "type": "moveTask",
     "content": [
-      { "index": 3, "name": "taskstatus", "type": "double"}
+      { "index": 0, "name": "cur_taskstatus", "type": "double"},
+      { "index": 1, "name": "running_status", "type": "double"},
+      { "index": 2, "name": "blocked", "type": "bool"},
+      { "index": 3, "name": "taskstatus", "type": "double"},
+      { "index": 8, "name": "percentage", "type": "double"}
     ]
   },
   "Odometer": {
@@ -730,6 +734,32 @@
       { "index": 15, "name": "motor7", "type": "double", "description": 14, "unit":""}
     ]
   },
+  "MotorSend": {
+    "type": "MotorSend",
+    "content": [
+      { "index": 1, "name": "motor0", "type": "double", "description": 0, "unit":""},
+      { "index": 3, "name": "motor1", "type": "double", "description": 2, "unit":""},   
+      { "index": 5, "name": "motor2", "type": "double", "description": 4, "unit":""},
+      { "index": 7, "name": "motor3", "type": "double", "description": 6, "unit":""},
+      { "index": 9, "name": "motor4", "type": "double", "description": 8, "unit":""},
+      { "index": 11, "name": "motor5", "type": "double", "description": 10, "unit":""},
+      { "index": 13, "name": "motor6", "type": "double", "description": 12, "unit":""},
+      { "index": 15, "name": "motor7", "type": "double", "description": 14, "unit":""}
+    ]
+  },
+  "MotorGet": {
+    "type": "MotorGet",
+    "content": [
+      { "index": 1, "name": "motor0", "type": "double", "description": 0, "unit":""},
+      { "index": 3, "name": "motor1", "type": "double", "description": 2, "unit":""},   
+      { "index": 5, "name": "motor2", "type": "double", "description": 4, "unit":""},
+      { "index": 7, "name": "motor3", "type": "double", "description": 6, "unit":""},
+      { "index": 9, "name": "motor4", "type": "double", "description": 8, "unit":""},
+      { "index": 11, "name": "motor5", "type": "double", "description": 10, "unit":""},
+      { "index": 13, "name": "motor6", "type": "double", "description": 12, "unit":""},
+      { "index": 15, "name": "motor7", "type": "double", "description": 14, "unit":""}
+    ]
+  },
   "pgv0": {
     "type": "pgv0",
     "content": [
@@ -773,7 +803,15 @@
       { "index": 5, "name": "is_DMT_detected", "type": "bool", "description": "是否检测到Data Matrix", "unit":""  }
     ]
   },
-
+  "CoupledMotor":{
+    "type":"CoupledMotor",
+    "content": [
+      { "index": 1, "name": "spinSpeed", "type": "double"},
+      { "index": 3, "name": "linearSpeed", "type": "double"},
+      { "index": 4, "name": "K", "type": "double"},
+      { "index": 5, "name": "new_linear_speed", "type": "double"}
+    ]    
+  },
   "MotorInfoISO": {
     "type": "MotorInfoISO",
     "content": [
@@ -804,7 +842,8 @@
       { "index": 8, "name": "temperature", "type": "double", "description": "温度值", "unit":"degree"  },
       { "index": 9, "name": "encodercnt", "type": "int64", "description": "编码器", "unit":""  },
       { "index": 11, "name": "errcode", "type": "int64", "description": "错误码", "unit":""  },
-      { "index": 12, "name": "raw_position", "type": "double", "description": "原始位置", "unit":""  }
+      { "index": 12, "name": "raw_position", "type": "double", "description": "原始位置", "unit":""  },
+      { "index": 10, "name": "_grouop_name_"}
     ]
   },
   "MotorInfo1": {
