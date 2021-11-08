@@ -1,3 +1,4 @@
+from typing import Text
 import matplotlib
 matplotlib.use('Qt5Agg')
 matplotlib.rcParams['font.sans-serif']=['FangSong']
@@ -24,6 +25,7 @@ import traceback
 import json
 from multiprocessing import freeze_support
 from PyQt5.QtCore import pyqtSignal
+import MotorRead as mr
 class XYSelection:
     def __init__(self, num = 1):
         self.num = num 
@@ -146,6 +148,11 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.json_action.setShortcut(QtCore.Qt.CTRL + QtCore.Qt.Key_J)
         self.json_action.triggered.connect(self.openJsonView)
         self.tools_menu.addAction(self.json_action)
+
+        self.motor_follow_action = QtWidgets.QAction('&View Motor Follow Cure', self.tools_menu, checkable = True)
+        self.motor_follow_action.setShortcut(QtCore.Qt.CTRL + QtCore.Qt.Key_K)
+        self.motor_follow_action.triggered.connect(self.drawMotorFollow)
+        self.tools_menu.addAction(self.motor_follow_action)
 
         self.help_menu = QtWidgets.QMenu('&Help', self)
         self.help_menu.addAction('&About', self.about)
@@ -876,6 +883,16 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 self.log_info.append(str(ind+1)+':'+flink)
             self.setWindowTitle('Loading')
 
+    def openModelFilesDialog(self):
+        options = QtWidgets.QFileDialog.Options()
+        options |= QtWidgets.QFileDialog.DontUseNativeDialog
+        options |= QtCore.Qt.WindowStaysOnTopHint
+        self.model_name, _ = QtWidgets.QFileDialog.getOpenFileNames(self,"选取model文件", "","model Files (*.model);;All Files (*)", options=options)
+        if self.model_name:
+            return self.model_name[0]
+        else:
+            return None
+
     def dragFiles(self, files):
         flag_first_in = True
         for file in files:
@@ -1374,6 +1391,45 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         else:
             if self.sts_widget:
                 self.sts_widget.hide()           
+
+    # 画电机跟随曲线
+    def drawMotorFollow(self, checked):
+        dir_name, _ = os.path.split(self.filenames[0])
+        pdir_name, _ = os.path.split(dir_name)
+        model_dir = os.path.join(pdir_name,"models")
+        model_name = os.path.join(model_dir,"robot.model")
+        if not os.path.exists(model_name):
+            model_dir = dir_name
+            model_name = os.path.join(model_dir,"robot.model")
+            if not os.path.exists(model_name):
+                model_dir = os.path.join(dir_name,"models")
+                model_name = os.path.join(model_dir,"robot.model")
+                if not os.path.exists(model_name):
+                    model_name = None
+        if not model_name:
+            model_name = self.openModelFilesDialog()
+        motor_name_list = mr.getMotorNames(model_name)
+        motor_num = len(motor_name_list)
+        num = QtWidgets.QLabel(str(motor_num))
+        self.fignum_changed(num)
+        name_motorinfo = mr.getNameMotorInfoDict(self.filenames[0], motor_name_list)
+        name_motorcmd = mr.getNameMotorCmdDict(self.filenames[0], motor_name_list)
+        name_type = mr.getMotorNameTypeDict(model_name)
+        try:
+            for i, name in enumerate(motor_name_list):
+                key1 = "MotorCmd." + name_motorcmd[name]
+                if name_type[name] == "steer":
+                    key2 = name_motorinfo[name] + ".postion"
+                else:
+                    key2 = name_motorinfo[name] + ".speed"
+                if i < self.max_fig_num:
+                    self.drawdata(self.axs[i], self.read_thread.getData(key1),
+                                    self.read_thread.ylabel[key1], True)
+                    self.drawdata(self.axs[i], self.read_thread.getData(key2), 
+                                    self.read_thread.ylabel[key2], False, False)
+        except KeyError:
+            self.log_info.append("Please choose the true model matched with log!!!")
+        self.motor_follow_action.setChecked(False)
 
     def updateMapSelectLine(self):
         if self.map_action.isChecked():
