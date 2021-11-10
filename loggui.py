@@ -1286,6 +1286,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         if checked:
             if not self.map_widget:
                 self.map_widget = MapWidget()
+                self.map_widget.setWindowIcon(QtGui.QIcon('rbk.ico'))
                 self.map_widget.hiddened.connect(self.mapClosed)
                 self.map_widget.keyPressEvent = self.keyPressEvent
             self.map_widget.show()
@@ -1335,6 +1336,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         if checked:
             if not self.log_widget:
                 self.log_widget = LogViewer()
+                self.log_widget.setWindowIcon(QtGui.QIcon('rbk.ico'))
                 self.log_widget.hiddened.connect(self.viewerClosed)
                 self.log_widget.moveHereSignal.connect(self.moveHere)
             if self.read_thread.reader:
@@ -1368,6 +1370,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         if checked:
             if not self.sts_widget:
                 self.sts_widget = JsonView()
+                self.sts_widget.setWindowIcon(QtGui.QIcon('rbk.ico'))
                 self.sts_widget.hiddened.connect(self.jsonViewerClosed)
             self.sts_widget.show()
             (xmin,xmax) = self.axs[0].get_xlim()
@@ -1486,6 +1489,7 @@ if __name__ == "__main__":
     try:
         qapp = QtWidgets.QApplication(sys.argv)
         app = ApplicationWindow()
+        app.setWindowIcon(QtGui.QIcon('rbk.ico'))
         app.show()
         sys.exit(qapp.exec_())
     except:
