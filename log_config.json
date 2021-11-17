@@ -734,6 +734,17 @@
       { "index": 15, "name": "motor7", "type": "double", "description": 14, "unit":""}
     ]
   },
+
+  "ProbeCpu": {
+    "type": "ProbeCpu",
+    "content": [
+      { "index": 0, "name": "totalcpu", "type": "double"},
+      { "index": 1, "name": "total_proc", "type": "double", "description": "rbk线程占用率", "unit":""},   
+      { "index": 4, "name": "tid1", "type": "double", "description": 2, "unit":""},
+      { "index": 7, "name": "tid2", "type": "double", "description": 5, "unit":""},
+      { "index": 10, "name": "tid3", "type": "double", "description": 8, "unit":""}
+    ]
+  },
   "MotorSend": {
     "type": "MotorSend",
     "content": [
