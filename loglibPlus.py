@@ -4,13 +4,14 @@ from datetime import datetime
 import codecs
 import chardet
 import logging
-import numpy as np
 import gzip
 from multiprocessing import Pool, Manager
-import matplotlib.pyplot as plt
 def rbktimetodate(rbktime):
     """ 将rbk的时间戳转化为datatime """
-    return datetime.strptime(rbktime, '%Y-%m-%d %H:%M:%S.%f')
+    if len(rbktime) == 17:
+        return datetime.strptime(rbktime, '%y%m%d %H%M%S.%f')
+    else:
+        return datetime.strptime(rbktime, '%Y-%m-%d %H:%M:%S.%f')
 
 def findrange(ts, t1, t2):
     """ 在ts中寻找大于t1小于t2对应的下标 """
@@ -297,7 +298,7 @@ class Data:
                         if tmp['index'] < len(values):
                             self._storeData(tmp, int(tmp['index']), values)
                         else:
-                            self.data[tmp['name']].append(np.nan)
+                            self.data[tmp['name']].append(None)
 
                     else:
                         if not self.parse_error:
@@ -525,9 +526,8 @@ class ErrorLine:
     data[3]: Alarm 内容
     """
     def __init__(self):
-        # self.general_regex = re.compile("\[(.*?)\].*\[error\].*")
-        self.regex = re.compile("\[(.*?)\].*\[error\].*\[Alarm\]\[.*?\|(.*?)\|(.*?)\|.*")
-        self.short_regx = "[error"
+        self.regex = re.compile("\[(.*?)\].*\[Alarm\]\[Error\|(.*?)\|(.*?)\|.*")
+        self.short_regx = "[Alarm][Error"
         self.data = [[] for _ in range(4)]
     def parse(self, line):
         if self.short_regx in line:       
@@ -573,9 +573,8 @@ class WarningLine:
     data[3]: Alarm 内容
     """
     def __init__(self):
-        self.general_regex = re.compile("\[(.*?)\].*\[warning\].*")
-        self.regex = re.compile("\[(.*?)\].*\[warning\].*\[Alarm\]\[.*?\|(.*?)\|(.*?)\|.*")
-        self.short_regx = "[warning"
+        self.regex = re.compile("\[(.*?)\].*?\[Alarm\]\[Warning\|(.*?)\|(.*?)\|.*")
+        self.short_regx = "[Alarm][Warning"
         self.data = [[] for _ in range(4)]
     def parse(self, line):
         if self.short_regx in line:              
@@ -588,16 +587,6 @@ class WarningLine:
                     self.data[2].append(new_num)
                     self.data[3].append(out.group(3))
                 return True
-            else:
-                out = self.general_regex.match(line)
-                if out:
-                    self.data[0].append(rbktimetodate(out.group(1)))
-                    self.data[1].append(out.group(0))
-                    new_num = '00000'
-                    if not new_num in self.data[2]:
-                        self.data[2].append(new_num)
-                        self.data[3].append('unKnown Warning')
-                    return True
             return False
         return False
     def t(self):
@@ -620,8 +609,8 @@ class FatalLine:
     data[3]: Alarm 内容
     """
     def __init__(self):
-        self.regex = re.compile("\[(.*?)\].*\[fatal\].*\[Alarm\]\[.*?\|(.*?)\|(.*?)\|.*")
-        self.short_regx = "[fatal"       
+        self.regex = re.compile("\[(.*?)\].*\[f.*?\].*\[Alarm\]\[Fatal\|(.*?)\|(.*?)\|.*")
+        self.short_regx = "[Alarm][Fatal"       
         self.data = [[] for _ in range(4)]
     def parse(self, line):
         if self.short_regx in line:                   
@@ -630,7 +619,6 @@ class FatalLine:
                 self.data[0].append(rbktimetodate(out.group(1)))
                 self.data[1].append(out.group(0))
                 new_num = out.group(2)
-                new_data_flag = True
                 if not new_num in self.data[2]:
                     self.data[2].append(new_num)
                     self.data[3].append(out.group(3))
