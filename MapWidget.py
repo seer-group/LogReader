@@ -18,6 +18,8 @@ import math
 import logging
 import copy
 import time
+from matplotlib.collections import LineCollection
+import matplotlib.colors as mcolor
 
 def GetGlobalPos(p2b, b2g):
     x = p2b[0] * np.cos(b2g[2]) - p2b[1] * np.sin(b2g[2])
@@ -25,6 +27,16 @@ def GetGlobalPos(p2b, b2g):
     x = x + b2g[0]
     y = y + b2g[1]
     return np.array([x, y])
+
+def convert2LaserPoints(org_laser_data, org_laser_pos, robot_pos):
+    laser_data = GetGlobalPos(org_laser_data, org_laser_pos)
+    laser_data = GetGlobalPos(laser_data, robot_pos)
+    laser_data = laser_data.T
+    laser_pos = GetGlobalPos(org_laser_pos, robot_pos)
+    c = np.zeros(laser_data.shape) + laser_pos
+    org_lines = np.concatenate((c,laser_data), axis=1) #水平扩展
+    lines = org_lines.reshape(laser_data.shape[0],2,2)
+    return lines
 
 def normalize_theta(theta):
     if theta >= -math.pi and theta < math.pi:
@@ -443,9 +455,10 @@ class MapWidget(QtWidgets.QWidget):
         self.cp_name = None
         self.draw_size = [] #xmin xmax ymin ymax
         self.map_data = lines.Line2D([],[], marker = '.', linestyle = '', markersize = 1.0)
-        self.laser_data = lines.Line2D([],[], marker = 'o', markersize = 2.0, 
-                                        linestyle = '-', linewidth = 0.1, 
-                                        color='r', alpha = 0.5)
+        self.laser_data = LineCollection([], linewidths=0.5, linestyle='solid')
+        self.laser_org_color = np.array([1,0,0,0.5])
+        self.laser_color = self.laser_org_color
+        self.laser_data.set_color(self.laser_org_color)
         self.robot_data = lines.Line2D([],[], linestyle = '-', color='k')
         self.robot_data_c0 = lines.Line2D([],[], linestyle = '-', linewidth = 2, color='k')
         self.robot_loc_data = lines.Line2D([],[], linestyle = '--', color='gray')
@@ -488,14 +501,19 @@ class MapWidget(QtWidgets.QWidget):
         self.static_canvas.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
         self.static_canvas.figure.subplots_adjust(left = 0.0, right = 1.0, bottom = 0.0, top = 1.0)
         self.static_canvas.figure.tight_layout()
-        self.ax= self.static_canvas.figure.subplots(1, 1)
+        self.ax, self.color_ax = self.static_canvas.figure.subplots(1, 2, 
+        gridspec_kw={'width_ratios': [100, 1], 'wspace':0.01})
+        self.cm = matplotlib.cm.jet
+        norm = matplotlib.colors.Normalize(vmin=0, vmax=1)
+        self.static_canvas.figure.colorbar(matplotlib.cm.ScalarMappable(norm=norm, cmap=self.cm),
+             cax=self.color_ax)
         self.ax.add_line(self.map_data)
         self.ax.add_patch(self.cur_arrow)
         self.ax.add_line(self.robot_data)
         self.ax.add_line(self.robot_data_c0)
         self.ax.add_line(self.robot_loc_data)
         self.ax.add_line(self.robot_loc_data_c0)
-        self.ax.add_line(self.laser_data)
+        self.ax.add_collection(self.laser_data)
         self.ax.add_line(self.obs_points)
         self.ax.add_line(self.depthCamera_hole_points)
         self.ax.add_line(self.depthCamera_obs_points)
@@ -987,7 +1005,7 @@ class MapWidget(QtWidgets.QWidget):
                 xydata = [0.0, 0.0, 0.0, 0.05, -0.05]
                 cross_shape = np.array([xxdata,xydata])
                 self.laser_pos = copy.deepcopy(self.read_model.laser)
-                laser_data = [self.laser_pos[self.laser_index][0], self.laser_pos[self.laser_index][1]]
+                # laser_data = [[self.laser_pos[self.laser_index][0], self.laser_pos[self.laser_index][1]]]
                 if not self.robot_pos:
                     if len(self.draw_size) == 4:
                         xmid = (self.draw_size[0] + self.draw_size[1])/2
@@ -1004,10 +1022,9 @@ class MapWidget(QtWidgets.QWidget):
                 self.robot_data_c0.set_xdata(cross_shape[0])
                 self.robot_data_c0.set_ydata(cross_shape[1])
                 if self.laser_org_data.any():
-                    laser_data = GetGlobalPos(self.laser_org_data, self.laser_pos[self.laser_index])
-                laser_data = GetGlobalPos(laser_data, self.robot_pos)
-                self.laser_data.set_xdata(laser_data[0])
-                self.laser_data.set_ydata(laser_data[1])
+                    self.laser_data.set_segments(convert2LaserPoints(self.laser_org_data, self.laser_pos[self.laser_index], self.robot_pos))
+                    self.laser_data.set_color(self.laser_color)
+                # laser_data = GetGlobalPos(laser_data, self.robot_pos)
 
                 cross_shape = np.array([xxdata,xydata])
                 cross_shape = GetGlobalPos(cross_shape,self.robot_pos)
@@ -1059,10 +1076,8 @@ class MapWidget(QtWidgets.QWidget):
                     font.setBold(True)
                     self.cp_action.setFont(font)
                     if self.laser_org_data.any() and self.laser_index == key:
-                        laser_data = GetGlobalPos(self.laser_org_data, self.laser_pos[self.laser_index])
-                        laser_data = GetGlobalPos(laser_data, self.robot_pos)
-                        self.laser_data.set_xdata(laser_data[0])
-                        self.laser_data.set_ydata(laser_data[1])
+                        self.laser_data.set_segments(convert2LaserPoints(self.laser_org_data, self.laser_pos[self.laser_index], self.robot_pos))
+                        self.laser_data.set_color(self.laser_color)
                         self.static_canvas.figure.canvas.draw()
 
     def readtrajectory(self, x, y, xn, yn, x0, y0, r0):
@@ -1085,7 +1100,7 @@ class MapWidget(QtWidgets.QWidget):
                 self.ax.set_xlim(xmin, xmax)
                 self.ax.set_ylim(ymin, ymax)
 
-    def updateRobotLaser(self, laser_org_data, laser_index, robot_pos, robot_loc_pos, laser_info, loc_info, obs_pos, obs_info, depthcamera_pos, particle_pos):
+    def updateRobotLaser(self, laser_org_data, laser_rssi, laser_index, robot_pos, robot_loc_pos, laser_info, loc_info, obs_pos, obs_info, depthcamera_pos, particle_pos):
         self.timestamp_lable.setText('当前激光时刻定位（实框）: '+ laser_info)
         self.logt_lable.setText('当前时刻定位(虚框): '+ loc_info)
         if obs_info != '':
@@ -1096,6 +1111,13 @@ class MapWidget(QtWidgets.QWidget):
         self.robot_pos = robot_pos
         self.robot_loc_pos = robot_loc_pos
         self.laser_org_data = laser_org_data
+        if len(laser_rssi) == len(laser_org_data.T):
+            color = self.cm(laser_rssi/255.) # 将透过率变成颜色变化
+            color[:,3] = color[:,3] * 0.2 # 改变透明度
+            self.laser_color = color
+            self.laser_data.set_color(self.laser_color)
+        else:
+            self.laser_color = self.laser_org_color
         self.laser_index = laser_index
         if obs_pos:
             self.obs_points.set_xdata([obs_pos[0]])
@@ -1149,11 +1171,7 @@ class MapWidget(QtWidgets.QWidget):
             self.robot_data_c0.set_ydata(cross_shape[1])
             if self.laser_index in self.check_lasers:
                 self.laser_data.set_visible(self.check_lasers[self.laser_index].isChecked())
-            laser_data = GetGlobalPos(laser_org_data, self.laser_pos[self.laser_index])
-            laser_data = GetGlobalPos(laser_data,robot_pos)
-            self.laser_data.set_xdata(laser_data[0])
-            self.laser_data.set_ydata(laser_data[1])
-
+            self.laser_data.set_segments(convert2LaserPoints(laser_org_data, self.laser_pos[self.laser_index], robot_pos))
             cross_shape = np.array([xxdata,xydata])
             cross_shape = GetGlobalPos(cross_shape,robot_loc_pos)
             self.robot_loc_data_c0.set_xdata(cross_shape[0])

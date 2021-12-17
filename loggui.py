@@ -468,15 +468,10 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                                 min_laser_channel = index
                                 laser_idx = tmp_laser_idx
                                 min_dt = tmp_dt
-                    org_point = [0 for _ in range(len(self.read_thread.laser.x(min_laser_channel)[0][laser_idx]))]
-                    laser_x = [None] * len(org_point) * 2
-                    laser_x[::2] = self.read_thread.laser.x(min_laser_channel)[0][laser_idx]
-                    laser_x[1::2] = org_point
-                    laser_y = [None] * len(org_point) * 2
-                    laser_y[::2] = self.read_thread.laser.y(min_laser_channel)[0][laser_idx]
-                    laser_y[1::2] = org_point
+                    laser_x = self.read_thread.laser.x(min_laser_channel)[0][laser_idx]
+                    laser_y = self.read_thread.laser.y(min_laser_channel)[0][laser_idx]
                     laser_points = np.array([laser_x, laser_y])
-
+                    rssi = np.array(self.read_thread.laser.rssi(min_laser_channel)[0][laser_idx])
                     #在一个区间内差找最小值
                     ts = self.read_thread.laser.ts(min_laser_channel)[0][laser_idx]
                     loc_min_ind = loc_idx - 100
@@ -499,7 +494,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                                         + ' , ' + str(self.read_thread.content['LocationEachFrame']['y'][pos_idx])
                                         + ' , ' + str(self.read_thread.content['LocationEachFrame']['theta'][pos_idx]))
                 if self.map_widget:
-                    self.map_widget.updateRobotLaser(laser_points,min_laser_channel,robot_pos,robot_loc_pos, laser_info, loc_info, obs_pos, obs_info, depth_pos, particle_pos)
+                    self.map_widget.updateRobotLaser(laser_points,rssi,min_laser_channel,robot_pos,robot_loc_pos, laser_info, loc_info, obs_pos, obs_info, depth_pos, particle_pos)
         # print("min_laser_channer: ", min_laser_channel, " laser_idx: " , laser_idx)
         self.key_loc_idx = loc_idx
         self.key_laser_idx = laser_idx
