@@ -19,7 +19,8 @@ import logging
 import copy
 import time
 from matplotlib.collections import LineCollection
-import matplotlib.colors as mcolor
+from matplotlib.patches import Circle
+from matplotlib.collections import PatchCollection
 
 def GetGlobalPos(p2b, b2g):
     x = p2b[0] * np.cos(b2g[2]) - p2b[1] * np.sin(b2g[2])
@@ -32,11 +33,12 @@ def convert2LaserPoints(org_laser_data, org_laser_pos, robot_pos):
     laser_data = GetGlobalPos(org_laser_data, org_laser_pos)
     laser_data = GetGlobalPos(laser_data, robot_pos)
     laser_data = laser_data.T
-    laser_pos = GetGlobalPos(org_laser_pos, robot_pos)
+    laser_pos = GetGlobalPos(org_laser_pos, robot_pos) # n*2
+    circle_cs = laser_data
     c = np.zeros(laser_data.shape) + laser_pos
     org_lines = np.concatenate((c,laser_data), axis=1) #水平扩展
     lines = org_lines.reshape(laser_data.shape[0],2,2)
-    return lines
+    return lines, circle_cs
 
 def normalize_theta(theta):
     if theta >= -math.pi and theta < math.pi:
@@ -456,9 +458,16 @@ class MapWidget(QtWidgets.QWidget):
         self.draw_size = [] #xmin xmax ymin ymax
         self.map_data = lines.Line2D([],[], marker = '.', linestyle = '', markersize = 1.0)
         self.laser_data = LineCollection([], linewidths=0.5, linestyle='solid')
+        self.laser_data_points = PatchCollection([])
         self.laser_org_color = np.array([1,0,0,0.5])
         self.laser_color = self.laser_org_color
         self.laser_data.set_color(self.laser_org_color)
+        self.laser_data.set_zorder(11)
+        self.laser_data_points.set_color(self.laser_org_color)
+        self.laser_data_points.set_linestyle('-')
+        self.laser_data_points.set_edgecolor('r')
+        self.laser_data_points.set_linewidth(2.0)
+        self.laser_data_points.set_zorder(10)
         self.robot_data = lines.Line2D([],[], linestyle = '-', color='k')
         self.robot_data_c0 = lines.Line2D([],[], linestyle = '-', linewidth = 2, color='k')
         self.robot_loc_data = lines.Line2D([],[], linestyle = '--', color='gray')
@@ -514,6 +523,7 @@ class MapWidget(QtWidgets.QWidget):
         self.ax.add_line(self.robot_loc_data)
         self.ax.add_line(self.robot_loc_data_c0)
         self.ax.add_collection(self.laser_data)
+        self.ax.add_collection(self.laser_data_points)
         self.ax.add_line(self.obs_points)
         self.ax.add_line(self.depthCamera_hole_points)
         self.ax.add_line(self.depthCamera_obs_points)
@@ -1022,8 +1032,14 @@ class MapWidget(QtWidgets.QWidget):
                 self.robot_data_c0.set_xdata(cross_shape[0])
                 self.robot_data_c0.set_ydata(cross_shape[1])
                 if self.laser_org_data.any():
-                    self.laser_data.set_segments(convert2LaserPoints(self.laser_org_data, self.laser_pos[self.laser_index], self.robot_pos))
+                    lines, cs = convert2LaserPoints(self.laser_org_data, self.laser_pos[self.laser_index], self.robot_pos)
+                    self.laser_data.set_segments(lines)
                     self.laser_data.set_color(self.laser_color)
+                    patches = []
+                    for c in cs:
+                        circle = Circle((c[0], c[1]), 0.01)
+                        patches.append(circle)
+                    self.laser_data_points.set_paths(patches)
                 # laser_data = GetGlobalPos(laser_data, self.robot_pos)
 
                 cross_shape = np.array([xxdata,xydata])
@@ -1076,8 +1092,14 @@ class MapWidget(QtWidgets.QWidget):
                     font.setBold(True)
                     self.cp_action.setFont(font)
                     if self.laser_org_data.any() and self.laser_index == key:
-                        self.laser_data.set_segments(convert2LaserPoints(self.laser_org_data, self.laser_pos[self.laser_index], self.robot_pos))
+                        lines, cs = convert2LaserPoints(self.laser_org_data, self.laser_pos[self.laser_index], self.robot_pos)
+                        self.laser_data.set_segments(lines)
                         self.laser_data.set_color(self.laser_color)
+                        patches = []
+                        for c in cs:
+                            circle = Circle((c[0], c[1]), 0.01)
+                            patches.append(circle)
+                        self.laser_data_points.set_paths(patches)
                         self.static_canvas.figure.canvas.draw()
 
     def readtrajectory(self, x, y, xn, yn, x0, y0, r0):
@@ -1111,11 +1133,10 @@ class MapWidget(QtWidgets.QWidget):
         self.robot_pos = robot_pos
         self.robot_loc_pos = robot_loc_pos
         self.laser_org_data = laser_org_data
-        if len(laser_rssi) == len(laser_org_data.T):
+        if len(laser_rssi) == len(laser_org_data.T) and len(laser_rssi) > 0:
             color = self.cm(laser_rssi/255.) # 将透过率变成颜色变化
             color[:,3] = color[:,3] * 0.2 # 改变透明度
             self.laser_color = color
-            self.laser_data.set_color(self.laser_color)
         else:
             self.laser_color = self.laser_org_color
         self.laser_index = laser_index
@@ -1171,7 +1192,16 @@ class MapWidget(QtWidgets.QWidget):
             self.robot_data_c0.set_ydata(cross_shape[1])
             if self.laser_index in self.check_lasers:
                 self.laser_data.set_visible(self.check_lasers[self.laser_index].isChecked())
-            self.laser_data.set_segments(convert2LaserPoints(laser_org_data, self.laser_pos[self.laser_index], robot_pos))
+
+            lines, cs = convert2LaserPoints(self.laser_org_data, self.laser_pos[self.laser_index], self.robot_pos)
+            self.laser_data.set_segments(lines)
+            patches = []
+            for c in cs:
+                circle = Circle((c[0], c[1]), 0.01)
+                patches.append(circle)
+            self.laser_data_points.set_paths(patches)
+            self.laser_data.set_color(self.laser_color)
+
             cross_shape = np.array([xxdata,xydata])
             cross_shape = GetGlobalPos(cross_shape,robot_loc_pos)
             self.robot_loc_data_c0.set_xdata(cross_shape[0])
