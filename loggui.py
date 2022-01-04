@@ -26,6 +26,8 @@ import json
 from multiprocessing import freeze_support
 from PyQt5.QtCore import pyqtSignal
 import MotorRead as mr
+from getMotorErr import MotorErrViewer 
+
 class XYSelection:
     def __init__(self, num = 1):
         self.num = num 
@@ -90,6 +92,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.map_widget = None
         self.log_widget = None
         self.sts_widget = None
+        self.motor_view_widget = None
 
     def setupUI(self):
         """初始化窗口结构""" 
@@ -148,6 +151,11 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.json_action.setShortcut(QtCore.Qt.CTRL + QtCore.Qt.Key_J)
         self.json_action.triggered.connect(self.openJsonView)
         self.tools_menu.addAction(self.json_action)
+
+        self.motor_err_action = QtWidgets.QAction('&View Motor Err', self.tools_menu, checkable = True)
+        self.motor_err_action.setShortcut(QtCore.Qt.CTRL + QtCore.Qt.Key_R)
+        self.motor_err_action.triggered.connect(self.viewMotorErr)
+        self.tools_menu.addAction(self.motor_err_action)
 
         self.motor_follow_action = QtWidgets.QAction('&View Motor Follow Cure', self.tools_menu, checkable = True)
         self.motor_follow_action.setShortcut(QtCore.Qt.CTRL + QtCore.Qt.Key_K)
@@ -1326,6 +1334,55 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 for ln in self.map_select_lines:
                     ln.set_visible(False)
         self.static_canvas.figure.canvas.draw()
+    
+    def viewMotorErr(self, checked):
+        if checked:
+            if not self.motor_view_widget:
+                self.motor_view_widget = MotorErrViewer()
+                self.motor_view_widget.setWindowIcon(QtGui.QIcon('rbk.ico'))
+                self.motor_view_widget.hiddened.connect(self.motorErrViewerClosed)
+                self.motor_view_widget.moveHereSignal.connect(self.moveHere)
+                dir_name, _ = os.path.split(self.filenames[0])
+                pdir_name, _ = os.path.split(dir_name)
+                model_dir = os.path.join(pdir_name,"models")
+                model_name = os.path.join(model_dir,"robot.model")
+                if not os.path.exists(model_name):
+                    model_dir = dir_name
+                    model_name = os.path.join(model_dir,"robot.model")
+                    if not os.path.exists(model_name):
+                        model_dir = os.path.join(dir_name,"models")
+                        model_name = os.path.join(model_dir,"robot.model")
+                        if not os.path.exists(model_name):
+                            model_name = None
+                if not model_name:
+                    model_name = self.openModelFilesDialog()
+                if model_name:
+                    self.motor_view_widget.setModelPath(model_name)
+                    self.motor_view_widget.setReportPath(self.read_thread.getReportFileAddr())
+                    self.motor_view_widget.listMotorErr()
+            self.motor_view_widget.show()
+            (xmin,xmax) = self.axs[0].get_xlim()
+            tmid = (xmin+xmax)/2.0 
+            if len(self.map_select_lines) > 1:
+                for ln in self.map_select_lines:
+                    ln.set_visible(True)
+                cur_t = self.map_select_lines[0].get_xdata()[0]
+                if type(cur_t) is not datetime:
+                    cur_t = cur_t * 86400 - 62135712000
+                    cur_t = datetime.fromtimestamp(cur_t)
+                self.updateMap(cur_t, self.key_loc_idx, self.key_laser_idx, self.key_laser_channel)
+            else:
+                for ax in self.axs:
+                    wl = ax.axvline(tmid, color = 'c', linewidth = 10, alpha = 0.5, picker = 10)
+                    self.map_select_lines.append(wl) 
+                    mouse_time = tmid * 86400 - 62135712000
+                    if mouse_time > 1e6:
+                        mouse_time = datetime.fromtimestamp(mouse_time)
+                        self.updateMap(mouse_time, -1, -1, -1)
+        else:
+            if self.motor_view_widget:
+                self.motor_view_widget.clearPlainText()
+                self.motor_view_widget.hide() 
 
     def openViewer(self, checked):
         if checked:
@@ -1459,6 +1516,10 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.json_action.setChecked(False)
         self.openJsonView(False)
 
+    def motorErrViewerClosed(self):
+        self.motor_err_action.setChecked(False)
+        self.viewMotorErr(False)
+
     def closeEvent(self, event):
         if self.map_widget:
             self.map_widget.close()
@@ -1466,6 +1527,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             self.log_widget.close()
         if self.sts_widget:
             self.sts_widget.close()
+        if self.motor_view_widget:
+            self.motor_view_widget.close()
         self.close()
 
 

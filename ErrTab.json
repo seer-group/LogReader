@@ -1,0 +1,5480 @@
+{
+    "Moons-MDX-SeerCANOpen": {
+        "match_bit":true,
+        "0x0001": {
+            "des": "Position Limit",
+            "reason": "位置超差参数错误,或者电机被卡住等",
+            "method": "查看电机是否卡主，联系鸣志供应商"
+        },
+        "0x0002": {
+            "des": "CCW Limit",
+            "reason": "反方向限位触发",
+            "method": "查看电机转向到反向限位是否卡主，联系鸣志供应商"
+        },
+        "0x0004": {
+            "des": "CW Limit",
+            "reason": "正方向限位触发",
+            "method": "查看电机转向到正向限位是否卡主，联系鸣志供应商"
+        },
+        "0x0008": {
+            "des": "Over Temp",
+            "reason": "过温",
+            "method": "查看电机过温参数，联系鸣志供应商"
+        },
+        "0x0010": {
+            "des": "Internal Voltage",
+            "reason": "内部电压出错",
+            "method": "联系鸣志供应商"
+        },
+        "0x0020": {
+            "des": "Over Voltage",
+            "reason": "过压",
+            "method": "查看外部供电是否超出供电范围"
+        },
+        "0x0040": {
+            "des": "Low Voltage",
+            "reason": "电压过低",
+            "method": "查看外部供电是否低于供电范围及是否按照操作手册配置电压过低阈值"
+        },
+        "0x0080": {
+            "des": "Over Current",
+            "reason": "过流",
+            "method": "查看外部供电是否存在过流"
+        },
+        "0x0100": {
+            "des": "Under Voltage",
+            "reason": "内部电压过低",
+            "method": "联系鸣志供应商"
+        },
+        "0x0200": {
+            "des": "Bad Encoder",
+            "reason": "编码器出现问题",
+            "method": "联系鸣志供应商"
+        },
+        "0x0400": {
+            "des": "Comm Error",
+            "reason": "未知",
+            "method": "联系鸣志供应商"
+        },
+        "0x0800": {
+            "des": "Bad Flash",
+            "reason": "Flash 存在问题",
+            "method": "联系鸣志供应商"
+        },
+        "0x1000": {
+            "des": "Velocity Limit",
+            "reason": "速度超差,或者电机被卡住等",
+            "method": "查看电机是否卡主，联系鸣志供应商"
+        },
+        "0x2000": {
+            "des": "Current Foldback",
+            "reason": "未知",
+            "method": "联系鸣志供应商"
+        },
+        "0x4000": {
+            "des": "Blank Q segment",
+            "reason": "未知",
+            "method": "联系鸣志供应商"
+        },
+        "0x8000": {
+            "des": "No Move",
+            "reason": "常伴随其他错误",
+            "method": "联系鸣志供应商"
+        }
+    },
+    "Copley-ADP-CANOpen": {
+        "match_bit":true,
+        "0x01": {
+            "des": "Short circuit detected",
+            "reason": "输出到输出，输出到地，内部PWM 桥错误",
+            "method": "短路现象被消除"
+        },
+        "0x02": {
+            "des": "Ampilier over temperature",
+            "reason": "驱动器内部的温度超过了指定的温度",
+            "method": "驱动器内部的温度下降到指定温度以下,是否配置充电去能功能"
+        },
+        "0x04": {
+            "des": "Over voltage",
+            "reason": "母线电压超出指定的电压限制",
+            "method": "母线电压恢复到指定的电压范围"
+        },
+        "0x08": {
+            "des": "Under voltage",
+            "reason": "母线电压超出指定的电压限制",
+            "method": "母线电压恢复到指定的电压范围"
+        },
+        "0x10": {
+            "des": "Motor temperature sensor active",
+            "reason": "电机过温开关状态改变指示过温错误",
+            "method": "温度开关恢复到正常状态，是否配置充电去使能"
+        },
+        "0x20": {
+            "des": "Feedback error",
+            "reason": "驱动器内部 5V 输出过流。旋转变压器或者模拟编码器没有接线 或者 电平超出误差范围。增量编码器的差分信号没有接线",
+            "method": "编码器的电源恢复到指定电压范围内。反馈信号恢复到指定电平范围内。差分信号连接完好。"
+        },
+        "0x40": {
+            "des": "Motor phasing error",
+            "reason": "基于编码器的相位角度与 Hall的开关状态不相符。这个错误仅发生在无刷电机被配置为弦波整定时。在旋转变压器反馈或者 Hall 纠正功能被关闭时，该错误不会发生。",
+            "method": "基于编码器的相位角度与Hall的开关状态一致"
+        },
+        "0x80": {
+            "des": "Current output limited",
+            "reason": "输出电流 I^2T 限制被超出",
+            "method": "修改电流环中的连续输出电流及时间，驱动器复位或者重新使能可以进行清错"
+        },
+        "0x100": {
+            "des": "Voltage output limited",
+            "reason": "驱动器输出限制",
+            "method": "无"
+        },
+        "0x200": {
+            "des": "Positive limit switch active",
+            "reason": "正限位触发",
+            "method": "驱动器位置模式下，检查是否触发了正限位，是否存在误触发"
+        },
+        "0x400": {
+            "des": "Negative limit switch active",
+            "reason": "负限位触发",
+            "method": "驱动器位置模式下，检查是否触发了负限位，是否存在误触发"
+        },
+        "0x800": {
+            "des": "Enable input not active",
+            "reason": "使能输入未触发",
+            "method": "按照操作书检查使能输入的接线状态"
+        },
+        "0x1000": {
+            "des": "Amp is disable by software",
+            "reason": "通过CANOPEN发送指令进行失能",
+            "method": "是否配置了Trigger功能disableMotor"
+        },
+        "0x2000": {
+            "des": "Trying to stop motor",
+            "reason": "尝试停止电机",
+            "method": "发生报错时同时存在该错误"
+        },
+        "0x4000": {
+            "des": "Motor brake activated",
+            "reason": "电机抱闸触发",
+            "method": "检查电机抱闸"
+        },
+        "0x8000": {
+            "des": "PWM outputs disabled",
+            "reason": "驱动器PWM输出关闭",
+            "method": "发生错误时同时存在该错误"
+        },
+        "0x10000": {
+            "des": "Positive software limit condition",
+            "reason": "未知",
+            "method": "未知"
+        },
+        "0x20000": {
+            "des": "Negative software limit condition",
+            "reason": "未知",
+            "method": "未知"
+        },
+        "0x40000": {
+            "des": "Tracking error",
+            "reason": "跟随超差报错",
+            "method": "检查电机是否卡主，位置或者速度轨迹跟踪窗口配置可以放大"
+        },
+        "0x80000": {
+            "des": "Tracking warning",
+            "reason": "跟随超差报警",
+            "method": "检查电机是否卡主，位置或者速度轨迹跟踪窗口配置可以放大"
+        },
+        "0x100000": {
+            "des": "Amplifier is currently in a reset condition",
+            "reason": "未知",
+            "method": "未知"
+        },
+        "0x200000": {
+            "des": "Position has wrapped",
+            "reason": "未知",
+            "method": "未知"
+        },
+        "0x400000": {
+            "des": "Amplifier fault",
+            "reason": "驱动器报错",
+            "method": "发生错误时同时存在该错误"
+        },
+        "0x800000": {
+            "des": "Velocity limit has been reached",
+            "reason": "速度超限",
+            "method": "速度超出限制，检查参数是否配置正确"
+        },
+        "0x1000000": {
+            "des": "Acceleration limit has been reached",
+            "reason": "加速度超限",
+            "method": "加速度超出限制，检查参数是否配置正确"
+        },
+        "0x2000000": {
+            "des": "Position Error is outside Position Tracking Window",
+            "reason": "位置误差超出跟踪窗口",
+            "method": "位置轨迹跟踪窗口配置可以放大，或电机是否卡主"
+        },
+        "0x4000000": {
+            "des": "Home switch is active",
+            "reason": "零位开关触发",
+            "method": "正常,不需要解决"
+        },
+        "0x8000000": {
+            "des": "In motion",
+            "reason": "正在运动中",
+            "method": "正常,不需要解决"
+        },
+        "0x10000000": {
+            "des": "Velocity Window.Set if the absolute velocity error exceeds the velocity window value",
+            "reason": "速度误差超出窗口值",
+            "method": "速度轨迹跟踪窗口配置可以放大，或电机是否卡主"
+        },
+        "0x20000000": {
+            "des": "Phase not yet initialized.",
+            "reason": "相位未初始化",
+            "method": "未按照操作书整定驱动器"
+        },
+        "0x40000000": {
+            "des": "Command fault",
+            "reason": "未知",
+            "method": "未知"
+        }
+    },
+    "Motec-ARES-CANOpen": {
+        "match_bit":true,
+        "0x00000001": {
+            "des": "系统故障",
+            "reason": "程序运行故障",
+            "method": "重新启动驱动器"
+        },
+        "0x00000002": {
+            "des": "驱动器启动故障",
+            "reason": "系统启动过程中初始化的故障",
+            "method": "重新启动驱动器"
+        },
+        "0x00000004": {
+            "des": "参数错误",
+            "reason": "DSP 从 FLSAH 参数读取时发生 CRC 校验错误",
+            "method": "重新导入参数文件"
+        },
+        "0x00000008": {
+            "des": "欠压报警",
+            "reason": "母线电压过低的故障",
+            "method": "调整/稳定供电电压；检查负载是否过大；减少电机加速度"
+        },
+        "0x00000010": {
+            "des": "过压报警",
+            "reason": "母线电压过高",
+            "method": "调整/稳定供电电压；检查制动电阻；减少电机减速度"
+        },
+        "0x00000020": {
+            "des": "I2T报警",
+            "reason": "电机过载时间过长",
+            "method": "检查电机接线；检查电机负载是否过大"
+        },
+        "0x00000040": {
+            "des": "超过峰值电流",
+            "reason": "电机过载，电流达到峰值电流",
+            "method": "检查电机负载是否过大"
+        },
+        "0x00000080": {
+            "des": "位置误差超限",
+            "reason": "位置模式位置跟踪误差超过限值",
+            "method": "减少负载；检查加/减速度是否太大"
+        },
+        "0x00000100": {
+            "des": "编码器故障",
+            "reason": "编码器信号异常",
+            "method": "检查编码器接线或编码器有没有损坏"
+        },
+        "0x00000200": {
+            "des": "速度误差超限",
+            "reason": "速度模式速度跟踪误差超过限值",
+            "method": "减少负载；检查加/减速度是否太大"
+        },
+        "0x00000400": {
+            "des": "功率模块温度过高警告",
+            "reason": "功率模块温度过高一级警告",
+            "method": "检查负载；改善驱动器冷却条件"
+        },
+        "0x00000800": {
+            "des": "功率模块温度过高报警",
+            "reason": "功率模块温度过高二级报警",
+            "method": "检查负载；改善驱动器冷却条件"
+        },
+        "0x00001000": {
+            "des": "STO 激活",
+            "reason": "STO 保护激活",
+            "method": "检查 STO模块保护信号以及连线是否正常"
+        },
+        "0x00002000": {
+            "des": "FLASH故障",
+            "reason": "内部 FLASH 读写故障",
+            "method": "重新启动驱动器"
+        },
+        "0x00004000": {
+            "des": "电流偏差值故障",
+            "reason": "驱动器上电自检过程中检测到电流零点异常",
+            "method": "驱动器上电自检过程中检测到电流零点异常"
+        },
+        "0x00008000": {
+            "des": "电机没有使能",
+            "reason": "没有使能",
+            "method": "检查急停路线"
+        },
+        "0x00010000": {
+            "des": "IPM 故障报警",
+            "reason": "IPM 模块释放故障信号",
+            "method": "重新启动驱动器；检查 STO 模块功能是否正常"
+        },
+        "0x00020000": {
+            "des": "速度超限报警",
+            "reason": "电机速度超过所定义的最大速度",
+            "method": "减小电机运行速度；增大最大速度限值"
+        },
+        "0x00040000": {
+            "des": "缺相报警",
+            "reason": "三相电源缺相",
+            "method": "检查电源连线"
+        },
+        "0x00080000": {
+            "des": "电机温度过高报警",
+            "reason": "电机温度过高二级报警",
+            "method": "减少负载；改善电机散热情况；减少加/减速度"
+        },
+        "0x00100000": {
+            "des": "I2T 警告",
+            "reason": "电机已进入过载状态",
+            "method": "减少负载；检查加/减速度是否太大"
+        },
+        "0x00200000": {
+            "des": "正向限位警告",
+            "reason": "电机碰触正向限位",
+            "method": "如果是误报，请检查限位设置和限位开关"
+        },
+        "0x00400000": {
+            "des": "负向限位警告",
+            "reason": "电机碰触负向限位",
+            "method": "如果是误报，请检查限位设置和限位开关"
+        },
+        "0x00800000": {
+            "des": "放电电阻过热",
+            "reason": "放电电阻导通时间过长",
+            "method": "检查电机负载情况"
+        },
+        "0x01000000": {
+            "des": "电机温度过高警告",
+            "reason": "电机温度过高一级警告",
+            "method": "减少负载；改善电机散热情况；减少加/减速度"
+        },
+        "0x02000000": {
+            "des": "编码器初始化故障",
+            "reason": "编码器初始化故障",
+            "method": "重新启动驱动器"
+        }
+    },
+    "Moons-M2DC-CANOpen": {
+        "match_bit":true,
+        "0x0001": {
+            "des": "Position Limit",
+            "reason": "位置超差参数错误,或者电机被卡住等",
+            "method": "查看电机是否卡主，联系鸣志供应商"
+        },
+        "0x0002": {
+            "des": "CCW Limit",
+            "reason": "反方向限位触发",
+            "method": "查看电机转向到反向限位是否卡主，联系鸣志供应商"
+        },
+        "0x0004": {
+            "des": "CW Limit",
+            "reason": "正方向限位触发",
+            "method": "查看电机转向到正向限位是否卡主，联系鸣志供应商"
+        },
+        "0x0008": {
+            "des": "Over Temp",
+            "reason": "过温",
+            "method": "查看电机过温参数，联系鸣志供应商"
+        },
+        "0x0010": {
+            "des": "Internal Voltage",
+            "reason": "内部电压出错",
+            "method": "联系鸣志供应商"
+        },
+        "0x0020": {
+            "des": "Over Voltage",
+            "reason": "过压",
+            "method": "查看外部供电是否超出供电范围"
+        },
+        "0x0040": {
+            "des": "Low Voltage",
+            "reason": "电压过低",
+            "method": "查看外部供电是否低于供电范围及是否按照操作手册配置电压过低阈值"
+        },
+        "0x0080": {
+            "des": "Over Current",
+            "reason": "过流",
+            "method": "查看外部供电是否存在过流"
+        },
+        "0x0100": {
+            "des": "Under Voltage",
+            "reason": "内部电压过低",
+            "method": "联系鸣志供应商"
+        },
+        "0x0200": {
+            "des": "Bad Encoder",
+            "reason": "编码器出现问题",
+            "method": "联系鸣志供应商"
+        },
+        "0x0400": {
+            "des": "Comm Error",
+            "reason": "未知",
+            "method": "联系鸣志供应商"
+        },
+        "0x0800": {
+            "des": "Bad Flash",
+            "reason": "Flash 存在问题",
+            "method": "联系鸣志供应商"
+        },
+        "0x1000": {
+            "des": "Velocity Limit",
+            "reason": "速度超差,或者电机被卡住等",
+            "method": "查看电机是否卡主，联系鸣志供应商"
+        },
+        "0x2000": {
+            "des": "Current Foldback",
+            "reason": "未知",
+            "method": "联系鸣志供应商"
+        },
+        "0x4000": {
+            "des": "Blank Q segment",
+            "reason": "未知",
+            "method": "联系鸣志供应商"
+        },
+        "0x8000": {
+            "des": "No Move",
+            "reason": "常伴随其他错误",
+            "method": "联系鸣志供应商"
+        }
+    },
+    "MOON-MBDV-CANOpen": {
+        "match_bit":true,
+        "0x0001": {
+            "des": "Position Limit",
+            "reason": "位置超差参数错误,或者电机被卡住等",
+            "method": "查看电机是否卡主，联系鸣志供应商"
+        },
+        "0x0002": {
+            "des": "CCW Limit",
+            "reason": "反方向限位触发",
+            "method": "查看电机转向到反向限位是否卡主，联系鸣志供应商"
+        },
+        "0x0004": {
+            "des": "CW Limit",
+            "reason": "正方向限位触发",
+            "method": "查看电机转向到正向限位是否卡主，联系鸣志供应商"
+        },
+        "0x0008": {
+            "des": "Over Temp",
+            "reason": "过温",
+            "method": "查看电机过温参数，联系鸣志供应商"
+        },
+        "0x0010": {
+            "des": "Internal error",
+            "reason": "内部错误",
+            "method": "联系鸣志供应商"
+        },
+        "0x0020": {
+            "des": "Over Voltage",
+            "reason": "电源电压超范围",
+            "method": "查看外部供电是否超出供电范围"
+        },
+        "0x0040": {
+            "des": "default",
+            "reason": "预留，保持为0",
+            "method": "联系鸣志供应商"
+        },
+        "0x0080": {
+            "des": "Over Current",
+            "reason": "过流",
+            "method": "查看外部供电是否存在过流"
+        },
+        "0x0100": {
+            "des": "default",
+            "reason": "预留，保持为0",
+            "method": "联系鸣志供应商"
+        },
+        "0x0200": {
+            "des": "encoder is not connected",
+            "reason": "电机编码器未连接",
+            "method": "检查电机编码器线是否接好，如未能解决联系鸣志供应商"
+        },
+        "0x0400": {
+            "des": "USB abnormal communication",
+            "reason": "USB通讯异常",
+            "method": "联系鸣志供应商"
+        },
+        "0x0800": {
+            "des": "default",
+            "reason": "预留，保持为0",
+            "method": "联系鸣志供应商"
+        },
+        "0x1000": {
+            "des": "Regenerative potential drain failed",
+            "reason": "再生电势泄放失败",
+            "method": "联系鸣志供应商"
+        },
+        "0x2000": {
+            "des": "Heavy load",
+            "reason": "电机重载状态",
+            "method": "检查电机抱闸是否打开"
+        },
+        "0x4000": {
+            "des": "default",
+            "reason": "预留，保持为0",
+            "method": "联系鸣志供应商"
+        },
+        "0x8000": {
+            "des": "Unconventional start",
+            "reason": "非常规启动报警",
+            "method": "驱动器重上电，如未恢复，联系鸣志供应商"
+        },
+        "0x00010000": {
+            "des": "Drive power phase loss",
+            "reason": "驱动器主回路电源缺相",
+            "method": "检查三相线是否牢固，三相线是否接反"
+        },
+        "0x00020000": {
+            "des": "STO trigger",
+            "reason": "安全转矩禁止STO功能被激活",
+            "method": "确认STO输入电源工作正常"
+        },
+        "0x00040000": {
+            "des": "default",
+            "reason": "预留，保持为0",
+            "method": "联系鸣志供应商"
+        },
+        "0x00080000": {
+            "des": "Speed overrun",
+            "reason": "电机速度超过P2-00的限定值",
+            "method": "检查编码器是否连接正常，如果调整了增益参数，可能是由于增益参数导致的过冲，请再次调整增益"
+        },
+        "0x00100000": {
+            "des": "Low Voltage",
+            "reason": "驱动器欠压",
+            "method": "查看外部供电是否稳定以及是否低于驱动器供电范围，如果均正常，联系鸣志供应商更换驱动器"
+        },
+        "0x00200000": {
+            "des": "emergency stop",
+            "reason": "驱动器紧急停止",
+            "method": "确定是否设置了紧急停止，紧急停止输入开关是否误动作，以及紧急停止逻辑设置是否合理"
+        },
+        "0x00400000": {
+            "des": "The second encoder is not connected",
+            "reason": "第二编码器未连接或信号输入异常",
+            "method": "检查第二编码器接线是否正常"
+        },
+        "0x00800000": {
+            "des": "Deviation Limit",
+            "reason": "全闭环混合偏差超限",
+            "method": "检查P3-10的设定值是否过小，检查编码器接线是否正常"
+        },
+        "0x01000000": {
+            "des": "Encoder battery under voltage",
+            "reason": "绝对值编码器电池欠压",
+            "method": "联系鸣志更换绝对值编码器电池"
+        },
+        "0x02000000": {
+            "des": "Absolute position loss",
+            "reason": "绝对位置丢失",
+            "method": "检查编码器接线是否正确，检查编码器电池是否欠压，如未解决联系鸣志"
+        },
+        "0x04000000": {
+            "des": "Absolute position overflow",
+            "reason": "绝对位置溢出",
+            "method": "电机位置超出范围，请进行绝对值编码器多圈清零；如需单方向运行，请把P3-15设定为2（多圈编码器不计溢出）"
+        },
+        "0x08000000": {
+            "des": "Watchdog trigger",
+            "reason": "CAN线看门狗触发",
+            "method": "检查can线是否连接正常"
+        },
+        "0x10000000": {
+            "des": "Absolute encoder multiple turn error",
+            "reason": "绝对值编码器多圈错误",
+            "method": "需要进行绝对值编码器多圈清零操作"
+        },
+        "0x20000000": {
+            "des": "Motor abnormal protection",
+            "reason": "电机动作异常保护",
+            "method": "检查电机机械部分是否被卡住，检查抱闸是否打开"
+        },
+        "0x40000000": {
+            "des": "CANOpen communication error",
+            "reason": "CANOpen通讯错误",
+            "method": "检查ID，波特率是否配置正确，检查can线是否正常"
+        },
+        "0x80000000": {
+            "des": "Homing param config error",
+            "reason": "回原点参数配置错误",
+            "method": "检查回原点参数是否配置完整"
+        }
+    },
+    "HLS-LS-CANOpen": {
+        "match_bit":false,
+        "0x4B0": {
+            "des": "bleeder too small",
+            "reason": "泄放电阻阻值过小",
+            "method": "更换阻值大的泄放电阻"
+        },
+        "0x515": {
+            "des": "Communication timeout",
+            "reason": "通讯超时",
+            "method": "检查can线是否松动"
+        },
+        "0x528": {
+            "des": "Break line stop",
+            "reason": "掉线停止",
+            "method": "检查can线是否松动"
+        },
+        "0x579": {
+            "des": "Phase loss",
+            "reason": "驱动器无相线",
+            "method": "检查三相线是否松动，或者接反"
+        },
+        "0x5DC": {
+            "des": "Encoder AB error",
+            "reason": "编码器AB报警",
+            "method": "检查编码器线是否松动"
+        },
+        "0x5E6": {
+            "des": "Encoder UVW error",
+            "reason": "编码器UVW报警",
+            "method": "检查编码器线是否松动"
+        },
+        "0x640": {
+            "des": "Fram R/W fault",
+            "reason": "Fram读写错误",
+            "method": "联系驱动器供应商"
+        },
+        "0x6A4": {
+            "des": "electronic gear param error",
+            "reason": "电子齿轮参数异常",
+            "method": "恢复出厂设置重新配置驱动器参数"
+        },
+        "0x898": {
+            "des": "Low Voltage",
+            "reason": "功率电源欠压",
+            "method": "查看外部供电是否稳定以及是否低于驱动器供电范围，如果均正常，联系鸣志供应商更换驱动器"
+        },
+        "0x9C4": {
+            "des": "Over Current",
+            "reason": "过流",
+            "method": "查看外部供电是否存在过流"
+        },
+        "0x9C5": {
+            "des": "Over Current",
+            "reason": "过流",
+            "method": "查看外部供电是否存在过流"
+        },
+        "0x9C6": {
+            "des": "Over Current",
+            "reason": "过流",
+            "method": "查看外部供电是否存在过流"
+        },
+        "0x9CE": {
+            "des": "Heavy load",
+            "reason": "过载",
+            "method": "检查电机机械是否卡住，以及电机抱闸是否打开"
+        },
+        "0x9D8": {
+            "des": "Speed overrun",
+            "reason": "超速",
+            "method": "检查编码器接线是否正确，检查机械是否安装正确，如未能恢复，联系驱动器厂家"
+        },
+        "0x9E2": {
+            "des": "Over Voltage",
+            "reason": "功率电源过压",
+            "method": "查看外部供电是否超出供电范围"
+        },
+        "0xA28": {
+            "des": "Param config error",
+            "reason": "参数配置异常",
+            "method": "恢复出厂设置，重新配置一遍驱动器参数"
+        },
+        "0xA32": {
+            "des": "position count overflow",
+            "reason": "位置偏差计数器溢出",
+            "method": "内部计数器溢出，联系驱动器供应商"
+        },
+        "0xA55": {
+            "des": "Position Limit",
+            "reason": "位置超差参数错误",
+            "method": "查看电机是否卡住，重新调整Fn0DA设定值，检查动力线和编码器线，换大功率电机或减小负载"
+        },
+        "0xA64": {
+            "des": "1 phase current fault",
+            "reason": "1相电流检测到ADC零点故障",
+            "method": "联系驱动器供应商"
+        },
+        "0xA65": {
+            "des": "2 phase current fault",
+            "reason": "2相电流检测到ADC零点故障",
+            "method": "联系驱动器供应商"
+        },
+        "0xB54": {
+            "des": "locked-rotor or stall",
+            "reason": "堵转或失速",
+            "method": "检查三相线以及编码器线，增大加减速，更换大电机或者减小负载，如未能解决，联系驱动器供应商"
+        },
+        "0xC26": {
+            "des": "motor type error",
+            "reason": "驱动器不匹配该型号电机",
+            "method": "更换匹配型号的电机，或联系驱动器供应商"
+        },
+        "0xE10": {
+            "des": "Encoder Z pluse loss",
+            "reason": "编码器Z脉冲丢失",
+            "method": "编码器接线错误，编码器损坏，噪声干扰严重"
+        },
+        "0xE11": {
+            "des": "Encoder Z pluse nimiety",
+            "reason": "编码器Z脉冲过多",
+            "method": "编码器接线错误，编码器损坏，噪声干扰严重"
+        },
+        "0x532": {
+            "des": "Independent parking",
+            "reason": "启动了自主停车功能",
+            "method": "关闭Fn1BF"
+        }
+    },
+    "HLS-DS/RS-CANOpen": {
+        "match_bit":false,
+        "0x1516": {
+            "des": "Unrecognized error",
+            "reason": "不可识别错误",
+            "method": "联系驱动器供应商"
+        },
+        "0x160C": {
+            "des": "Over Current",
+            "reason": "过流",
+            "method": "查看外部供电是否存在过流"
+        },
+        "0x1614": {
+            "des": "Heavy load",
+            "reason": "过载",
+            "method": "检查电机抱闸是否打开"
+        },
+        "0x1611": {
+            "des": "Discharge loop error",
+            "reason": "放电回路频繁动作平均功率大",
+            "method": "驱动器负载功率过大"
+        },
+        "0x1411": {
+            "des": "Instantaneous high power",
+            "reason": "放电报警瞬间功率大",
+            "method": "联系驱动器供应商"
+        },
+        "0x161C": {
+            "des": "Over Voltage",
+            "reason": "过压",
+            "method": "查看外部供电是否超出供电范围"
+        },
+        "0x170A": {
+            "des": "Param fault",
+            "reason": "参数故障",
+            "method": "重启驱动器，如未能恢复联系驱动器供应商"
+        },
+        "0x120C": {
+            "des": "current sampling error",
+            "reason": "电流采样（中点）故障",
+            "method": "联系驱动器供应商"
+        },
+        "0x0E0C": {
+            "des": "Encoder ABZ error",
+            "reason": "编码器故障ABZ报警",
+            "method": "联系驱动器供应商"
+        },
+        "0x170E": {
+            "des": "Position Limit",
+            "reason": "位置超差",
+            "method": "查看电机是否卡住，联系驱动器供应商"
+        },
+        "0x1A1B": {
+            "des": "stall",
+            "reason": "失速",
+            "method": "联系驱动器供应商"
+        },
+        "0x141C": {
+            "des": "Low Voltage",
+            "reason": "驱动器欠压",
+            "method": "查看外部供电是否稳定以及是否低于驱动器供电范围，如果均正常，联系厂家更换驱动器"
+        },
+        "0x0E11": {
+            "des": "Encoder error or UVW error",
+            "reason": "编码器故障或UVW报警",
+            "method": "检查编码器接线和三相线接线，如无法排除，联系驱动器供应商"
+        },
+        "0x0A16": {
+            "des": "Drive phase loss",
+            "reason": "缺相保护",
+            "method": "检查三相线是否牢固，三相线是否接反"
+        },
+        "0x0F0E": {
+            "des": "FPGA config error",
+            "reason": "FPGA配置失败",
+            "method": "联系驱动器供应商"
+        },
+        "0x120D": {
+            "des": "DI func define repetition",
+            "reason": "输入口功能定义重复",
+            "method": "检查DI功能配置"
+        },
+        "0x0D0E": {
+            "des": "The power bus is not ready",
+            "reason": "功率母线未准备好",
+            "method": "检查驱动器动力线及电源线"
+        },
+        "0x1A14": {
+            "des": "Speed command too small",
+            "reason": "速度指令过小",
+            "method": "增大下发速度指令"
+        },
+        "0x0F0D": {
+            "des": "FPGA crash",
+            "reason": "FPGA 死机",
+            "method": "联系驱动器供应商"
+        },
+        "0x0C0E": {
+            "des": "Communication error",
+            "reason": "与驱动器的串口通讯错误",
+            "method": "检查串口通讯工具是否有问题"
+        },
+        "0x0B0E": {
+            "des": "Synergy model error",
+            "reason": "协同模式报警",
+            "method": "联系驱动器供应商"
+        },
+        "0x1416": {
+            "des": "Watchdog trigger",
+            "reason": "CAN线看门狗触发",
+            "method": "检查can线是否连接正常"
+        },
+        "0x110E": {
+            "des": "The first speed change signal error",
+            "reason": "第一阶速找零信号报警",
+            "method": "检查找零配置参数，如未能恢复，联系驱动器供应商"
+        },
+        "0x160E": {
+            "des": "The second speed change signal error",
+            "reason": "第二阶速找零信号报警",
+            "method": "检查找零配置参数，如未能恢复，联系驱动器供应商"
+        },
+        "0x120E": {
+            "des": "Return to homing for Z error",
+            "reason": "回原点找Z报警",
+            "method": "检查找零配置参数，如未能恢复，联系驱动器供应商"
+        }
+    },
+    "ESTUN-DC10BMG-CANOpen": {
+        "match_bit":false,
+        "0x01": {
+            "des": "Parameters of the damage",
+            "reason": "参数破坏",
+            "method": "恢复出厂设置"
+        },
+        "0x02": {
+            "des": "ADC error",
+            "reason": "ADC转换通道出问题",
+            "method": "联系驱动器供应商厂家"
+        },
+        "0x03": {
+            "des": "Speed overrun",
+            "reason": "超速",
+            "method": "联系驱动器供应商厂家"
+        },
+        "0x04": {
+            "des": "Heavy load",
+            "reason": "电机过载",
+            "method": "检查电机抱闸是否打开"
+        },
+        "0x05": {
+            "des": "position count overflow",
+            "reason": "位置偏差计数器溢出",
+            "method": "内部计数器溢出，联系驱动器供应商"
+        },
+        "0x06": {
+            "des": "position pluse overflow",
+            "reason": "位置偏差脉冲溢出",
+            "method": "位置偏差超出了参数Pn504的值"
+        },
+        "0x07": {
+            "des": "electronic gear config error",
+            "reason": "电子齿轮设置和给定脉冲频率配置不合理",
+            "method": "电子齿轮设置不合理或脉冲频率太高"
+        },
+        "0x08": {
+            "des": "Current detection channel error",
+            "reason": "电流检测通道有问题",
+            "method": "内部芯片有问题，联系驱动器供应商"
+        },
+        "0x09": {
+            "des": "Current detection channel error",
+            "reason": "电流检测通道有问题",
+            "method": "内部芯片有问题，联系驱动器供应商"
+        },
+        "0x0C": {
+            "des": "Over Current",
+            "reason": "过流",
+            "method": "查看外部供电是否存在过流"
+        },
+        "0x0D": {
+            "des": "Over Voltage",
+            "reason": "过压",
+            "method": "查看外部供电是否超出供电范围"
+        },
+        "0x0E": {
+            "des": "Low Voltage",
+            "reason": "驱动器欠压",
+            "method": "查看外部供电是否稳定以及是否低于驱动器供电范围，如果均正常，联系厂家更换驱动器"
+        },
+        "0x0F": {
+            "des": "bleeder fault",
+            "reason": "泄放电阻损坏",
+            "method": "更换泄放电阻"
+        },
+        "0x10": {
+            "des": "internal error",
+            "reason": "再生异常",
+            "method": "再生处理回路异常，联系厂家"
+        },
+        "0x12": {
+            "des": "IGBT over heat",
+            "reason": "IGBT温度过高",
+            "method": "关机冷却一段时间，如未能消除，联系厂家"
+        },
+        "0x13": {
+            "des": "motor over heat",
+            "reason": "电机过热",
+            "method": "关机冷却一段时间，如未能消除，联系厂家"
+        },
+        "0x14": {
+            "des": "Drive power phase loss",
+            "reason": "驱动器主回路电源缺相",
+            "method": "检查三相线是否牢固，三相线是否接反"
+        },
+        "0x15": {
+            "des": "Instantaneous power failure",
+            "reason": "瞬间停电报警",
+            "method": "交流电中，有超过一个电源周期的停电发送"
+        },
+        "0x16": {
+            "des": "motor temp sensor disconnect",
+            "reason": "电机温度传感器断线",
+            "method": "编码器线缆有问题"
+        },
+        "0x17": {
+            "des": "braking over current",
+            "reason": "制动过流",
+            "method": "泄放电阻过小或泄放模块损坏"
+        },
+        "0x19": {
+            "des": "U/V/W over current",
+            "reason": "电机动力线U/V/W 过流",
+            "method": "检查是否机械卡死或者三相线接反，按驱动器enter键清除，如未能清除，驱动器重上电"
+        },
+        "0x1A": {
+            "des": "U/V/W over current",
+            "reason": "电机动力线U/V/W 过流",
+            "method": "检查是否机械卡死或者三相线接反，按驱动器enter键清除，如未能清除，驱动器重上电"
+        },
+        "0x1B": {
+            "des": "U/V/W over current",
+            "reason": "电机动力线U/V/W 过流",
+            "method": "检查是否机械卡死或者三相线接反，按驱动器enter键清除，如未能清除，驱动器重上电"
+        },
+        "0x1C": {
+            "des": "Encoder over heat",
+            "reason": "编码器过热",
+            "method": "关机冷却一段时间，如未能消除，联系厂家"
+        },
+        "0x26": {
+            "des": "Encoder LED error",
+            "reason": "编码器LED损坏",
+            "method": "联系厂家"
+        },
+        "0x27": {
+            "des": "Encoder EEPROM error",
+            "reason": "编码器EEPROM损坏",
+            "method": "联系厂家"
+        },
+        "0x29": {
+            "des": "default",
+            "reason": "预留，保持为0",
+            "method": "联系驱动器供应商"
+        },
+        "0x2A": {
+            "des": "motor type error",
+            "reason": "驱动器参数与电机不匹配",
+            "method": "联系驱动器供应商"
+        },
+        "0x2B": {
+            "des": "drive/encoder type error",
+            "reason": "驱动器参数与电机不匹配",
+            "method": "联系驱动器供应商"
+        },
+        "0x2C": {
+            "des": "default",
+            "reason": "预留，保持为0",
+            "method": "联系驱动器供应商"
+        },
+        "0x2D": {
+            "des": "Absolute encoder multiple turn error",
+            "reason": "绝对值编码器多圈错误",
+            "method": "需要进行绝对值编码器多圈清零操作"
+        },
+        "0x2E": {
+            "des": "Absolute encoder multiple turn overflow",
+            "reason": "绝对值编码器多圈溢出",
+            "method": "需要进行绝对值编码器多圈清零操作"
+        },
+        "0x2F": {
+            "des": "Encoder battery voltage below 2.5V",
+            "reason": "编码器电池电压低于2.5V，多圈信息已丢",
+            "method": "先更换编码器电池，再进行绝对值编码器多圈清零操作"
+        },
+        "0x30": {
+            "des": "Encoder battery voltage below 3.1V",
+            "reason": "编码器电池电压低于3.1V",
+            "method": "先更换编码器电池，再进行绝对值编码器多圈清零操作"
+        },
+        "0x33": {
+            "des": "Encoder detected overspeed",
+            "reason": "绝对值编码器检测到超速，多圈信息可能出错",
+            "method": "检查编码器电池是否电压不足，先更换编码器电池，再进行绝对值编码器多圈清零操作"
+        },
+        "0x42": {
+            "des": "can differential signal error",
+            "reason": "can线差分信号报错",
+            "method": "can通讯线使用超五类网线，并且屏蔽层接地处理，电机enter键或者下发清错指令可消除"
+        },
+        "0x43": {
+            "des": "CANOpen watchdog",
+            "reason": "看门狗报错",
+            "method": "检查cna线是否断线，排除错误后可以通过电机enter键或者下发清错指令消除该错误"
+        },
+        "0x51": {
+            "des": "U/V/W disconnect",
+            "reason": "电机动力线断线",
+            "method": "检查电机动力线是否松动"
+        },
+        "0x52": {
+            "des": "Torque exceeds limit",
+            "reason": "电机扭矩输出超限",
+            "method": "联系驱动器厂家"
+        }
+    },
+    "TsinoDynatron-CDA8-CANOpen": {
+        "match_bit":false,
+        "0x2250": {
+            "des": "Driver short circuit",
+            "reason": "驱动器短路",
+            "method": "检查接线"
+        },
+        "0x2330": {
+            "des": "Driver output shorted ground",
+            "reason": "驱动器输出对地",
+            "method": "检查接线"
+        },
+        "0x2341": {
+            "des": "Driver U/V short circuit",
+            "reason": "驱动器U/V短路",
+            "method": "检查三相线接线"
+        },
+        "0x2342": {
+            "des": "Driver V/W short circuit",
+            "reason": "驱动器V/W短路",
+            "method": "检查三相线接线"
+        },
+        "0x2343": {
+            "des": "Driver W/U short circuit",
+            "reason": "驱动器W/U短路",
+            "method": "检查三相线接线"
+        },
+        "0xFF2A": {
+            "des": "Encoder battery low voltage",
+            "reason": "编码器电池欠压",
+            "method": "更换编码器电池"
+        },
+        "0xFF09": {
+            "des": "motor brake error",
+            "reason": "电机抱闸异常",
+            "method": "联系驱动器厂家"
+        },
+        "0xFF90": {
+            "des": "Absolute encoder multiple turn overflow",
+            "reason": "绝对值编码器多圈溢出",
+            "method": "需要进行绝对值编码器多圈清零操作"
+        },
+        "0xFF1A": {
+            "des": "Drive phase sequence error",
+            "reason": "电机接线相序错误",
+            "method": "检查三相线是否牢固，三相线是否接反"
+        },
+        "0x2310": {
+            "des": "Phase U Over Current",
+            "reason": "相线U过流",
+            "method": "查看外部供电是否存在过流"
+        },
+        "0x2311": {
+            "des": "Phase V Over Current",
+            "reason": "相线V过流",
+            "method": "查看外部供电是否存在过流"
+        },
+        "0x2312": {
+            "des": "Phase W Over Current",
+            "reason": "相线W过流",
+            "method": "查看外部供电是否存在过流"
+        },
+        "0x3210": {
+            "des": "Over Voltage",
+            "reason": "直流母线过压",
+            "method": "查看外部供电是否超出供电范围"
+        },
+        "0x5112": {
+            "des": "Low Voltage",
+            "reason": "控制电压欠压",
+            "method": "查看外部供电是否稳定以及是否低于驱动器供电范围，如果均正常，联系鸣志供应商更换驱动器"
+        },
+        "0xFF02": {
+            "des": "Heavy load",
+            "reason": "驱动器持续过载",
+            "method": "检查电机抱闸是否打开"
+        },
+        "0xFF15": {
+            "des": "Drive phase loss",
+            "reason": "驱动器输出缺相",
+            "method": "检查三相线是否牢固，三相线是否接反"
+        }
+    },
+    "Technosoft-Canopen": {
+        "match_bit":true,
+        "0x0001": {
+            "des": "CAN error",
+            "reason": "CAN总线报错",
+            "method": "检查can线是否松动"
+        },
+        "0x0002": {
+            "des": "Short circuit",
+            "reason": "短路保护",
+            "method": "检查接线是否有短路，如果不能恢复，联系驱动器供应商"
+        },
+        "0x0004": {
+            "des": "Invalid setup data",
+            "reason": "EEPROM数据异常",
+            "method": "恢复出厂设置，如果无法恢复，联系驱动器供应商"
+        },
+        "0x0008": {
+            "des": "Control error",
+            "reason": "位置或者速度过大",
+            "method": "合理规划下发速度或位置，如果下发速度没有过大，检查减速机安装是否有异常，以及编码器线是否正确"
+        },
+        "0x0010": {
+            "des": "Communication error",
+            "reason": "串口通讯错误",
+            "method": "检查串口工具以及接线是否有异常"
+        },
+        "0x0020": {
+            "des": "Encoder feedback error",
+            "reason": "编码器或者霍尔传感器反馈错误",
+            "method": "检查编码器接线，如果无法恢复，联系驱动器供应商"
+        },
+        "0x0040": {
+            "des": "Positive limit switch active",
+            "reason": "正限位开关被触发",
+            "method": "检查正限位是否有异常，如果不需要位置极限，可以关闭该参数配置"
+        },
+        "0x0080": {
+            "des": "Negative limit switch active",
+            "reason": "负限位开关被触发",
+            "method": "检查负限位是否有异常，如果不需要位置极限，可以关闭该参数配置"
+        },
+        "0x0100": {
+            "des": "Over Current",
+            "reason": "过流",
+            "method": "查看外部供电是否存在过流"
+        },
+        "0x0200": {
+            "des": "I^2T protection",
+            "reason": "I^2T保护",
+            "method": "设备重上电，如无法恢复，联系驱动器供应商"
+        },
+        "0x0400": {
+            "des": "Over temperature motor",
+            "reason": "电机过温",
+            "method": "关机冷却一段时间，如未能消除，联系驱动器供应商"
+        },
+        "0x0800": {
+            "des": "Over temperature drive",
+            "reason": "驱动器过温",
+            "method": "关机冷却一段时间，如未能消除，联系驱动器供应商"
+        },
+        "0x1000": {
+            "des": "Over Voltage",
+            "reason": "过压",
+            "method": "查看外部供电是否超出供电范围"
+        },
+        "0x2000": {
+            "des": "Under Voltage",
+            "reason": "驱动器欠压",
+            "method": "查看外部供电是否稳定以及是否低于驱动器供电范围，如果均正常，联系驱动器供应商更换驱动器"
+        },
+        "0x4000": {
+            "des": "Command error",
+            "reason": "驱动器接受指令错误",
+            "method": "如无法消除，联系驱动器供应商"
+        },
+        "0x8000": {
+            "des": "STO trigger",
+            "reason": "安全转矩禁止STO功能被激活",
+            "method": "确认STO输入电源工作正常"
+        }
+    },
+    "JMC-C830RC-CANOpen": {
+        "match_bit":false,
+        "0x33": {
+            "des": "EEPROM Param error",
+            "reason": "EEPROM参数错误",
+            "method": "联系驱动器供应商"
+        },
+        "0x35": {
+            "des": "Init error",
+            "reason": "驱动器初始化失败",
+            "method": "设备重上电，如无法消除，联系驱动器供应商"
+        },
+        "0x3D": {
+            "des": "Product matching fault",
+            "reason": "产品匹配故障",
+            "method": "驱动器和电机不匹配，更换匹配的电机"
+        },
+        "0x3E": {
+            "des": "Param store error",
+            "reason": "驱动器参数存储故障",
+            "method": "初始化参数，如无法消除，联系驱动器供应商"
+        },
+        "0x3F": {
+            "des": "Over Current",
+            "reason": "过流",
+            "method": "查看外部供电是否存在过流"
+        },
+        "0x40": {
+            "des": "Driver output shorted ground",
+            "reason": "驱动器输出对地",
+            "method": "检查接线"
+        },
+        "0x42": {
+            "des": "Control under Voltage",
+            "reason": "驱动器控制电源电压低",
+            "method": "属于驱动器硬件层面故障，先查看外部供电是否稳定以及是否低于驱动器供电范围，如果均正常，联系驱动器供应商更换驱动器"
+        },
+        "0x191": {
+            "des": "Under Voltage",
+            "reason": "驱动器欠压",
+            "method": "查看外部供电是否稳定以及是否低于驱动器供电范围，如果均正常，联系驱动器供应商更换驱动器"
+        },
+        "0x192": {
+            "des": "Over Voltage",
+            "reason": "过压",
+            "method": "查看外部供电是否超出供电范围"
+        },
+        "0x19A": {
+            "des": "Heavy load",
+            "reason": "过载（瞬时）",
+            "method": "检查电机机械是否卡住，以及电机抱闸是否打开"
+        },
+        "0x19B": {
+            "des": "Drive heavy load",
+            "reason": "驱动器过载",
+            "method": "检查电机机械是否卡住，以及电机抱闸是否打开"
+        },
+        "0x19C": {
+            "des": "Motor heavy load",
+            "reason": "电机过载（连续最大负载）",
+            "method": "检查电机机械是否卡住，以及电机抱闸是否打开"
+        },
+        "0x1A4": {
+            "des": "Speed overrun",
+            "reason": "超速",
+            "method": "检查编码器接线是否正确，检查机械是否安装正确，如未能恢复，联系驱动器厂家"
+        },
+        "0x1A5": {
+            "des": "Out of control",
+            "reason": "失控",
+            "method": "联系驱动器供应商"
+        },
+        "0x1B9": {
+            "des": "motor over heat",
+            "reason": "电机过热",
+            "method": "关机冷却一段时间，如未能消除，联系厂家"
+        },
+        "0x1F5": {
+            "des": "position Deviation too large",
+            "reason": "位置偏差过大",
+            "method": "位置跟随超过设置上限，联系驱动器供应商"
+        },
+        "0x258": {
+            "des": "Encoder power short circuit",
+            "reason": "编码器输出电源短路故障",
+            "method": "检查编码器相关接线，如无异常，联系驱动器供应商"
+        },
+        "0x262": {
+            "des": "Incremental encoder disconnect",
+            "reason": "增量式编码器脱线",
+            "method": "检查编码器相关接线"
+        },
+        "0x263": {
+            "des": "Encoder Z pluse loss",
+            "reason": "编码器Z脉冲丢失",
+            "method": "编码器接线错误，编码器损坏，噪声干扰严重"
+        },
+        "0x3AD": {
+            "des": "Power param change",
+            "reason": "需重新接通电源的参数变更",
+            "method": "恢复出厂设置，重新配置驱动器参数，如未能恢复，联系驱动器供应商"
+        }
+    },
+    "LeiSai-LD5-CANOpen": {
+        "match_bit":false,
+        "0x2212": {
+            "des": "Over Current",
+            "reason": "过流",
+            "method": "查看外部供电是否存在过流"
+        },
+        "0x3130": {
+            "des": "Phase loss",
+            "reason": "缺相",
+            "method": "检查三相线是否牢固，三相线是否接反"
+        },
+        "0x4210": {
+            "des": "Drive over Temp",
+            "reason": "驱动器过温",
+            "method": "关机冷却一段时间，如未能消除，联系驱动器供应商"
+        },
+        "0x5510": {
+            "des": "RAM not enough",
+            "reason": "RAM不足",
+            "method": "联系驱动器供应商"
+        },
+        "0x5531": {
+            "des": "EEPROM hardware error",
+            "reason": "EEPROM硬件错误",
+            "method": "联系驱动器供应商"
+        },
+        "0x7122": {
+            "des": "motor type error",
+            "reason": "驱动器不匹配该型号电机",
+            "method": "更换匹配型号的电机，或联系驱动器供应商"
+        },
+        "0x7321": {
+            "des": "Encoder disconnect",
+            "reason": "编码器断线",
+            "method": "检查编码器相关接线"
+        },
+        "0x7322": {
+            "des": "Encoder communication error",
+            "reason": "编码器通讯错误",
+            "method": "检查编码器相关接线"
+        },
+        "0x7323": {
+            "des": "Encoder init position error",
+            "reason": "编码器初始位置错误",
+            "method": "检查编码器相关接线，设备重上电，如果无法恢复，联系驱动器供应商"
+        },
+        "0x7324": {
+            "des": "Encoder data error",
+            "reason": "编码器数据错误",
+            "method": "检查编码器相关接线，设备重上电，如果无法恢复，联系驱动器供应商"
+        },
+        "0x7329": {
+            "des": "Limit error",
+            "reason": "限位报警",
+            "method": "检查是否机械实际触碰到限位，检查限位配置参数是否合理"
+        },
+        "0x8110": {
+            "des": "CAN error",
+            "reason": "限CAN 超载报警位报警",
+            "method": "can总线上数据量过大"
+        },
+        "0x8130": {
+            "des": "CANOpen watchdog",
+            "reason": "看门狗报错",
+            "method": "检查cna线是否断线，排除错误后可以通过电机enter键或者下发清错指令消除该错误"
+        }
+    },
+    "Curtis-1232-RuiBoTe": {
+        "match_bit":false,
+        "0x12": {
+            "des": "Controller Overcurrent",
+            "reason": "控制器电流过载 :相位电流超过了限定电流",
+            "method": "检查电机外部U，V，W连接短路 or 检查电机参数是否不匹配 or 检查控制器是否有故障:后断电重启curtis控制器"
+        },
+        "0x13": {
+            "des": "Current Sensor Fault",
+            "reason": "电流传感器故障 :控制器电流传感器读数偏差",
+            "method": "检查电机U、V、W通过定子是否对车体短路，导致漏电 or 检查控制器是否有故障:后断电重启curtis"
+        },
+        "0x14": {
+            "des": "PreCharge Failed",
+            "reason": "预充电失败 :钥匙开关输入电压对电容器充电失败",
+            "method": "检查是否电容器正端外接负载使电容器不能正常充电  查看菜单Monitor>>Battery:Capacitor Voltage:后通过VCL函数percharge()重新设置或者互锁开关重新输入"
+        },
+        "0x15": {
+            "des": "Controller Severe Undertemp",
+            "reason": "控制器温度过低:散热温度低于-40℃",
+            "method": "检查外部环境是否温度太低 or 检查菜单Monitor>>Controller:Temperature :温度升至-40℃以上或者断电重启curtis控制器"
+        },
+        "0x16": {
+            "des": "Controller Severe Overtemp",
+            "reason": "控制器温度过高:散热器温度超过95℃",
+            "method": "检查控制器工作环境 or 车辆超载 or 控制安装错误  检查Monitor>>Controller:Temperature : 断电重启curtis控制器"
+        },
+        "0x17": {
+            "des": "Severe Undervoltage",
+            "reason": "电压过低:MOSFEET桥工作室电容电压低于最低啊电压限制",
+            "method": "检查电池参数设置错误 or 电池阻抗过大 or 电池连接断开 or 熔断器断开或主接触器未连接 检查Monitor Battery>>Capacitor Voltage :将电容电压升高到高，后断电重启curtis控制器"
+        },
+        "0x18": {
+            "des": "Severe Overvoltage",
+            "reason": "电压过高:MOSFEET桥工作室电容电压超过了最高电压限制",
+            "method": "检查电池参数设置错误 or 电池阻抗过高 or 再生制动时电池连接断开 检查检查Monitor Battery>>Capacitor Voltage:降低电压，后断电重启curtis控制器"
+        },
+        "0x21": {
+            "des": "Controller Undertemp Cutback",
+            "reason": "控制器温度过低导致性能消减:散热器温度低于-25℃",
+            "method": "检查控制器在受限工作条件下工作 :使散热器温度高于-25℃"
+        },
+        "0x22": {
+            "des": "Controller Overtemp Cutback",
+            "reason": "控制器温度过高导致性能消减:散热器温度超过85℃",
+            "method": "检查控制器工作环境严酷 or 检查车辆超载 or 查看菜单Controller:Temperature 5 :降低温度"
+        },
+        "0x23": {
+            "des": "Undervoltage Cutback",
+            "reason": "电压过低性能消减:电容电压过低",
+            "method": "检查电池电量不足 or 检查电池参数设置错误 or 电池阻抗过大 or 电池连接断开 or 查看Monitor >>Battery:Capacitor Voltage :将电容端电压升高到高于最低电压限制值"
+        },
+        "0x24": {
+            "des": "Overvoltage Cutback",
+            "reason": "电压过高性能消减:MOSFEET 桥工作时电容电压超过了最高电圧限制",
+            "method": "检查 再生制动过程中再生电流导致电池电压升高 or 电池参数设置错误 or 电池阻抗过大 or 再生制动是电池连接断开:将电容端电压降低与最高电压限制值"
+        },
+        "0x25": {
+            "des": "+5VSupply Failure",
+            "reason": "控制器输出5V电源失效 : 5v 输出(pin 26)有超过±10%的误差范围",
+            "method": "外接负载阻抗过低 or 查看菜单 Monitor » outputs:5 Volts and Ext Supply Current :调整输出电压至5V±10%范围"
+        },
+        "0x26": {
+            "des": "Digital Out 6 Failure",
+            "reason": "驱动6 输出失效:驱动6 输出电流超出15mA",
+            "method": "外接于驱动6 输出（ Pin19） 的负载阻抗过低 :检查接线错误 "
+        },
+        "0x27": {
+            "des": "Digital Out7 OVercurrent",
+            "reason": "驱动7 输出量输出过流:驱动7 输出电流超出15mA",
+            "method": "外接于驱动7 输出（ Pin20） 的负载阻抗过低 :检查接线错误"
+        },
+        "0x28": {
+            "des": "Motor TempHot Cutback",
+            "reason": "电机过热导致性能消减 : 电机温度传感器输入",
+            "method": "检查电机温度达到或者高于程序设定的警戒温度 or 检查电机温度设置参数 or 检查Monitor >> Motor >> Temperatureand >> Inputs:Analog2 or 检查是否行走的时候抱闸未打开"
+        },
+        "0x29": {
+            "des": "Motor Temp Sensor Fault",
+            "reason": "电机温度传感器故障 :电机温度传感器输入电压值为0 或大于10V ",
+            "method": "检查电机温度传感器连接错误 or 检查Monitor»Motor >> Temperatureand >> Inputs: Analog2"
+        },
+        "0x31": {
+            "des": "Coil1 Driver 、 Main Open/short",
+            "reason": "驱动1开路或者短路、主接触器线圈开路/短路:驱动1 输出（ 6 管脚） 开路或者短路，此故障只有在“Main Enable”设置为ON的时候才可能发生",
+            "method": "检查连接负载开路或短路 or 连接管脚污损 or 检查纠正错误的接线"
+        },
+        "0x32": {
+            "des": "Coil2 DriverOpen/Short、EMBrake Open/Short",
+            "reason": "驱动2 开路或短路、电磁刹车线圈开路/短路:驱动2 输出（ 5 管脚） 开路或者短路，此故障仅在“ EMbrakeType” 设置为0才发生",
+            "method": "检查连接负载开路或短路 or 连接管脚污损 or 检查纠正错误的接线"
+        },
+        "0x33": {
+            "des": "Coil3 Driver Open/short",
+            "reason": "驱动3开路或短路:驱动3输出开路或者短路",
+            "method": "检查连接负载开路或短路 or 连接管脚污损 or 检查纠正错误的接线"
+        },
+        "0x34": {
+            "des": "Coil4 Driver Open/short",
+            "reason": "驱动4开路或短路:驱动4输出开路或者短路",
+            "method": "检查连接负载开路或短路 or 连接管脚污损 or 检查纠正错误的接线"
+        },
+        "0x35": {
+            "des": "PDOpen/Short",
+            "reason": "比例驱动开路/短路:比例驱动（2管脚）开路或者短路",
+            "method": "检查连接负载开路或短路 or 连接管脚污损 or 检查纠正错误的接线"
+        },
+        "0x36": {
+            "des": "Encoder Fault",
+            "reason": "编码器失效",
+            "method": "检查电机编码器故障 or 检查编码器错误的接线，断电重启curtis控制器"
+        },
+        "0x37": {
+            "des": "Motor Open",
+            "reason": "电机缺相，U/V/W一相或者多相开路",
+            "method": "检查电机缺相 or 电机接线错误 or 查看Monitor»Motor: Motor RPM，断电重启curtis控制器"
+        },
+        "0x38": {
+            "des": "Main Contactor Welded",
+            "reason": "主接触器粘连:电容端先于主接触器吸合， 电容电压没有释放",
+            "method": "一般情况下其他的错误会导致0x38，请检查有无其他的错误，如果没有，检查主接触器接线"
+        },
+        "0x39": {
+            "des": "Main ContactorDid Not Close",
+            "reason": "主接触器未闭合: 当需要主接触器闭合时候， 电容电压未达到B+电压",
+            "method": "主接触器未闭合 or 熔断器断开 or 主接触器触点氧化，熔化， 或者连接状态不稳定"
+        },
+        "0x41": {
+            "des": "Throttle Wiper High",
+            "reason": "加速器输出偏高 :加速器电位器（16 管脚） 输出电压高于输出电压限制",
+            "method": "检查加速器电位器输出电压过高 or 查看Monitor»Inputs:Throttle Pot，降低加速器电位器输出电压，检查是否接线错误"
+        },
+        "0x42": {
+            "des": "Throttle Wiper Low",
+            "reason": "加速器输出偏低 :加速器电位器（17 管脚） 输出电压低于输出电压限制 ",
+            "method": "检查加速器电位器输出电压过低 or 查看Monitor»Inputs:Throttle Pot，增加加速器电位器输出电压，检查是否接线错误"
+        },
+        "0x43": {
+            "des": "Pot2 Wiper High",
+            "reason": "",
+            "method": "检查电位器2 输出电压过高 or 检查Monitor »Inputs: Pot2 Raw ,检查是否接线错误"
+        },
+        "0x44": {
+            "des": "Pot2 Wiper Low",
+            "reason": "电位器2 输出过低:电位器2（17 管脚）输出电压低于输出电压限制",
+            "method": "检查电位器2 输出电压过低 or 检查Monitor »Inputs: Pot2 Raw ,检查是否接线错误"
+        },
+        "0x45": {
+            "des": "PotLowOvercurrent",
+            "reason": "电位器低端电流过高:电位器低端（18 管脚） 电流超过了10mA",
+            "method": "电位器阻抗过低 or 查看监控菜单 Monitor >> Outputs: Pot Low or 断电重启curtis控制器"
+        },
+        "0x46": {
+            "des": "EEPROM Failure",
+            "reason": "EEPROM失效:控制器操作系统试图向EEPROM 写入并且失败",
+            "method": "下载正确的软件，烧写正确的软件版本"
+        },
+        "0x47": {
+            "des": "HPD/Sequencing Fault 或 Emer RevHPD 或 Pump HPD",
+            "reason": "高踏板保护/操作顺序失败:由于钥匙启动， 互锁， 方向， 以及加速器输入设置错误导致高踏板保护以及启动顺序错误",
+            "method": "钥匙启动， 互锁， 方向以及加速器输入顺序设置错误 or 接线， 开关钥匙， 互锁方向， 或加速器输入故障 or 在curtis中没有EMR reverse brake 但是在设置项里面却打开了，将之关掉"
+        },
+        "0x49": {
+            "des": "ParameterChange",
+            "reason": "参数的更改需要钥匙开关的重启动",
+            "method": "断电重启curtis驱动器"
+        },
+        "0x53": {
+            "des": "1220C PDO timeout",
+            "reason": "转向驱动器通讯故障",
+            "method": ""
+        },
+        "0x54": {
+            "des": "",
+            "reason": "",
+            "method": ""
+        },
+        "0x55": {
+            "des": "Lift/Lower SRO Fault",
+            "reason": "起升下降动作上电自检故障",
+            "method": "对比标准cpf文件中关于Lift和Lower相关的参数项配置，用1309模块查看驱动器详细信息"
+        },
+        "0x56": {
+            "des": "EMR HPD Fault",
+            "reason": "紧急反向开关上电自检故障",
+            "method": "检查EMR的接线是否正确 or 检查curtis文件中EMR 的参数设置的是否正确"
+        },
+        "0x57": {
+            "des": "1253C PDO timeout",
+            "reason": "油泵控制器通讯故障",
+            "method": "检查1253C和行走驱动器的can总线连接是否正常 or 检查行走驱动器和1253的can baudrate 和 can ID配置的是否正确"
+        },
+        "0x59": {
+            "des": "COM Communication fault",
+            "reason": "行走驱动器和1220转向驱动器握手故障",
+            "method": "检查1220C和行走驱动器的can总线连接是否正常 or 检查行走驱动器和1220的can baudrate 和 can ID配置的是否正确"
+        },
+        "0x64": {
+            "des": "1220C shut throttle",
+            "reason": "1220C有故障车子不能动",
+            "method": "通过1309模块连接到1220C上面，检查相关的错误信息"
+        },
+        "0x65": {
+            "des": "1220C limitted throttle",
+            "reason": "1220C 有故障，车能动限速",
+            "method": "通过1309模块连接到1220C上面，检查相关的错误信息"
+        },
+        "0x66": {
+            "des": "PDO Fault VGA",
+            "reason": "上位机通讯超时",
+            "method": "检查can线连接是否正确且为通路 or 检查模型文件是否配置正确 or 检查curtis中can baudrate 配置是否正确 or 检查主控相关功能是否激活"
+        },
+        "0x67": {
+            "des": "handshake Fault",
+            "reason": "行走驱动器和转向驱动器握手失败",
+            "method": "检查和curtis1220C之间的can线连接 or 检查curtis中配置的can baudrate 和 can ID 配置是否正确"
+        },
+        "0x68": {
+            "des": "VCL Run Time Error",
+            "reason": "运行时间VCL 代码错误",
+            "method": "曾经遇到can信号导致curtis驱动器崩溃的情况，首先检查我们控制器can线信号，然后联系curtis供应商"
+        },
+        "0x69": {
+            "des": "External Supply Out of Range",
+            "reason": "外部电源电流（总电流: 5V（ 26 管脚） 以及12V （25 管脚） ） 超出限制； 范围上限由External Supply Max定义， 下限由External SupplMin 定义",
+            "method": "检查 Monitor »Outputs: ExtSupply Current 或 调整外部电流"
+        },
+        "0x71": {
+            "des": "OS General",
+            "reason": "操作系统故障:内部控制失效",
+            "method": "断电重启curtis驱动器"
+        },
+        "0x72": {
+            "des": "PDO Timeout",
+            "reason": "PDO 超时:CAN PDO 信息接收时间超时",
+            "method": "检查can 通信是否正常，检查can线路接线是否正常、检查模型文件配置是否正确"
+        },
+        "0x73": {
+            "des": "Stall Detected",
+            "reason": "电机堵转:检测不到电机编码器",
+            "method": "检查电机存在机械堵转 or 检查电机编码器失效 or 检查是否接线错误 or 检查输入点击编码器电源是否故障"
+        },
+        "0x74": {
+            "des": "Fault On Other Traction Controlle",
+            "reason": "其他牵引控制器故障 ，双驱错误: 查看其他驱动器；",
+            "method": "联系curtis供应商"
+        },
+        "0x75": {
+            "des": "Dual Severe Faul",
+            "reason": "双驱动错误 :查看其它驱动器",
+            "method": "联系curtis供应商"
+        },
+        "0x87": {
+            "des": "Motor Characterization Fault",
+            "reason": "电机匹配过程失败",
+            "method": "查找curtis驱动器内部错误信息，修改错误重新匹配:"
+        },
+        "0x89": {
+            "des": "Motor Type Fault",
+            "reason": "电机类型错误 ",
+            "method": "电机类型数值超出范围，配置正确的值，断掉重启curtis驱动器"
+        },
+        "0x91": {
+            "des": "VCl/OSMismatch",
+            "reason": "控制器中VCL/OS 不匹配，",
+            "method": "联系相关人员，更新正确的VCL和 OS 程序"
+        },
+        "0x92": {
+            "des": "EM Brake Failed to Set",
+            "reason": "电磁刹锁死后， 车辆仍然在移动",
+            "method": "电磁刹车制动力太小 or 检查加速器是否正常 or 检查curtis参数是否符合文档 or 断电重启curtis驱动器"
+        },
+        "0x93": {
+            "des": "Encoder LOS(Limited Operating Strategy)",
+            "reason": "编码器受限操作状态:由于电机堵转或者编码器故障， 使得受限操作状态被激活",
+            "method": "检查电机堵转 or 电机编码器故障 or 检查电机编码器接线，断电重启curtis驱动器"
+        },
+        "0x94": {
+            "des": "Emer Rev Timeout",
+            "reason": "紧急反向反应超时 ",
+            "method": "检查紧急反向开关的状态 or 检查相关接线和curtis驱动器参数的配置"
+        },
+        "0x98": {
+            "des": "IllegalModel Numbe",
+            "reason": "控制器型号错误，控制器无法识别",
+            "method": "请联系curtis供应商"
+        },
+        "0x99": {
+            "des": "Dualmotor Parameter Mismatch",
+            "reason": "双电机参数匹配错误",
+            "method": "请联系curtis供应商"
+        }
+    },
+    "Curtis-1232-Seer-L14": {
+        "match_bit":false,
+        "0x12": {
+            "des": "Controller Overcurrent",
+            "reason": "控制器电流过载 :相位电流超过了限定电流",
+            "method": "检查电机外部U，V，W连接短路 or 检查电机参数是否不匹配 or 检查控制器是否有故障:后断电重启curtis控制器"
+        },
+        "0x13": {
+            "des": "Current Sensor Fault",
+            "reason": "电流传感器故障 :控制器电流传感器读数偏差",
+            "method": "检查电机U、V、W通过定子是否对车体短路，导致漏电 or 检查控制器是否有故障:后断电重启curtis"
+        },
+        "0x14": {
+            "des": "PreCharge Failed",
+            "reason": "预充电失败 :钥匙开关输入电压对电容器充电失败",
+            "method": "检查是否电容器正端外接负载使电容器不能正常充电  查看菜单Monitor>>Battery:Capacitor Voltage:后通过VCL函数percharge()重新设置或者互锁开关重新输入"
+        },
+        "0x15": {
+            "des": "Controller Severe Undertemp",
+            "reason": "控制器温度过低:散热温度低于-40℃",
+            "method": "检查外部环境是否温度太低 or 检查菜单Monitor>>Controller:Temperature :温度升至-40℃以上或者断电重启curtis控制器"
+        },
+        "0x16": {
+            "des": "Controller Severe Overtemp",
+            "reason": "控制器温度过高:散热器温度超过95℃",
+            "method": "检查控制器工作环境 or 车辆超载 or 控制安装错误  检查Monitor>>Controller:Temperature : 断电重启curtis控制器"
+        },
+        "0x17": {
+            "des": "Severe Undervoltage",
+            "reason": "电压过低:MOSFEET桥工作室电容电压低于最低啊电压限制",
+            "method": "检查电池参数设置错误 or 电池阻抗过大 or 电池连接断开 or 熔断器断开或主接触器未连接 检查Monitor Battery>>Capacitor Voltage :将电容电压升高到高，后断电重启curtis控制器"
+        },
+        "0x18": {
+            "des": "Severe Overvoltage",
+            "reason": "电压过高:MOSFEET桥工作室电容电压超过了最高电压限制",
+            "method": "检查电池参数设置错误 or 电池阻抗过高 or 再生制动时电池连接断开 检查检查Monitor Battery>>Capacitor Voltage:降低电压，后断电重启curtis控制器"
+        },
+        "0x21": {
+            "des": "Controller Undertemp Cutback",
+            "reason": "控制器温度过低导致性能消减:散热器温度低于-25℃",
+            "method": "检查控制器在受限工作条件下工作 :使散热器温度高于-25℃"
+        },
+        "0x22": {
+            "des": "Controller Overtemp Cutback",
+            "reason": "控制器温度过高导致性能消减:散热器温度超过85℃",
+            "method": "检查控制器工作环境严酷 or 检查车辆超载 or 查看菜单Controller:Temperature 5 :降低温度"
+        },
+        "0x23": {
+            "des": "Undervoltage Cutback",
+            "reason": "电压过低性能消减:电容电压过低",
+            "method": "检查电池电量不足 or 检查电池参数设置错误 or 电池阻抗过大 or 电池连接断开 or 查看Monitor >>Battery:Capacitor Voltage :将电容端电压升高到高于最低电压限制值"
+        },
+        "0x24": {
+            "des": "Overvoltage Cutback",
+            "reason": "电压过高性能消减:MOSFEET 桥工作时电容电压超过了最高电圧限制",
+            "method": "检查 再生制动过程中再生电流导致电池电压升高 or 电池参数设置错误 or 电池阻抗过大 or 再生制动是电池连接断开:将电容端电压降低与最高电压限制值"
+        },
+        "0x25": {
+            "des": "+5VSupply Failure",
+            "reason": "控制器输出5V电源失效 : 5v 输出(pin 26)有超过±10%的误差范围",
+            "method": "外接负载阻抗过低 or 查看菜单 Monitor » outputs:5 Volts and Ext Supply Current :调整输出电压至5V±10%范围"
+        },
+        "0x26": {
+            "des": "Digital Out 6 Failure",
+            "reason": "驱动6 输出失效:驱动6 输出电流超出15mA",
+            "method": "外接于驱动6 输出（ Pin19） 的负载阻抗过低 :检查接线错误 "
+        },
+        "0x27": {
+            "des": "Digital Out7 OVercurrent",
+            "reason": "驱动7 输出量输出过流:驱动7 输出电流超出15mA",
+            "method": "外接于驱动7 输出（ Pin20） 的负载阻抗过低 :检查接线错误"
+        },
+        "0x28": {
+            "des": "Motor TempHot Cutback",
+            "reason": "电机过热导致性能消减 : 电机温度传感器输入",
+            "method": "检查电机温度达到或者高于程序设定的警戒温度 or 检查电机温度设置参数 or 检查Monitor >> Motor >> Temperatureand >> Inputs:Analog2 or 检查是否行走的时候抱闸未打开"
+        },
+        "0x29": {
+            "des": "Motor Temp Sensor Fault",
+            "reason": "电机温度传感器故障 :电机温度传感器输入电压值为0 或大于10V ",
+            "method": "检查电机温度传感器连接错误 or 检查Monitor»Motor >> Temperatureand >> Inputs: Analog2"
+        },
+        "0x31": {
+            "des": "Coil1 Driver 、 Main Open/short",
+            "reason": "驱动1开路或者短路、主接触器线圈开路/短路:驱动1 输出（ 6 管脚） 开路或者短路，此故障只有在“Main Enable”设置为ON的时候才可能发生",
+            "method": "检查连接负载开路或短路 or 连接管脚污损 or 检查纠正错误的接线"
+        },
+        "0x32": {
+            "des": "Coil2 DriverOpen/Short、EMBrake Open/Short",
+            "reason": "驱动2 开路或短路、电磁刹车线圈开路/短路:驱动2 输出（ 5 管脚） 开路或者短路，此故障仅在“ EMbrakeType” 设置为0才发生",
+            "method": "检查连接负载开路或短路 or 连接管脚污损 or 检查纠正错误的接线"
+        },
+        "0x33": {
+            "des": "Coil3 Driver Open/short",
+            "reason": "驱动3开路或短路:驱动3输出开路或者短路",
+            "method": "检查连接负载开路或短路 or 连接管脚污损 or 检查纠正错误的接线"
+        },
+        "0x34": {
+            "des": "Coil4 Driver Open/short",
+            "reason": "驱动4开路或短路:驱动4输出开路或者短路",
+            "method": "检查连接负载开路或短路 or 连接管脚污损 or 检查纠正错误的接线"
+        },
+        "0x35": {
+            "des": "PDOpen/Short",
+            "reason": "比例驱动开路/短路:比例驱动（2管脚）开路或者短路",
+            "method": "检查连接负载开路或短路 or 连接管脚污损 or 检查纠正错误的接线"
+        },
+        "0x36": {
+            "des": "Encoder Fault",
+            "reason": "编码器失效",
+            "method": "检查电机编码器故障 or 检查编码器错误的接线，断电重启curtis控制器"
+        },
+        "0x37": {
+            "des": "Motor Open",
+            "reason": "电机缺相，U/V/W一相或者多相开路",
+            "method": "检查电机缺相 or 电机接线错误 or 查看Monitor»Motor: Motor RPM，断电重启curtis控制器"
+        },
+        "0x38": {
+            "des": "Main Contactor Welded",
+            "reason": "主接触器粘连:电容端先于主接触器吸合， 电容电压没有释放",
+            "method": "一般情况下其他的错误会导致0x38，请检查有无其他的错误，如果没有，检查主接触器接线"
+        },
+        "0x39": {
+            "des": "Main ContactorDid Not Close",
+            "reason": "主接触器未闭合: 当需要主接触器闭合时候， 电容电压未达到B+电压",
+            "method": "主接触器未闭合 or 熔断器断开 or 主接触器触点氧化，熔化， 或者连接状态不稳定"
+        },
+        "0x41": {
+            "des": "Throttle Wiper High",
+            "reason": "加速器输出偏高 :加速器电位器（16 管脚） 输出电压高于输出电压限制",
+            "method": "检查加速器电位器输出电压过高 or 查看Monitor»Inputs:Throttle Pot，降低加速器电位器输出电压，检查是否接线错误"
+        },
+        "0x42": {
+            "des": "Throttle Wiper Low",
+            "reason": "加速器输出偏低 :加速器电位器（17 管脚） 输出电压低于输出电压限制 ",
+            "method": "检查加速器电位器输出电压过低 or 查看Monitor»Inputs:Throttle Pot，增加加速器电位器输出电压，检查是否接线错误"
+        },
+        "0x43": {
+            "des": "Pot2 Wiper High",
+            "reason": "",
+            "method": "检查电位器2 输出电压过高 or 检查Monitor »Inputs: Pot2 Raw ,检查是否接线错误"
+        },
+        "0x44": {
+            "des": "Pot2 Wiper Low",
+            "reason": "电位器2 输出过低:电位器2（17 管脚）输出电压低于输出电压限制",
+            "method": "检查电位器2 输出电压过低 or 检查Monitor »Inputs: Pot2 Raw ,检查是否接线错误"
+        },
+        "0x45": {
+            "des": "PotLowOvercurrent",
+            "reason": "电位器低端电流过高:电位器低端（18 管脚） 电流超过了10mA",
+            "method": "电位器阻抗过低 or 查看监控菜单 Monitor >> Outputs: Pot Low or 断电重启curtis控制器"
+        },
+        "0x46": {
+            "des": "EEPROM Failure",
+            "reason": "EEPROM失效:控制器操作系统试图向EEPROM 写入并且失败",
+            "method": "下载正确的软件，烧写正确的软件版本"
+        },
+        "0x47": {
+            "des": "HPD/Sequencing Fault 或 Emer RevHPD 或 Pump HPD",
+            "reason": "高踏板保护/操作顺序失败:由于钥匙启动， 互锁， 方向， 以及加速器输入设置错误导致高踏板保护以及启动顺序错误",
+            "method": "钥匙启动， 互锁， 方向以及加速器输入顺序设置错误 or 接线， 开关钥匙， 互锁方向， 或加速器输入故障 or 在curtis中没有EMR reverse brake 但是在设置项里面却打开了，将之关掉"
+        },
+        "0x49": {
+            "des": "ParameterChange",
+            "reason": "参数的更改需要钥匙开关的重启动",
+            "method": "断电重启curtis驱动器"
+        },
+        "0x51": {
+            "des": "user ",
+            "reason": "",
+            "method": ""
+        },
+        "0x52": {
+            "des": "",
+            "reason": "",
+            "method": ""
+        },
+        "0x53": {
+            "des": "1220C PDO timeout",
+            "reason": "转向驱动器通讯故障",
+            "method": ""
+        },
+        "0x54": {
+            "des": "",
+            "reason": "",
+            "method": ""
+        },
+        "0x55": {
+            "des": "Lift/Lower SRO Fault",
+            "reason": "起升下降动作上电自检故障",
+            "method": "对比标准cpf文件中关于Lift和Lower相关的参数项配置，用1309模块查看驱动器详细信息"
+        },
+        "0x56": {
+            "des": "EMR HPD Fault",
+            "reason": "紧急反向开关上电自检故障",
+            "method": "检查EMR的接线是否正确 or 检查curtis文件中EMR 的参数设置的是否正确"
+        },
+        "0x57": {
+            "des": "1253C PDO timeout",
+            "reason": "油泵控制器通讯故障",
+            "method": "检查1253C和行走驱动器的can总线连接是否正常 or 检查行走驱动器和1253的can baudrate 和 can ID配置的是否正确"
+        },
+        "0x59": {
+            "des": "COM Communication fault",
+            "reason": "行走驱动器和1220转向驱动器握手故障",
+            "method": "检查1220C和行走驱动器的can总线连接是否正常 or 检查行走驱动器和1220的can baudrate 和 can ID配置的是否正确"
+        },
+        "0x64": {
+            "des": "1220C shut throttle",
+            "reason": "1220C有故障车子不能动",
+            "method": "通过1309模块连接到1220C上面，检查相关的错误信息"
+        },
+        "0x65": {
+            "des": "1220C limitted throttle",
+            "reason": "1220C 有故障，车能动限速",
+            "method": "通过1309模块连接到1220C上面，检查相关的错误信息"
+        },
+        "0x66": {
+            "des": "PDO Fault VGA",
+            "reason": "上位机通讯超时",
+            "method": "检查can线连接是否正确且为通路 or 检查模型文件是否配置正确 or 检查curtis中can baudrate 配置是否正确 or 检查主控相关功能是否激活"
+        },
+        "0x67": {
+            "des": "handshake Fault",
+            "reason": "行走驱动器和转向驱动器握手失败",
+            "method": "检查和curtis1220C之间的can线连接 or 检查curtis中配置的can baudrate 和 can ID 配置是否正确"
+        },
+        "0x68": {
+            "des": "VCL Run Time Error",
+            "reason": "运行时间VCL 代码错误",
+            "method": "曾经遇到can信号导致curtis驱动器崩溃的情况，首先检查我们控制器can线信号，然后联系curtis供应商"
+        },
+        "0x69": {
+            "des": "External Supply Out of Range",
+            "reason": "外部电源电流（总电流: 5V（ 26 管脚） 以及12V （25 管脚） ） 超出限制； 范围上限由External Supply Max定义， 下限由External SupplMin 定义",
+            "method": "检查 Monitor »Outputs: ExtSupply Current 或 调整外部电流"
+        },
+        "0x71": {
+            "des": "OS General",
+            "reason": "操作系统故障:内部控制失效",
+            "method": "断电重启curtis驱动器"
+        },
+        "0x72": {
+            "des": "PDO Timeout",
+            "reason": "PDO 超时:CAN PDO 信息接收时间超时",
+            "method": "检查can 通信是否正常，检查can线路接线是否正常、检查模型文件配置是否正确"
+        },
+        "0x73": {
+            "des": "Stall Detected",
+            "reason": "电机堵转:检测不到电机编码器",
+            "method": "检查电机存在机械堵转 or 检查电机编码器失效 or 检查是否接线错误 or 检查输入点击编码器电源是否故障"
+        },
+        "0x74": {
+            "des": "Fault On Other Traction Controlle",
+            "reason": "其他牵引控制器故障 ，双驱错误: 查看其他驱动器；",
+            "method": "联系curtis供应商"
+        },
+        "0x75": {
+            "des": "Dual Severe Faul",
+            "reason": "双驱动错误 :查看其它驱动器",
+            "method": "联系curtis供应商"
+        },
+        "0x87": {
+            "des": "Motor Characterization Fault",
+            "reason": "电机匹配过程失败",
+            "method": "查找curtis驱动器内部错误信息，修改错误重新匹配:"
+        },
+        "0x89": {
+            "des": "Motor Type Fault",
+            "reason": "电机类型错误 ",
+            "method": "电机类型数值超出范围，配置正确的值，断掉重启curtis驱动器"
+        },
+        "0x91": {
+            "des": "VCl/OSMismatch",
+            "reason": "控制器中VCL/OS 不匹配，",
+            "method": "联系相关人员，更新正确的VCL和 OS 程序"
+        },
+        "0x92": {
+            "des": "EM Brake Failed to Set",
+            "reason": "电磁刹锁死后， 车辆仍然在移动",
+            "method": "电磁刹车制动力太小 or 检查加速器是否正常 or 检查curtis参数是否符合文档 or 断电重启curtis驱动器"
+        },
+        "0x93": {
+            "des": "Encoder LOS(Limited Operating Strategy)",
+            "reason": "编码器受限操作状态:由于电机堵转或者编码器故障， 使得受限操作状态被激活",
+            "method": "检查电机堵转 or 电机编码器故障 or 检查电机编码器接线，断电重启curtis驱动器"
+        },
+        "0x94": {
+            "des": "Emer Rev Timeout",
+            "reason": "紧急反向反应超时 ",
+            "method": "检查紧急反向开关的状态 or 检查相关接线和curtis驱动器参数的配置"
+        },
+        "0x98": {
+            "des": "IllegalModel Numbe",
+            "reason": "控制器型号错误，控制器无法识别",
+            "method": "请联系curtis供应商"
+        },
+        "0x99": {
+            "des": "Dualmotor Parameter Mismatch",
+            "reason": "双电机参数匹配错误",
+            "method": "请联系curtis供应商"
+        }
+    },
+    "Curtis-1232-JiaTeng": {
+        "match_bit":false,
+        "0x12": {
+            "des": "Controller Overcurrent",
+            "reason": "控制器电流过载 :相位电流超过了限定电流",
+            "method": "检查电机外部U，V，W连接短路 or 检查电机参数是否不匹配 or 检查控制器是否有故障:后断电重启curtis控制器"
+        },
+        "0x13": {
+            "des": "Current Sensor Fault",
+            "reason": "电流传感器故障 :控制器电流传感器读数偏差",
+            "method": "检查电机U、V、W通过定子是否对车体短路，导致漏电 or 检查控制器是否有故障:后断电重启curtis"
+        },
+        "0x14": {
+            "des": "PreCharge Failed",
+            "reason": "预充电失败 :钥匙开关输入电压对电容器充电失败",
+            "method": "检查是否电容器正端外接负载使电容器不能正常充电  查看菜单Monitor>>Battery:Capacitor Voltage:后通过VCL函数percharge()重新设置或者互锁开关重新输入"
+        },
+        "0x15": {
+            "des": "Controller Severe Undertemp",
+            "reason": "控制器温度过低:散热温度低于-40℃",
+            "method": "检查外部环境是否温度太低 or 检查菜单Monitor>>Controller:Temperature :温度升至-40℃以上或者断电重启curtis控制器"
+        },
+        "0x16": {
+            "des": "Controller Severe Overtemp",
+            "reason": "控制器温度过高:散热器温度超过95℃",
+            "method": "检查控制器工作环境 or 车辆超载 or 控制安装错误  检查Monitor>>Controller:Temperature : 断电重启curtis控制器"
+        },
+        "0x17": {
+            "des": "Severe Undervoltage",
+            "reason": "电压过低:MOSFEET桥工作室电容电压低于最低啊电压限制",
+            "method": "检查电池参数设置错误 or 电池阻抗过大 or 电池连接断开 or 熔断器断开或主接触器未连接 检查Monitor Battery>>Capacitor Voltage :将电容电压升高到高，后断电重启curtis控制器"
+        },
+        "0x18": {
+            "des": "Severe Overvoltage",
+            "reason": "电压过高:MOSFEET桥工作室电容电压超过了最高电压限制",
+            "method": "检查电池参数设置错误 or 电池阻抗过高 or 再生制动时电池连接断开 检查检查Monitor Battery>>Capacitor Voltage:降低电压，后断电重启curtis控制器"
+        },
+        "0x21": {
+            "des": "Controller Undertemp Cutback",
+            "reason": "控制器温度过低导致性能消减:散热器温度低于-25℃",
+            "method": "检查控制器在受限工作条件下工作 :使散热器温度高于-25℃"
+        },
+        "0x22": {
+            "des": "Controller Overtemp Cutback",
+            "reason": "控制器温度过高导致性能消减:散热器温度超过85℃",
+            "method": "检查控制器工作环境严酷 or 检查车辆超载 or 查看菜单Controller:Temperature 5 :降低温度"
+        },
+        "0x23": {
+            "des": "Undervoltage Cutback",
+            "reason": "电压过低性能消减:电容电压过低",
+            "method": "检查电池电量不足 or 检查电池参数设置错误 or 电池阻抗过大 or 电池连接断开 or 查看Monitor >>Battery:Capacitor Voltage :将电容端电压升高到高于最低电压限制值"
+        },
+        "0x24": {
+            "des": "Overvoltage Cutback",
+            "reason": "电压过高性能消减:MOSFEET 桥工作时电容电压超过了最高电圧限制",
+            "method": "检查 再生制动过程中再生电流导致电池电压升高 or 电池参数设置错误 or 电池阻抗过大 or 再生制动是电池连接断开:将电容端电压降低与最高电压限制值"
+        },
+        "0x25": {
+            "des": "+5VSupply Failure",
+            "reason": "控制器输出5V电源失效 : 5v 输出(pin 26)有超过±10%的误差范围",
+            "method": "外接负载阻抗过低 or 查看菜单 Monitor » outputs:5 Volts and Ext Supply Current :调整输出电压至5V±10%范围"
+        },
+        "0x26": {
+            "des": "Digital Out 6 Failure",
+            "reason": "驱动6 输出失效:驱动6 输出电流超出15mA",
+            "method": "外接于驱动6 输出（ Pin19） 的负载阻抗过低 :检查接线错误 "
+        },
+        "0x27": {
+            "des": "Digital Out7 OVercurrent",
+            "reason": "驱动7 输出量输出过流:驱动7 输出电流超出15mA",
+            "method": "外接于驱动7 输出（ Pin20） 的负载阻抗过低 :检查接线错误"
+        },
+        "0x28": {
+            "des": "Motor TempHot Cutback",
+            "reason": "电机过热导致性能消减 : 电机温度传感器输入",
+            "method": "检查电机温度达到或者高于程序设定的警戒温度 or 检查电机温度设置参数 or 检查Monitor >> Motor >> Temperatureand >> Inputs:Analog2 or 检查是否行走的时候抱闸未打开"
+        },
+        "0x29": {
+            "des": "Motor Temp Sensor Fault",
+            "reason": "电机温度传感器故障 :电机温度传感器输入电压值为0 或大于10V ",
+            "method": "检查电机温度传感器连接错误 or 检查Monitor»Motor >> Temperatureand >> Inputs: Analog2"
+        },
+        "0x31": {
+            "des": "Coil1 Driver 、 Main Open/short",
+            "reason": "驱动1开路或者短路、主接触器线圈开路/短路:驱动1 输出（ 6 管脚） 开路或者短路，此故障只有在“Main Enable”设置为ON的时候才可能发生",
+            "method": "检查连接负载开路或短路 or 连接管脚污损 or 检查纠正错误的接线"
+        },
+        "0x32": {
+            "des": "Coil2 DriverOpen/Short、EMBrake Open/Short",
+            "reason": "驱动2 开路或短路、电磁刹车线圈开路/短路:驱动2 输出（ 5 管脚） 开路或者短路，此故障仅在“ EMbrakeType” 设置为0才发生",
+            "method": "检查连接负载开路或短路 or 连接管脚污损 or 检查纠正错误的接线"
+        },
+        "0x33": {
+            "des": "Coil3 Driver Open/short",
+            "reason": "驱动3开路或短路:驱动3输出开路或者短路",
+            "method": "检查连接负载开路或短路 or 连接管脚污损 or 检查纠正错误的接线"
+        },
+        "0x34": {
+            "des": "Coil4 Driver Open/short",
+            "reason": "驱动4开路或短路:驱动4输出开路或者短路",
+            "method": "检查连接负载开路或短路 or 连接管脚污损 or 检查纠正错误的接线"
+        },
+        "0x35": {
+            "des": "PDOpen/Short",
+            "reason": "比例驱动开路/短路:比例驱动（2管脚）开路或者短路",
+            "method": "检查连接负载开路或短路 or 连接管脚污损 or 检查纠正错误的接线"
+        },
+        "0x36": {
+            "des": "Encoder Fault",
+            "reason": "编码器失效",
+            "method": "检查电机编码器故障 or 检查编码器错误的接线，断电重启curtis控制器"
+        },
+        "0x37": {
+            "des": "Motor Open",
+            "reason": "电机缺相，U/V/W一相或者多相开路",
+            "method": "检查电机缺相 or 电机接线错误 or 查看Monitor»Motor: Motor RPM，断电重启curtis控制器"
+        },
+        "0x38": {
+            "des": "Main Contactor Welded",
+            "reason": "主接触器粘连:电容端先于主接触器吸合， 电容电压没有释放",
+            "method": "一般情况下其他的错误会导致0x38，请检查有无其他的错误，如果没有，检查主接触器接线"
+        },
+        "0x39": {
+            "des": "Main ContactorDid Not Close",
+            "reason": "主接触器未闭合: 当需要主接触器闭合时候， 电容电压未达到B+电压",
+            "method": "主接触器未闭合 or 熔断器断开 or 主接触器触点氧化，熔化， 或者连接状态不稳定"
+        },
+        "0x41": {
+            "des": "Throttle Wiper High",
+            "reason": "加速器输出偏高 :加速器电位器（16 管脚） 输出电压高于输出电压限制",
+            "method": "检查加速器电位器输出电压过高 or 查看Monitor»Inputs:Throttle Pot，降低加速器电位器输出电压，检查是否接线错误"
+        },
+        "0x42": {
+            "des": "Throttle Wiper Low",
+            "reason": "加速器输出偏低 :加速器电位器（17 管脚） 输出电压低于输出电压限制 ",
+            "method": "检查加速器电位器输出电压过低 or 查看Monitor»Inputs:Throttle Pot，增加加速器电位器输出电压，检查是否接线错误"
+        },
+        "0x43": {
+            "des": "Pot2 Wiper High",
+            "reason": "",
+            "method": "检查电位器2 输出电压过高 or 检查Monitor »Inputs: Pot2 Raw ,检查是否接线错误"
+        },
+        "0x44": {
+            "des": "Pot2 Wiper Low",
+            "reason": "电位器2 输出过低:电位器2（17 管脚）输出电压低于输出电压限制",
+            "method": "检查电位器2 输出电压过低 or 检查Monitor »Inputs: Pot2 Raw ,检查是否接线错误"
+        },
+        "0x45": {
+            "des": "PotLowOvercurrent",
+            "reason": "电位器低端电流过高:电位器低端（18 管脚） 电流超过了10mA",
+            "method": "电位器阻抗过低 or 查看监控菜单 Monitor >> Outputs: Pot Low or 断电重启curtis控制器"
+        },
+        "0x46": {
+            "des": "EEPROM Failure",
+            "reason": "EEPROM失效:控制器操作系统试图向EEPROM 写入并且失败",
+            "method": "下载正确的软件，烧写正确的软件版本"
+        },
+        "0x47": {
+            "des": "HPD/Sequencing Fault 或 Emer RevHPD 或 Pump HPD",
+            "reason": "高踏板保护/操作顺序失败:由于钥匙启动， 互锁， 方向， 以及加速器输入设置错误导致高踏板保护以及启动顺序错误",
+            "method": "钥匙启动， 互锁， 方向以及加速器输入顺序设置错误 or 接线， 开关钥匙， 互锁方向， 或加速器输入故障 or 在curtis中没有EMR reverse brake 但是在设置项里面却打开了，将之关掉"
+        },
+        "0x49": {
+            "des": "ParameterChange",
+            "reason": "参数的更改需要钥匙开关的重启动",
+            "method": "断电重启curtis驱动器"
+        },
+        "0x51": {
+            "des": "user ",
+            "reason": "",
+            "method": ""
+        },
+        "0x52": {
+            "des": "TH PDO timeout",
+            "reason": "can 手柄连接超时",
+            "method": "can手柄连接超时，检查接线，联系curtis的供应商"
+        },
+        "0x54": {
+            "des": "EMR STUCK",
+            "reason": "上电前紧急反向开关断开",
+            "method": "检查紧急反向开关的接线是否正常"
+        },
+        "0x55": {
+            "des": "none",
+            "reason": "none",
+            "method": "none"
+        },
+        "0x56": {
+            "des": "Handle switch welded",
+            "reason": "上电前互锁开关（常开开关闭合）",
+            "method": "检查互锁开关的接线是否正确"
+        },
+        "0x57": {
+            "des": "EMR Switch trigger",
+            "reason": "托盘车在后退时紧急反向开关动作",
+            "method": "联系curtis供应商"
+        },
+        "0x59": {
+            "des": "1220 communication Fault",
+            "reason": "行走驱动器和1220C通讯失败",
+            "method": "检查1220C和行走驱动器的can总线连接是否正常 or 检查行走驱动器和1220的can baudrate 和 can ID配置的是否正确"
+        },
+        "0x60": {
+            "des": "none",
+            "reason": "none",
+            "method": "none"
+        },
+        "0x61": {
+            "des": "COM confict",
+            "reason": "手持编程器连在编程口上",
+            "method": "将手持编程器拔掉"
+        },
+        "0x62": {
+            "des": "angle INPUT fault",
+            "reason": "1220C 模拟量信号异常，主控的j1-24号脚信号异常",
+            "method": "对照电气原理图检查接线是否正确"
+        },
+        "0x68": {
+            "des": "VCL Run Time Error",
+            "reason": "运行时间VCL 代码错误",
+            "method": "曾经遇到can信号导致curtis驱动器崩溃的情况，首先检查我们控制器can线信号，然后联系curtis供应商"
+        },
+        "0x69": {
+            "des": "External Supply Out of Range",
+            "reason": "外部电源电流（总电流: 5V（ 26 管脚） 以及12V （25 管脚） ） 超出限制； 范围上限由External Supply Max定义， 下限由External SupplMin 定义",
+            "method": "检查 Monitor »Outputs: ExtSupply Current 或 调整外部电流"
+        },
+        "0x71": {
+            "des": "OS General",
+            "reason": "操作系统故障:内部控制失效",
+            "method": "断电重启curtis驱动器"
+        },
+        "0x72": {
+            "des": "PDO Timeout",
+            "reason": "PDO 超时:CAN PDO 信息接收时间超时",
+            "method": "检查can 通信是否正常，检查can线路接线是否正常、检查模型文件配置是否正确"
+        },
+        "0x73": {
+            "des": "Stall Detected",
+            "reason": "电机堵转:检测不到电机编码器",
+            "method": "检查电机存在机械堵转 or 检查电机编码器失效 or 检查是否接线错误 or 检查输入点击编码器电源是否故障"
+        },
+        "0x74": {
+            "des": "Fault On Other Traction Controlle",
+            "reason": "其他牵引控制器故障 ，双驱错误: 查看其他驱动器；",
+            "method": "联系curtis供应商"
+        },
+        "0x75": {
+            "des": "Dual Severe Faul",
+            "reason": "双驱动错误 :查看其它驱动器",
+            "method": "联系curtis供应商"
+        },
+        "0x87": {
+            "des": "Motor Characterization Fault",
+            "reason": "电机匹配过程失败",
+            "method": "查找curtis驱动器内部错误信息，修改错误重新匹配:"
+        },
+        "0x89": {
+            "des": "Motor Type Fault",
+            "reason": "电机类型错误 ",
+            "method": "电机类型数值超出范围，配置正确的值，断掉重启curtis驱动器"
+        },
+        "0x91": {
+            "des": "VCl/OSMismatch",
+            "reason": "控制器中VCL/OS 不匹配，",
+            "method": "联系相关人员，更新正确的VCL和 OS 程序"
+        },
+        "0x92": {
+            "des": "EM Brake Failed to Set",
+            "reason": "电磁刹锁死后， 车辆仍然在移动",
+            "method": "电磁刹车制动力太小 or 检查加速器是否正常 or 检查curtis参数是否符合文档 or 断电重启curtis驱动器"
+        },
+        "0x93": {
+            "des": "Encoder LOS(Limited Operating Strategy)",
+            "reason": "编码器受限操作状态:由于电机堵转或者编码器故障， 使得受限操作状态被激活",
+            "method": "检查电机堵转 or 电机编码器故障 or 检查电机编码器接线，断电重启curtis驱动器"
+        },
+        "0x94": {
+            "des": "Emer Rev Timeout",
+            "reason": "紧急反向反应超时 ",
+            "method": "检查紧急反向开关的状态 or 检查相关接线和curtis驱动器参数的配置"
+        },
+        "0x98": {
+            "des": "IllegalModel Numbe",
+            "reason": "控制器型号错误，控制器无法识别",
+            "method": "请联系curtis供应商"
+        },
+        "0x99": {
+            "des": "Dualmotor Parameter Mismatch",
+            "reason": "双电机参数匹配错误",
+            "method": "请联系curtis供应商"
+        }
+    },
+    "Curtis-1234-Seer": {
+        "match_bit":false,
+        "0x12": {
+            "des": "Controller Overcurrent",
+            "reason": "控制器电流过载 :相位电流超过了限定电流",
+            "method": "检查电机外部U，V，W连接短路 or 检查电机参数是否不匹配 or 检查控制器是否有故障:后断电重启curtis控制器"
+        },
+        "0x13": {
+            "des": "Current Sensor Fault",
+            "reason": "电流传感器故障 :控制器电流传感器读数偏差",
+            "method": "检查电机U、V、W通过定子是否对车体短路，导致漏电 or 检查控制器是否有故障:后断电重启curtis"
+        },
+        "0x14": {
+            "des": "PreCharge Failed",
+            "reason": "预充电失败 :钥匙开关输入电压对电容器充电失败",
+            "method": "检查是否电容器正端外接负载使电容器不能正常充电  查看菜单Monitor>>Battery:Capacitor Voltage:后通过VCL函数percharge()重新设置或者互锁开关重新输入"
+        },
+        "0x15": {
+            "des": "Controller Severe Undertemp",
+            "reason": "控制器温度过低:散热温度低于-40℃",
+            "method": "检查外部环境是否温度太低 or 检查菜单Monitor>>Controller:Temperature :温度升至-40℃以上或者断电重启curtis控制器"
+        },
+        "0x16": {
+            "des": "Controller Severe Overtemp",
+            "reason": "控制器温度过高:散热器温度超过95℃",
+            "method": "检查控制器工作环境 or 车辆超载 or 控制安装错误  检查Monitor>>Controller:Temperature : 断电重启curtis控制器"
+        },
+        "0x17": {
+            "des": "Severe Undervoltage",
+            "reason": "电压过低:MOSFEET桥工作室电容电压低于最低啊电压限制",
+            "method": "检查电池参数设置错误 or 电池阻抗过大 or 电池连接断开 or 熔断器断开或主接触器未连接 检查Monitor Battery>>Capacitor Voltage :将电容电压升高到高，后断电重启curtis控制器"
+        },
+        "0x18": {
+            "des": "Severe Overvoltage",
+            "reason": "电压过高:MOSFEET桥工作室电容电压超过了最高电压限制",
+            "method": "检查电池参数设置错误 or 电池阻抗过高 or 再生制动时电池连接断开 检查检查Monitor Battery>>Capacitor Voltage:降低电压，后断电重启curtis控制器"
+        },
+        "0x21": {
+            "des": "Controller Undertemp Cutback",
+            "reason": "控制器温度过低导致性能消减:散热器温度低于-25℃",
+            "method": "检查控制器在受限工作条件下工作 :使散热器温度高于-25℃"
+        },
+        "0x22": {
+            "des": "Controller Overtemp Cutback",
+            "reason": "控制器温度过高导致性能消减:散热器温度超过85℃",
+            "method": "检查控制器工作环境严酷 or 检查车辆超载 or 查看菜单Controller:Temperature 5 :降低温度"
+        },
+        "0x23": {
+            "des": "Undervoltage Cutback",
+            "reason": "电压过低性能消减:电容电压过低",
+            "method": "检查电池电量不足 or 检查电池参数设置错误 or 电池阻抗过大 or 电池连接断开 or 查看Monitor >>Battery:Capacitor Voltage :将电容端电压升高到高于最低电压限制值"
+        },
+        "0x24": {
+            "des": "Overvoltage Cutback",
+            "reason": "电压过高性能消减:MOSFEET 桥工作时电容电压超过了最高电圧限制",
+            "method": "检查 再生制动过程中再生电流导致电池电压升高 or 电池参数设置错误 or 电池阻抗过大 or 再生制动是电池连接断开:将电容端电压降低与最高电压限制值"
+        },
+        "0x25": {
+            "des": "+5VSupply Failure",
+            "reason": "控制器输出5V电源失效 : 5v 输出(pin 26)有超过±10%的误差范围",
+            "method": "外接负载阻抗过低 or 查看菜单 Monitor » outputs:5 Volts and Ext Supply Current :调整输出电压至5V±10%范围"
+        },
+        "0x26": {
+            "des": "Digital Out 6 Failure",
+            "reason": "驱动6 输出失效:驱动6 输出电流超出15mA",
+            "method": "外接于驱动6 输出（ Pin19） 的负载阻抗过低 :检查接线错误 "
+        },
+        "0x27": {
+            "des": "Digital Out7 OVercurrent",
+            "reason": "驱动7 输出量输出过流:驱动7 输出电流超出15mA",
+            "method": "外接于驱动7 输出（ Pin20） 的负载阻抗过低 :检查接线错误"
+        },
+        "0x28": {
+            "des": "Motor TempHot Cutback",
+            "reason": "电机过热导致性能消减 : 电机温度传感器输入",
+            "method": "检查电机温度达到或者高于程序设定的警戒温度 or 检查电机温度设置参数 or 检查Monitor >> Motor >> Temperatureand >> Inputs:Analog2 or 检查是否行走的时候抱闸未打开"
+        },
+        "0x29": {
+            "des": "Motor Temp Sensor Fault",
+            "reason": "电机温度传感器故障 :电机温度传感器输入电压值为0 或大于10V ",
+            "method": "检查电机温度传感器连接错误 or 检查Monitor»Motor >> Temperatureand >> Inputs: Analog2"
+        },
+        "0x31": {
+            "des": "Coil1 Driver 、 Main Open/short",
+            "reason": "驱动1开路或者短路、主接触器线圈开路/短路:驱动1 输出（ 6 管脚） 开路或者短路，此故障只有在“Main Enable”设置为ON的时候才可能发生",
+            "method": "检查连接负载开路或短路 or 连接管脚污损 or 检查纠正错误的接线"
+        },
+        "0x32": {
+            "des": "Coil2 DriverOpen/Short、EMBrake Open/Short",
+            "reason": "驱动2 开路或短路、电磁刹车线圈开路/短路:驱动2 输出（ 5 管脚） 开路或者短路，此故障仅在“ EMbrakeType” 设置为0才发生",
+            "method": "检查连接负载开路或短路 or 连接管脚污损 or 检查纠正错误的接线"
+        },
+        "0x33": {
+            "des": "Coil3 Driver Open/short",
+            "reason": "驱动3开路或短路:驱动3输出开路或者短路",
+            "method": "检查连接负载开路或短路 or 连接管脚污损 or 检查纠正错误的接线"
+        },
+        "0x34": {
+            "des": "Coil4 Driver Open/short",
+            "reason": "驱动4开路或短路:驱动4输出开路或者短路",
+            "method": "检查连接负载开路或短路 or 连接管脚污损 or 检查纠正错误的接线"
+        },
+        "0x35": {
+            "des": "PDOpen/Short",
+            "reason": "比例驱动开路/短路:比例驱动（2管脚）开路或者短路",
+            "method": "检查连接负载开路或短路 or 连接管脚污损 or 检查纠正错误的接线"
+        },
+        "0x36": {
+            "des": "Encoder Fault",
+            "reason": "编码器失效",
+            "method": "检查电机编码器故障 or 检查编码器错误的接线，断电重启curtis控制器"
+        },
+        "0x37": {
+            "des": "Motor Open",
+            "reason": "电机缺相，U/V/W一相或者多相开路",
+            "method": "检查电机缺相 or 电机接线错误 or 查看Monitor»Motor: Motor RPM，断电重启curtis控制器"
+        },
+        "0x38": {
+            "des": "Main Contactor Welded",
+            "reason": "主接触器粘连:电容端先于主接触器吸合， 电容电压没有释放",
+            "method": "一般情况下其他的错误会导致0x38，请检查有无其他的错误，如果没有，检查主接触器接线"
+        },
+        "0x39": {
+            "des": "Main ContactorDid Not Close",
+            "reason": "主接触器未闭合: 当需要主接触器闭合时候， 电容电压未达到B+电压",
+            "method": "主接触器未闭合 or 熔断器断开 or 主接触器触点氧化，熔化， 或者连接状态不稳定"
+        },
+        "0x41": {
+            "des": "Throttle Wiper High",
+            "reason": "加速器输出偏高 :加速器电位器（16 管脚） 输出电压高于输出电压限制",
+            "method": "检查加速器电位器输出电压过高 or 查看Monitor»Inputs:Throttle Pot，降低加速器电位器输出电压，检查是否接线错误"
+        },
+        "0x42": {
+            "des": "Throttle Wiper Low",
+            "reason": "加速器输出偏低 :加速器电位器（17 管脚） 输出电压低于输出电压限制 ",
+            "method": "检查加速器电位器输出电压过低 or 查看Monitor»Inputs:Throttle Pot，增加加速器电位器输出电压，检查是否接线错误"
+        },
+        "0x43": {
+            "des": "Pot2 Wiper High",
+            "reason": "",
+            "method": "检查电位器2 输出电压过高 or 检查Monitor »Inputs: Pot2 Raw ,检查是否接线错误"
+        },
+        "0x44": {
+            "des": "Pot2 Wiper Low",
+            "reason": "电位器2 输出过低:电位器2（17 管脚）输出电压低于输出电压限制",
+            "method": "检查电位器2 输出电压过低 or 检查Monitor »Inputs: Pot2 Raw ,检查是否接线错误"
+        },
+        "0x45": {
+            "des": "PotLowOvercurrent",
+            "reason": "电位器低端电流过高:电位器低端（18 管脚） 电流超过了10mA",
+            "method": "电位器阻抗过低 or 查看监控菜单 Monitor >> Outputs: Pot Low or 断电重启curtis控制器"
+        },
+        "0x46": {
+            "des": "EEPROM Failure",
+            "reason": "EEPROM失效:控制器操作系统试图向EEPROM 写入并且失败",
+            "method": "下载正确的软件，烧写正确的软件版本"
+        },
+        "0x47": {
+            "des": "HPD/Sequencing Fault 或 Emer RevHPD 或 Pump HPD",
+            "reason": "高踏板保护/操作顺序失败:由于钥匙启动， 互锁， 方向， 以及加速器输入设置错误导致高踏板保护以及启动顺序错误",
+            "method": "钥匙启动， 互锁， 方向以及加速器输入顺序设置错误 or 接线， 开关钥匙， 互锁方向， 或加速器输入故障 or 在curtis中没有EMR reverse brake 但是在设置项里面却打开了，将之关掉"
+        },
+        "0x49": {
+            "des": "ParameterChange",
+            "reason": "参数的更改需要钥匙开关的重启动",
+            "method": "断电重启curtis驱动器"
+        },
+        "0x51": {
+            "des": "user ",
+            "reason": "",
+            "method": ""
+        },
+        "0x52": {
+            "des": "",
+            "reason": "",
+            "method": ""
+        },
+        "0x53": {
+            "des": "",
+            "reason": "",
+            "method": ""
+        },
+        "0x54": {
+            "des": "",
+            "reason": "",
+            "method": ""
+        },
+        "0x55": {
+            "des": "",
+            "reason": "",
+            "method": ""
+        },
+        "0x56": {
+            "des": "",
+            "reason": "",
+            "method": ""
+        },
+        "0x57": {
+            "des": "",
+            "reason": "",
+            "method": ""
+        },
+        "0x59": {
+            "des": "",
+            "reason": "",
+            "method": ""
+        },
+        "0x60": {
+            "des": "",
+            "reason": "",
+            "method": ""
+        },
+        "0x61": {
+            "des": "",
+            "reason": "",
+            "method": ""
+        },
+        "0x68": {
+            "des": "VCL Run Time Error",
+            "reason": "运行时间VCL 代码错误",
+            "method": "曾经遇到can信号导致curtis驱动器崩溃的情况，首先检查我们控制器can线信号，然后联系curtis供应商"
+        },
+        "0x69": {
+            "des": "External Supply Out of Range",
+            "reason": "外部电源电流（总电流: 5V（ 26 管脚） 以及12V （25 管脚） ） 超出限制； 范围上限由External Supply Max定义， 下限由External SupplMin 定义",
+            "method": "检查 Monitor »Outputs: ExtSupply Current 或 调整外部电流"
+        },
+        "0x71": {
+            "des": "OS General",
+            "reason": "操作系统故障:内部控制失效",
+            "method": "断电重启curtis驱动器"
+        },
+        "0x72": {
+            "des": "PDO Timeout",
+            "reason": "PDO 超时:CAN PDO 信息接收时间超时",
+            "method": "检查can 通信是否正常，检查can线路接线是否正常、检查模型文件配置是否正确"
+        },
+        "0x73": {
+            "des": "Stall Detected",
+            "reason": "电机堵转:检测不到电机编码器",
+            "method": "检查电机存在机械堵转 or 检查电机编码器失效 or 检查是否接线错误 or 检查输入点击编码器电源是否故障"
+        },
+        "0x74": {
+            "des": "Fault On Other Traction Controlle",
+            "reason": "其他牵引控制器故障 ，双驱错误: 查看其他驱动器；",
+            "method": "联系curtis供应商"
+        },
+        "0x75": {
+            "des": "Dual Severe Faul",
+            "reason": "双驱动错误 :查看其它驱动器",
+            "method": "联系curtis供应商"
+        },
+        "0x87": {
+            "des": "Motor Characterization Fault",
+            "reason": "电机匹配过程失败",
+            "method": "查找curtis驱动器内部错误信息，修改错误重新匹配:"
+        },
+        "0x89": {
+            "des": "Motor Type Fault",
+            "reason": "电机类型错误 ",
+            "method": "电机类型数值超出范围，配置正确的值，断掉重启curtis驱动器"
+        },
+        "0x91": {
+            "des": "VCl/OSMismatch",
+            "reason": "控制器中VCL/OS 不匹配，",
+            "method": "联系相关人员，更新正确的VCL和 OS 程序"
+        },
+        "0x92": {
+            "des": "EM Brake Failed to Set",
+            "reason": "电磁刹锁死后， 车辆仍然在移动",
+            "method": "电磁刹车制动力太小 or 检查加速器是否正常 or 检查curtis参数是否符合文档 or 断电重启curtis驱动器"
+        },
+        "0x93": {
+            "des": "Encoder LOS(Limited Operating Strategy)",
+            "reason": "编码器受限操作状态:由于电机堵转或者编码器故障， 使得受限操作状态被激活",
+            "method": "检查电机堵转 or 电机编码器故障 or 检查电机编码器接线，断电重启curtis驱动器"
+        },
+        "0x94": {
+            "des": "Emer Rev Timeout",
+            "reason": "紧急反向反应超时 ",
+            "method": "检查紧急反向开关的状态 or 检查相关接线和curtis驱动器参数的配置"
+        },
+        "0x98": {
+            "des": "IllegalModel Numbe",
+            "reason": "控制器型号错误，控制器无法识别",
+            "method": "请联系curtis供应商"
+        },
+        "0x99": {
+            "des": "Dualmotor Parameter Mismatch",
+            "reason": "双电机参数匹配错误",
+            "method": "请联系curtis供应商"
+        }
+    },
+    "Curtis-1298-DHL": {
+        "match_bit":false,
+        "0x12": {
+            "des": "Controller Overcurrent",
+            "reason": "控制器电流过载 :相位电流超过了限定电流",
+            "method": "检查电机外部U，V，W连接短路 or 检查电机参数是否不匹配 or 检查控制器是否有故障:后断电重启curtis控制器"
+        },
+        "0x13": {
+            "des": "Current Sensor Fault",
+            "reason": "电流传感器故障 :控制器电流传感器读数偏差",
+            "method": "检查电机U、V、W通过定子是否对车体短路，导致漏电 or 检查控制器是否有故障:后断电重启curtis"
+        },
+        "0x14": {
+            "des": "PreCharge Failed",
+            "reason": "预充电失败 :钥匙开关输入电压对电容器充电失败",
+            "method": "检查是否电容器正端外接负载使电容器不能正常充电  查看菜单Monitor>>Battery:Capacitor Voltage:后通过VCL函数percharge()重新设置或者互锁开关重新输入"
+        },
+        "0x15": {
+            "des": "Controller Severe Undertemp",
+            "reason": "控制器温度过低:散热温度低于-40℃",
+            "method": "检查外部环境是否温度太低 or 检查菜单Monitor>>Controller:Temperature :温度升至-40℃以上或者断电重启curtis控制器"
+        },
+        "0x16": {
+            "des": "Controller Severe Overtemp",
+            "reason": "控制器温度过高:散热器温度超过95℃",
+            "method": "检查控制器工作环境 or 车辆超载 or 控制安装错误  检查Monitor>>Controller:Temperature : 断电重启curtis控制器"
+        },
+        "0x17": {
+            "des": "Severe Undervoltage",
+            "reason": "电压过低:MOSFEET桥工作室电容电压低于最低啊电压限制",
+            "method": "检查电池参数设置错误 or 电池阻抗过大 or 电池连接断开 or 熔断器断开或主接触器未连接 检查Monitor Battery>>Capacitor Voltage :将电容电压升高到高，后断电重启curtis控制器"
+        },
+        "0x18": {
+            "des": "Severe Overvoltage",
+            "reason": "电压过高:MOSFEET桥工作室电容电压超过了最高电压限制",
+            "method": "检查电池参数设置错误 or 电池阻抗过高 or 再生制动时电池连接断开 检查检查Monitor Battery>>Capacitor Voltage:降低电压，后断电重启curtis控制器"
+        },
+        "0x21": {
+            "des": "Controller Undertemp Cutback",
+            "reason": "控制器温度过低导致性能消减:散热器温度低于-25℃",
+            "method": "检查控制器在受限工作条件下工作 :使散热器温度高于-25℃"
+        },
+        "0x22": {
+            "des": "Controller Overtemp Cutback",
+            "reason": "控制器温度过高导致性能消减:散热器温度超过85℃",
+            "method": "检查控制器工作环境严酷 or 检查车辆超载 or 查看菜单Controller:Temperature 5 :降低温度"
+        },
+        "0x23": {
+            "des": "Undervoltage Cutback",
+            "reason": "电压过低性能消减:电容电压过低",
+            "method": "检查电池电量不足 or 检查电池参数设置错误 or 电池阻抗过大 or 电池连接断开 or 查看Monitor >>Battery:Capacitor Voltage :将电容端电压升高到高于最低电压限制值"
+        },
+        "0x24": {
+            "des": "Overvoltage Cutback",
+            "reason": "电压过高性能消减:MOSFEET 桥工作时电容电压超过了最高电圧限制",
+            "method": "检查 再生制动过程中再生电流导致电池电压升高 or 电池参数设置错误 or 电池阻抗过大 or 再生制动是电池连接断开:将电容端电压降低与最高电压限制值"
+        },
+        "0x25": {
+            "des": "+5VSupply Failure",
+            "reason": "控制器输出5V电源失效 : 5v 输出(pin 26)有超过±10%的误差范围",
+            "method": "外接负载阻抗过低 or 查看菜单 Monitor » outputs:5 Volts and Ext Supply Current :调整输出电压至5V±10%范围"
+        },
+        "0x26": {
+            "des": "Digital Out 6 Failure",
+            "reason": "驱动6 输出失效:驱动6 输出电流超出15mA",
+            "method": "外接于驱动6 输出（ Pin19） 的负载阻抗过低 :检查接线错误 "
+        },
+        "0x27": {
+            "des": "Digital Out7 OVercurrent",
+            "reason": "驱动7 输出量输出过流:驱动7 输出电流超出15mA",
+            "method": "外接于驱动7 输出（ Pin20） 的负载阻抗过低 :检查接线错误"
+        },
+        "0x28": {
+            "des": "Motor TempHot Cutback",
+            "reason": "电机过热导致性能消减 : 电机温度传感器输入",
+            "method": "检查电机温度达到或者高于程序设定的警戒温度 or 检查电机温度设置参数 or 检查Monitor >> Motor >> Temperatureand >> Inputs:Analog2 or 检查是否行走的时候抱闸未打开"
+        },
+        "0x29": {
+            "des": "Motor Temp Sensor Fault",
+            "reason": "电机温度传感器故障 :电机温度传感器输入电压值为0 或大于10V ",
+            "method": "检查电机温度传感器连接错误 or 检查Monitor»Motor >> Temperatureand >> Inputs: Analog2"
+        },
+        "0x31": {
+            "des": "Coil1 Driver 、 Main Open/short",
+            "reason": "驱动1开路或者短路、主接触器线圈开路/短路:驱动1 输出（ 6 管脚） 开路或者短路，此故障只有在“Main Enable”设置为ON的时候才可能发生",
+            "method": "检查连接负载开路或短路 or 连接管脚污损 or 检查纠正错误的接线"
+        },
+        "0x32": {
+            "des": "Coil2 DriverOpen/Short、EMBrake Open/Short",
+            "reason": "驱动2 开路或短路、电磁刹车线圈开路/短路:驱动2 输出（ 5 管脚） 开路或者短路，此故障仅在“ EMbrakeType” 设置为0才发生",
+            "method": "检查连接负载开路或短路 or 连接管脚污损 or 检查纠正错误的接线"
+        },
+        "0x33": {
+            "des": "Coil3 Driver Open/short",
+            "reason": "驱动3开路或短路:驱动3输出开路或者短路",
+            "method": "检查连接负载开路或短路 or 连接管脚污损 or 检查纠正错误的接线"
+        },
+        "0x34": {
+            "des": "Coil4 Driver Open/short",
+            "reason": "驱动4开路或短路:驱动4输出开路或者短路",
+            "method": "检查连接负载开路或短路 or 连接管脚污损 or 检查纠正错误的接线"
+        },
+        "0x35": {
+            "des": "PDOpen/Short",
+            "reason": "比例驱动开路/短路:比例驱动（2管脚）开路或者短路",
+            "method": "检查连接负载开路或短路 or 连接管脚污损 or 检查纠正错误的接线"
+        },
+        "0x36": {
+            "des": "Encoder Fault",
+            "reason": "编码器失效",
+            "method": "检查电机编码器故障 or 检查编码器错误的接线，断电重启curtis控制器"
+        },
+        "0x37": {
+            "des": "Motor Open",
+            "reason": "电机缺相，U/V/W一相或者多相开路",
+            "method": "检查电机缺相 or 电机接线错误 or 查看Monitor»Motor: Motor RPM，断电重启curtis控制器"
+        },
+        "0x38": {
+            "des": "Main Contactor Welded",
+            "reason": "主接触器粘连:电容端先于主接触器吸合， 电容电压没有释放",
+            "method": "一般情况下其他的错误会导致0x38，请检查有无其他的错误，如果没有，检查主接触器接线"
+        },
+        "0x39": {
+            "des": "Main ContactorDid Not Close",
+            "reason": "主接触器未闭合: 当需要主接触器闭合时候， 电容电压未达到B+电压",
+            "method": "主接触器未闭合 or 熔断器断开 or 主接触器触点氧化，熔化， 或者连接状态不稳定"
+        },
+        "0x41": {
+            "des": "Throttle Wiper High",
+            "reason": "加速器输出偏高 :加速器电位器（16 管脚） 输出电压高于输出电压限制",
+            "method": "检查加速器电位器输出电压过高 or 查看Monitor»Inputs:Throttle Pot，降低加速器电位器输出电压，检查是否接线错误"
+        },
+        "0x42": {
+            "des": "Throttle Wiper Low",
+            "reason": "加速器输出偏低 :加速器电位器（17 管脚） 输出电压低于输出电压限制 ",
+            "method": "检查加速器电位器输出电压过低 or 查看Monitor»Inputs:Throttle Pot，增加加速器电位器输出电压，检查是否接线错误"
+        },
+        "0x43": {
+            "des": "Pot2 Wiper High",
+            "reason": "",
+            "method": "检查电位器2 输出电压过高 or 检查Monitor »Inputs: Pot2 Raw ,检查是否接线错误"
+        },
+        "0x44": {
+            "des": "Pot2 Wiper Low",
+            "reason": "电位器2 输出过低:电位器2（17 管脚）输出电压低于输出电压限制",
+            "method": "检查电位器2 输出电压过低 or 检查Monitor »Inputs: Pot2 Raw ,检查是否接线错误"
+        },
+        "0x45": {
+            "des": "PotLowOvercurrent",
+            "reason": "电位器低端电流过高:电位器低端（18 管脚） 电流超过了10mA",
+            "method": "电位器阻抗过低 or 查看监控菜单 Monitor >> Outputs: Pot Low or 断电重启curtis控制器"
+        },
+        "0x46": {
+            "des": "EEPROM Failure",
+            "reason": "EEPROM失效:控制器操作系统试图向EEPROM 写入并且失败",
+            "method": "下载正确的软件，烧写正确的软件版本"
+        },
+        "0x47": {
+            "des": "HPD/Sequencing Fault 或 Emer RevHPD 或 Pump HPD",
+            "reason": "高踏板保护/操作顺序失败:由于钥匙启动， 互锁， 方向， 以及加速器输入设置错误导致高踏板保护以及启动顺序错误",
+            "method": "钥匙启动， 互锁， 方向以及加速器输入顺序设置错误 or 接线， 开关钥匙， 互锁方向， 或加速器输入故障 or 在curtis中没有EMR reverse brake 但是在设置项里面却打开了，将之关掉"
+        },
+        "0x49": {
+            "des": "ParameterChange",
+            "reason": "参数的更改需要钥匙开关的重启动",
+            "method": "断电重启curtis驱动器"
+        },
+        "0x51": {
+            "des": "user ",
+            "reason": "",
+            "method": ""
+        },
+        "0x52": {
+            "des": "",
+            "reason": "",
+            "method": ""
+        },
+        "0x53": {
+            "des": "",
+            "reason": "",
+            "method": ""
+        },
+        "0x54": {
+            "des": "",
+            "reason": "",
+            "method": ""
+        },
+        "0x55": {
+            "des": "",
+            "reason": "",
+            "method": ""
+        },
+        "0x56": {
+            "des": "",
+            "reason": "",
+            "method": ""
+        },
+        "0x57": {
+            "des": "",
+            "reason": "",
+            "method": ""
+        },
+        "0x59": {
+            "des": "",
+            "reason": "",
+            "method": ""
+        },
+        "0x60": {
+            "des": "",
+            "reason": "",
+            "method": ""
+        },
+        "0x61": {
+            "des": "",
+            "reason": "",
+            "method": ""
+        },
+        "0x68": {
+            "des": "VCL Run Time Error",
+            "reason": "运行时间VCL 代码错误",
+            "method": "曾经遇到can信号导致curtis驱动器崩溃的情况，首先检查我们控制器can线信号，然后联系curtis供应商"
+        },
+        "0x69": {
+            "des": "External Supply Out of Range",
+            "reason": "外部电源电流（总电流: 5V（ 26 管脚） 以及12V （25 管脚） ） 超出限制； 范围上限由External Supply Max定义， 下限由External SupplMin 定义",
+            "method": "检查 Monitor »Outputs: ExtSupply Current 或 调整外部电流"
+        },
+        "0x71": {
+            "des": "OS General",
+            "reason": "操作系统故障:内部控制失效",
+            "method": "断电重启curtis驱动器"
+        },
+        "0x72": {
+            "des": "PDO Timeout",
+            "reason": "PDO 超时:CAN PDO 信息接收时间超时",
+            "method": "检查can 通信是否正常，检查can线路接线是否正常、检查模型文件配置是否正确"
+        },
+        "0x73": {
+            "des": "Stall Detected",
+            "reason": "电机堵转:检测不到电机编码器",
+            "method": "检查电机存在机械堵转 or 检查电机编码器失效 or 检查是否接线错误 or 检查输入点击编码器电源是否故障"
+        },
+        "0x74": {
+            "des": "Fault On Other Traction Controlle",
+            "reason": "其他牵引控制器故障 ，双驱错误: 查看其他驱动器；",
+            "method": "联系curtis供应商"
+        },
+        "0x75": {
+            "des": "Dual Severe Faul",
+            "reason": "双驱动错误 :查看其它驱动器",
+            "method": "联系curtis供应商"
+        },
+        "0x87": {
+            "des": "Motor Characterization Fault",
+            "reason": "电机匹配过程失败",
+            "method": "查找curtis驱动器内部错误信息，修改错误重新匹配:"
+        },
+        "0x89": {
+            "des": "Motor Type Fault",
+            "reason": "电机类型错误 ",
+            "method": "电机类型数值超出范围，配置正确的值，断掉重启curtis驱动器"
+        },
+        "0x91": {
+            "des": "VCl/OSMismatch",
+            "reason": "控制器中VCL/OS 不匹配，",
+            "method": "联系相关人员，更新正确的VCL和 OS 程序"
+        },
+        "0x92": {
+            "des": "EM Brake Failed to Set",
+            "reason": "电磁刹锁死后， 车辆仍然在移动",
+            "method": "电磁刹车制动力太小 or 检查加速器是否正常 or 检查curtis参数是否符合文档 or 断电重启curtis驱动器"
+        },
+        "0x93": {
+            "des": "Encoder LOS(Limited Operating Strategy)",
+            "reason": "编码器受限操作状态:由于电机堵转或者编码器故障， 使得受限操作状态被激活",
+            "method": "检查电机堵转 or 电机编码器故障 or 检查电机编码器接线，断电重启curtis驱动器"
+        },
+        "0x94": {
+            "des": "Emer Rev Timeout",
+            "reason": "紧急反向反应超时 ",
+            "method": "检查紧急反向开关的状态 or 检查相关接线和curtis驱动器参数的配置"
+        },
+        "0x98": {
+            "des": "IllegalModel Numbe",
+            "reason": "控制器型号错误，控制器无法识别",
+            "method": "请联系curtis供应商"
+        },
+        "0x99": {
+            "des": "Dualmotor Parameter Mismatch",
+            "reason": "双电机参数匹配错误",
+            "method": "请联系curtis供应商"
+        }
+    },
+    "Curtis-F2A-ReBoTe": {
+        "match_bit":false,
+        "0x12": {
+            "des": "Controller Overcurrent",
+            "reason": "控制器电流过载 :相位电流超过了限定电流",
+            "method": "检查电机外部U，V，W连接短路 or 检查电机参数是否不匹配 or 检查控制器是否有故障:后断电重启curtis控制器"
+        },
+        "0x13": {
+            "des": "Current Sensor Fault",
+            "reason": "电流传感器故障 :控制器电流传感器读数偏差",
+            "method": "检查电机U、V、W通过定子是否对车体短路，导致漏电 or 检查控制器是否有故障:后断电重启curtis"
+        },
+        "0x14": {
+            "des": "PreCharge Failed",
+            "reason": "预充电失败 :钥匙开关输入电压对电容器充电失败",
+            "method": "检查是否电容器正端外接负载使电容器不能正常充电  查看菜单Monitor>>Battery:Capacitor Voltage:后通过VCL函数percharge()重新设置或者互锁开关重新输入"
+        },
+        "0x15": {
+            "des": "Controller Severe Undertemp",
+            "reason": "控制器温度过低:散热温度低于-40℃",
+            "method": "检查外部环境是否温度太低 or 检查菜单Monitor>>Controller:Temperature :温度升至-40℃以上或者断电重启curtis控制器"
+        },
+        "0x16": {
+            "des": "Controller Severe Overtemp",
+            "reason": "控制器温度过高:散热器温度超过95℃",
+            "method": "检查控制器工作环境 or 车辆超载 or 控制安装错误  检查Monitor>>Controller:Temperature : 断电重启curtis控制器"
+        },
+        "0x17": {
+            "des": "Severe Undervoltage",
+            "reason": "电压过低:MOSFEET桥工作室电容电压低于最低啊电压限制",
+            "method": "检查电池参数设置错误 or 电池阻抗过大 or 电池连接断开 or 熔断器断开或主接触器未连接 检查Monitor Battery>>Capacitor Voltage :将电容电压升高到高，后断电重启curtis控制器"
+        },
+        "0x18": {
+            "des": "Severe Overvoltage",
+            "reason": "电压过高:MOSFEET桥工作室电容电压超过了最高电压限制",
+            "method": "检查电池参数设置错误 or 电池阻抗过高 or 再生制动时电池连接断开 检查检查Monitor Battery>>Capacitor Voltage:降低电压，后断电重启curtis控制器"
+        },
+        "0x21": {
+            "des": "Controller Undertemp Cutback",
+            "reason": "控制器温度过低导致性能消减:散热器温度低于-25℃",
+            "method": "检查控制器在受限工作条件下工作 :使散热器温度高于-25℃"
+        },
+        "0x22": {
+            "des": "Controller Overtemp Cutback",
+            "reason": "控制器温度过高导致性能消减:散热器温度超过85℃",
+            "method": "检查控制器工作环境严酷 or 检查车辆超载 or 查看菜单Controller:Temperature 5 :降低温度"
+        },
+        "0x23": {
+            "des": "Undervoltage Cutback",
+            "reason": "电压过低性能消减:电容电压过低",
+            "method": "检查电池电量不足 or 检查电池参数设置错误 or 电池阻抗过大 or 电池连接断开 or 查看Monitor >>Battery:Capacitor Voltage :将电容端电压升高到高于最低电压限制值"
+        },
+        "0x24": {
+            "des": "Overvoltage Cutback",
+            "reason": "电压过高性能消减:MOSFEET 桥工作时电容电压超过了最高电圧限制",
+            "method": "检查 再生制动过程中再生电流导致电池电压升高 or 电池参数设置错误 or 电池阻抗过大 or 再生制动是电池连接断开:将电容端电压降低与最高电压限制值"
+        },
+        "0x25": {
+            "des": "+5VSupply Failure",
+            "reason": "控制器输出5V电源失效 : 5v 输出(pin 26)有超过±10%的误差范围",
+            "method": "外接负载阻抗过低 or 查看菜单 Monitor » outputs:5 Volts and Ext Supply Current :调整输出电压至5V±10%范围"
+        },
+        "0x26": {
+            "des": "Digital Out 6 Failure",
+            "reason": "驱动6 输出失效:驱动6 输出电流超出15mA",
+            "method": "外接于驱动6 输出（ Pin19） 的负载阻抗过低 :检查接线错误 "
+        },
+        "0x27": {
+            "des": "Digital Out7 OVercurrent",
+            "reason": "驱动7 输出量输出过流:驱动7 输出电流超出15mA",
+            "method": "外接于驱动7 输出（ Pin20） 的负载阻抗过低 :检查接线错误"
+        },
+        "0x28": {
+            "des": "Motor TempHot Cutback",
+            "reason": "电机过热导致性能消减 : 电机温度传感器输入",
+            "method": "检查电机温度达到或者高于程序设定的警戒温度 or 检查电机温度设置参数 or 检查Monitor >> Motor >> Temperatureand >> Inputs:Analog2 or 检查是否行走的时候抱闸未打开"
+        },
+        "0x29": {
+            "des": "Motor Temp Sensor Fault",
+            "reason": "电机温度传感器故障 :电机温度传感器输入电压值为0 或大于10V ",
+            "method": "检查电机温度传感器连接错误 or 检查Monitor»Motor >> Temperatureand >> Inputs: Analog2"
+        },
+        "0x31": {
+            "des": "Coil1 Driver 、 Main Open/short",
+            "reason": "驱动1开路或者短路、主接触器线圈开路/短路:驱动1 输出（ 6 管脚） 开路或者短路，此故障只有在“Main Enable”设置为ON的时候才可能发生",
+            "method": "检查连接负载开路或短路 or 连接管脚污损 or 检查纠正错误的接线"
+        },
+        "0x32": {
+            "des": "Coil2 DriverOpen/Short、EMBrake Open/Short",
+            "reason": "驱动2 开路或短路、电磁刹车线圈开路/短路:驱动2 输出（ 5 管脚） 开路或者短路，此故障仅在“ EMbrakeType” 设置为0才发生",
+            "method": "检查连接负载开路或短路 or 连接管脚污损 or 检查纠正错误的接线"
+        },
+        "0x33": {
+            "des": "Coil3 Driver Open/short",
+            "reason": "驱动3开路或短路:驱动3输出开路或者短路",
+            "method": "检查连接负载开路或短路 or 连接管脚污损 or 检查纠正错误的接线"
+        },
+        "0x34": {
+            "des": "Coil4 Driver Open/short",
+            "reason": "驱动4开路或短路:驱动4输出开路或者短路",
+            "method": "检查连接负载开路或短路 or 连接管脚污损 or 检查纠正错误的接线"
+        },
+        "0x35": {
+            "des": "PDOpen/Short",
+            "reason": "比例驱动开路/短路:比例驱动（2管脚）开路或者短路",
+            "method": "检查连接负载开路或短路 or 连接管脚污损 or 检查纠正错误的接线"
+        },
+        "0x36": {
+            "des": "Encoder Fault",
+            "reason": "编码器失效",
+            "method": "检查电机编码器故障 or 检查编码器错误的接线，断电重启curtis控制器"
+        },
+        "0x37": {
+            "des": "Motor Open",
+            "reason": "电机缺相，U/V/W一相或者多相开路",
+            "method": "检查电机缺相 or 电机接线错误 or 查看Monitor»Motor: Motor RPM，断电重启curtis控制器"
+        },
+        "0x38": {
+            "des": "Main Contactor Welded",
+            "reason": "主接触器粘连:电容端先于主接触器吸合， 电容电压没有释放",
+            "method": "一般情况下其他的错误会导致0x38，请检查有无其他的错误，如果没有，检查主接触器接线"
+        },
+        "0x39": {
+            "des": "Main ContactorDid Not Close",
+            "reason": "主接触器未闭合: 当需要主接触器闭合时候， 电容电压未达到B+电压",
+            "method": "主接触器未闭合 or 熔断器断开 or 主接触器触点氧化，熔化， 或者连接状态不稳定"
+        },
+        "0x41": {
+            "des": "Throttle Wiper High",
+            "reason": "加速器输出偏高 :加速器电位器（16 管脚） 输出电压高于输出电压限制",
+            "method": "检查加速器电位器输出电压过高 or 查看Monitor»Inputs:Throttle Pot，降低加速器电位器输出电压，检查是否接线错误"
+        },
+        "0x42": {
+            "des": "Throttle Wiper Low",
+            "reason": "加速器输出偏低 :加速器电位器（17 管脚） 输出电压低于输出电压限制 ",
+            "method": "检查加速器电位器输出电压过低 or 查看Monitor»Inputs:Throttle Pot，增加加速器电位器输出电压，检查是否接线错误"
+        },
+        "0x43": {
+            "des": "Pot2 Wiper High",
+            "reason": "",
+            "method": "检查电位器2 输出电压过高 or 检查Monitor »Inputs: Pot2 Raw ,检查是否接线错误"
+        },
+        "0x44": {
+            "des": "Pot2 Wiper Low",
+            "reason": "电位器2 输出过低:电位器2（17 管脚）输出电压低于输出电压限制",
+            "method": "检查电位器2 输出电压过低 or 检查Monitor »Inputs: Pot2 Raw ,检查是否接线错误"
+        },
+        "0x45": {
+            "des": "PotLowOvercurrent",
+            "reason": "电位器低端电流过高:电位器低端（18 管脚） 电流超过了10mA",
+            "method": "电位器阻抗过低 or 查看监控菜单 Monitor >> Outputs: Pot Low or 断电重启curtis控制器"
+        },
+        "0x46": {
+            "des": "EEPROM Failure",
+            "reason": "EEPROM失效:控制器操作系统试图向EEPROM 写入并且失败",
+            "method": "下载正确的软件，烧写正确的软件版本"
+        },
+        "0x47": {
+            "des": "HPD/Sequencing Fault 或 Emer RevHPD 或 Pump HPD",
+            "reason": "高踏板保护/操作顺序失败:由于钥匙启动， 互锁， 方向， 以及加速器输入设置错误导致高踏板保护以及启动顺序错误",
+            "method": "钥匙启动， 互锁， 方向以及加速器输入顺序设置错误 or 接线， 开关钥匙， 互锁方向， 或加速器输入故障 or 在curtis中没有EMR reverse brake 但是在设置项里面却打开了，将之关掉"
+        },
+        "0x49": {
+            "des": "ParameterChange",
+            "reason": "参数的更改需要钥匙开关的重启动",
+            "method": "断电重启curtis驱动器"
+        },
+        "0x51": {
+            "des": "user ",
+            "reason": "",
+            "method": ""
+        },
+        "0x52": {
+            "des": "",
+            "reason": "",
+            "method": ""
+        },
+        "0x53": {
+            "des": "1220C PDO timeout",
+            "reason": "转向驱动器通讯故障",
+            "method": ""
+        },
+        "0x54": {
+            "des": "",
+            "reason": "",
+            "method": ""
+        },
+        "0x55": {
+            "des": "Lift/Lower SRO Fault",
+            "reason": "起升下降动作上电自检故障",
+            "method": "对比标准cpf文件中关于Lift和Lower相关的参数项配置，用1309模块查看驱动器详细信息"
+        },
+        "0x56": {
+            "des": "EMR HPD Fault",
+            "reason": "紧急反向开关上电自检故障",
+            "method": "检查EMR的接线是否正确 or 检查curtis文件中EMR 的参数设置的是否正确"
+        },
+        "0x57": {
+            "des": "1253C PDO timeout",
+            "reason": "油泵控制器通讯故障",
+            "method": "检查1253C和行走驱动器的can总线连接是否正常 or 检查行走驱动器和1253的can baudrate 和 can ID配置的是否正确"
+        },
+        "0x59": {
+            "des": "COM Communication fault",
+            "reason": "行走驱动器和1220转向驱动器握手故障",
+            "method": "检查1220C和行走驱动器的can总线连接是否正常 or 检查行走驱动器和1220的can baudrate 和 can ID配置的是否正确"
+        },
+        "0x64": {
+            "des": "1220C shut throttle",
+            "reason": "1220C有故障车子不能动",
+            "method": "通过1309模块连接到1220C上面，检查相关的错误信息"
+        },
+        "0x65": {
+            "des": "1220C limitted throttle",
+            "reason": "1220C 有故障，车能动限速",
+            "method": "通过1309模块连接到1220C上面，检查相关的错误信息"
+        },
+        "0x66": {
+            "des": "PDO Fault VGA",
+            "reason": "上位机通讯超时",
+            "method": "检查can线连接是否正确且为通路 or 检查模型文件是否配置正确 or 检查curtis中can baudrate 配置是否正确 or 检查主控相关功能是否激活"
+        },
+        "0x67": {
+            "des": "handshake Fault",
+            "reason": "行走驱动器和转向驱动器握手失败",
+            "method": "检查和curtis1220C之间的can线连接 or 检查curtis中配置的can baudrate 和 can ID 配置是否正确"
+        },
+        "0x68": {
+            "des": "VCL Run Time Error",
+            "reason": "运行时间VCL 代码错误",
+            "method": "曾经遇到can信号导致curtis驱动器崩溃的情况，首先检查我们控制器can线信号，然后联系curtis供应商"
+        },
+        "0x69": {
+            "des": "External Supply Out of Range",
+            "reason": "外部电源电流（总电流: 5V（ 26 管脚） 以及12V （25 管脚） ） 超出限制； 范围上限由External Supply Max定义， 下限由External SupplMin 定义",
+            "method": "检查 Monitor »Outputs: ExtSupply Current 或 调整外部电流"
+        },
+        "0x71": {
+            "des": "OS General",
+            "reason": "操作系统故障:内部控制失效",
+            "method": "断电重启curtis驱动器"
+        },
+        "0x72": {
+            "des": "PDO Timeout",
+            "reason": "PDO 超时:CAN PDO 信息接收时间超时",
+            "method": "检查can 通信是否正常，检查can线路接线是否正常、检查模型文件配置是否正确"
+        },
+        "0x73": {
+            "des": "Stall Detected",
+            "reason": "电机堵转:检测不到电机编码器",
+            "method": "检查电机存在机械堵转 or 检查电机编码器失效 or 检查是否接线错误 or 检查输入点击编码器电源是否故障"
+        },
+        "0x74": {
+            "des": "Fault On Other Traction Controlle",
+            "reason": "其他牵引控制器故障 ，双驱错误: 查看其他驱动器；",
+            "method": "联系curtis供应商"
+        },
+        "0x75": {
+            "des": "Dual Severe Faul",
+            "reason": "双驱动错误 :查看其它驱动器",
+            "method": "联系curtis供应商"
+        },
+        "0x87": {
+            "des": "Motor Characterization Fault",
+            "reason": "电机匹配过程失败",
+            "method": "查找curtis驱动器内部错误信息，修改错误重新匹配:"
+        },
+        "0x89": {
+            "des": "Motor Type Fault",
+            "reason": "电机类型错误 ",
+            "method": "电机类型数值超出范围，配置正确的值，断掉重启curtis驱动器"
+        },
+        "0x91": {
+            "des": "VCl/OSMismatch",
+            "reason": "控制器中VCL/OS 不匹配，",
+            "method": "联系相关人员，更新正确的VCL和 OS 程序"
+        },
+        "0x92": {
+            "des": "EM Brake Failed to Set",
+            "reason": "电磁刹锁死后， 车辆仍然在移动",
+            "method": "电磁刹车制动力太小 or 检查加速器是否正常 or 检查curtis参数是否符合文档 or 断电重启curtis驱动器"
+        },
+        "0x93": {
+            "des": "Encoder LOS(Limited Operating Strategy)",
+            "reason": "编码器受限操作状态:由于电机堵转或者编码器故障， 使得受限操作状态被激活",
+            "method": "检查电机堵转 or 电机编码器故障 or 检查电机编码器接线，断电重启curtis驱动器"
+        },
+        "0x94": {
+            "des": "Emer Rev Timeout",
+            "reason": "紧急反向反应超时 ",
+            "method": "检查紧急反向开关的状态 or 检查相关接线和curtis驱动器参数的配置"
+        },
+        "0x98": {
+            "des": "IllegalModel Numbe",
+            "reason": "控制器型号错误，控制器无法识别",
+            "method": "请联系curtis供应商"
+        },
+        "0x99": {
+            "des": "Dualmotor Parameter Mismatch",
+            "reason": "双电机参数匹配错误",
+            "method": "请联系curtis供应商"
+        }
+    },
+    "Curtis-1298-Seer": {
+        "match_bit":false,
+        "0x12": {
+            "des": "Controller Overcurrent",
+            "reason": "控制器电流过载 :相位电流超过了限定电流",
+            "method": "检查电机外部U，V，W连接短路 or 检查电机参数是否不匹配 or 检查控制器是否有故障:后断电重启curtis控制器"
+        },
+        "0x13": {
+            "des": "Current Sensor Fault",
+            "reason": "电流传感器故障 :控制器电流传感器读数偏差",
+            "method": "检查电机U、V、W通过定子是否对车体短路，导致漏电 or 检查控制器是否有故障:后断电重启curtis"
+        },
+        "0x14": {
+            "des": "PreCharge Failed",
+            "reason": "预充电失败 :钥匙开关输入电压对电容器充电失败",
+            "method": "检查是否电容器正端外接负载使电容器不能正常充电  查看菜单Monitor>>Battery:Capacitor Voltage:后通过VCL函数percharge()重新设置或者互锁开关重新输入"
+        },
+        "0x15": {
+            "des": "Controller Severe Undertemp",
+            "reason": "控制器温度过低:散热温度低于-40℃",
+            "method": "检查外部环境是否温度太低 or 检查菜单Monitor>>Controller:Temperature :温度升至-40℃以上或者断电重启curtis控制器"
+        },
+        "0x16": {
+            "des": "Controller Severe Overtemp",
+            "reason": "控制器温度过高:散热器温度超过95℃",
+            "method": "检查控制器工作环境 or 车辆超载 or 控制安装错误  检查Monitor>>Controller:Temperature : 断电重启curtis控制器"
+        },
+        "0x17": {
+            "des": "Severe Undervoltage",
+            "reason": "电压过低:MOSFEET桥工作室电容电压低于最低啊电压限制",
+            "method": "检查电池参数设置错误 or 电池阻抗过大 or 电池连接断开 or 熔断器断开或主接触器未连接 检查Monitor Battery>>Capacitor Voltage :将电容电压升高到高，后断电重启curtis控制器"
+        },
+        "0x18": {
+            "des": "Severe Overvoltage",
+            "reason": "电压过高:MOSFEET桥工作室电容电压超过了最高电压限制",
+            "method": "检查电池参数设置错误 or 电池阻抗过高 or 再生制动时电池连接断开 检查检查Monitor Battery>>Capacitor Voltage:降低电压，后断电重启curtis控制器"
+        },
+        "0x21": {
+            "des": "Controller Undertemp Cutback",
+            "reason": "控制器温度过低导致性能消减:散热器温度低于-25℃",
+            "method": "检查控制器在受限工作条件下工作 :使散热器温度高于-25℃"
+        },
+        "0x22": {
+            "des": "Controller Overtemp Cutback",
+            "reason": "控制器温度过高导致性能消减:散热器温度超过85℃",
+            "method": "检查控制器工作环境严酷 or 检查车辆超载 or 查看菜单Controller:Temperature 5 :降低温度"
+        },
+        "0x23": {
+            "des": "Undervoltage Cutback",
+            "reason": "电压过低性能消减:电容电压过低",
+            "method": "检查电池电量不足 or 检查电池参数设置错误 or 电池阻抗过大 or 电池连接断开 or 查看Monitor >>Battery:Capacitor Voltage :将电容端电压升高到高于最低电压限制值"
+        },
+        "0x24": {
+            "des": "Overvoltage Cutback",
+            "reason": "电压过高性能消减:MOSFEET 桥工作时电容电压超过了最高电圧限制",
+            "method": "检查 再生制动过程中再生电流导致电池电压升高 or 电池参数设置错误 or 电池阻抗过大 or 再生制动是电池连接断开:将电容端电压降低与最高电压限制值"
+        },
+        "0x25": {
+            "des": "+5VSupply Failure",
+            "reason": "控制器输出5V电源失效 : 5v 输出(pin 26)有超过±10%的误差范围",
+            "method": "外接负载阻抗过低 or 查看菜单 Monitor » outputs:5 Volts and Ext Supply Current :调整输出电压至5V±10%范围"
+        },
+        "0x26": {
+            "des": "Digital Out 6 Failure",
+            "reason": "驱动6 输出失效:驱动6 输出电流超出15mA",
+            "method": "外接于驱动6 输出（ Pin19） 的负载阻抗过低 :检查接线错误 "
+        },
+        "0x27": {
+            "des": "Digital Out7 OVercurrent",
+            "reason": "驱动7 输出量输出过流:驱动7 输出电流超出15mA",
+            "method": "外接于驱动7 输出（ Pin20） 的负载阻抗过低 :检查接线错误"
+        },
+        "0x28": {
+            "des": "Motor TempHot Cutback",
+            "reason": "电机过热导致性能消减 : 电机温度传感器输入",
+            "method": "检查电机温度达到或者高于程序设定的警戒温度 or 检查电机温度设置参数 or 检查Monitor >> Motor >> Temperatureand >> Inputs:Analog2 or 检查是否行走的时候抱闸未打开"
+        },
+        "0x29": {
+            "des": "Motor Temp Sensor Fault",
+            "reason": "电机温度传感器故障 :电机温度传感器输入电压值为0 或大于10V ",
+            "method": "检查电机温度传感器连接错误 or 检查Monitor»Motor >> Temperatureand >> Inputs: Analog2"
+        },
+        "0x31": {
+            "des": "Coil1 Driver 、 Main Open/short",
+            "reason": "驱动1开路或者短路、主接触器线圈开路/短路:驱动1 输出（ 6 管脚） 开路或者短路，此故障只有在“Main Enable”设置为ON的时候才可能发生",
+            "method": "检查连接负载开路或短路 or 连接管脚污损 or 检查纠正错误的接线"
+        },
+        "0x32": {
+            "des": "Coil2 DriverOpen/Short、EMBrake Open/Short",
+            "reason": "驱动2 开路或短路、电磁刹车线圈开路/短路:驱动2 输出（ 5 管脚） 开路或者短路，此故障仅在“ EMbrakeType” 设置为0才发生",
+            "method": "检查连接负载开路或短路 or 连接管脚污损 or 检查纠正错误的接线"
+        },
+        "0x33": {
+            "des": "Coil3 Driver Open/short",
+            "reason": "驱动3开路或短路:驱动3输出开路或者短路",
+            "method": "检查连接负载开路或短路 or 连接管脚污损 or 检查纠正错误的接线"
+        },
+        "0x34": {
+            "des": "Coil4 Driver Open/short",
+            "reason": "驱动4开路或短路:驱动4输出开路或者短路",
+            "method": "检查连接负载开路或短路 or 连接管脚污损 or 检查纠正错误的接线"
+        },
+        "0x35": {
+            "des": "PDOpen/Short",
+            "reason": "比例驱动开路/短路:比例驱动（2管脚）开路或者短路",
+            "method": "检查连接负载开路或短路 or 连接管脚污损 or 检查纠正错误的接线"
+        },
+        "0x36": {
+            "des": "Encoder Fault",
+            "reason": "编码器失效",
+            "method": "检查电机编码器故障 or 检查编码器错误的接线，断电重启curtis控制器"
+        },
+        "0x37": {
+            "des": "Motor Open",
+            "reason": "电机缺相，U/V/W一相或者多相开路",
+            "method": "检查电机缺相 or 电机接线错误 or 查看Monitor»Motor: Motor RPM，断电重启curtis控制器"
+        },
+        "0x38": {
+            "des": "Main Contactor Welded",
+            "reason": "主接触器粘连:电容端先于主接触器吸合， 电容电压没有释放",
+            "method": "一般情况下其他的错误会导致0x38，请检查有无其他的错误，如果没有，检查主接触器接线"
+        },
+        "0x39": {
+            "des": "Main ContactorDid Not Close",
+            "reason": "主接触器未闭合: 当需要主接触器闭合时候， 电容电压未达到B+电压",
+            "method": "主接触器未闭合 or 熔断器断开 or 主接触器触点氧化，熔化， 或者连接状态不稳定"
+        },
+        "0x41": {
+            "des": "Throttle Wiper High",
+            "reason": "加速器输出偏高 :加速器电位器（16 管脚） 输出电压高于输出电压限制",
+            "method": "检查加速器电位器输出电压过高 or 查看Monitor»Inputs:Throttle Pot，降低加速器电位器输出电压，检查是否接线错误"
+        },
+        "0x42": {
+            "des": "Throttle Wiper Low",
+            "reason": "加速器输出偏低 :加速器电位器（17 管脚） 输出电压低于输出电压限制 ",
+            "method": "检查加速器电位器输出电压过低 or 查看Monitor»Inputs:Throttle Pot，增加加速器电位器输出电压，检查是否接线错误"
+        },
+        "0x43": {
+            "des": "Pot2 Wiper High",
+            "reason": "",
+            "method": "检查电位器2 输出电压过高 or 检查Monitor »Inputs: Pot2 Raw ,检查是否接线错误"
+        },
+        "0x44": {
+            "des": "Pot2 Wiper Low",
+            "reason": "电位器2 输出过低:电位器2（17 管脚）输出电压低于输出电压限制",
+            "method": "检查电位器2 输出电压过低 or 检查Monitor »Inputs: Pot2 Raw ,检查是否接线错误"
+        },
+        "0x45": {
+            "des": "PotLowOvercurrent",
+            "reason": "电位器低端电流过高:电位器低端（18 管脚） 电流超过了10mA",
+            "method": "电位器阻抗过低 or 查看监控菜单 Monitor >> Outputs: Pot Low or 断电重启curtis控制器"
+        },
+        "0x46": {
+            "des": "EEPROM Failure",
+            "reason": "EEPROM失效:控制器操作系统试图向EEPROM 写入并且失败",
+            "method": "下载正确的软件，烧写正确的软件版本"
+        },
+        "0x47": {
+            "des": "HPD/Sequencing Fault 或 Emer RevHPD 或 Pump HPD",
+            "reason": "高踏板保护/操作顺序失败:由于钥匙启动， 互锁， 方向， 以及加速器输入设置错误导致高踏板保护以及启动顺序错误",
+            "method": "钥匙启动， 互锁， 方向以及加速器输入顺序设置错误 or 接线， 开关钥匙， 互锁方向， 或加速器输入故障 or 在curtis中没有EMR reverse brake 但是在设置项里面却打开了，将之关掉"
+        },
+        "0x49": {
+            "des": "ParameterChange",
+            "reason": "参数的更改需要钥匙开关的重启动",
+            "method": "断电重启curtis驱动器"
+        },
+        "0x51": {
+            "des": "EMR SRO Fault On Startup ",
+            "reason": "上电前，紧急反向开关有效",
+            "method": "检查EMR在curtis中的配置是否正确 or 检查EMR 接线是否正确"
+        },
+        "0x52": {
+            "des": "1220C PDO Timeout",
+            "reason": " 转向驱动器1220C的can数据通信超时",
+            "method": "检查和curtis1220C之间的can线连接 or 检查curtis中配置的can baudrate 和 can ID 配置是否正确"
+        },
+        "0x53": {
+            "des": "VCU 0x203 PDO timeout",
+            "reason": "主控下发给curtis通信的0x203数据超时，curtis未接收到VCU 0x203的数据",
+            "method": "检查机器人模型文件配置是否正确 or 检查 curtis中 can ID配置的是否正确"
+        },
+        "0x54": {
+            "des": "VCU 0x303 PDO timeout",
+            "reason": "主控下发给curtis通信的0x303数据超时，curtis未接收到VCU 0x303的数据",
+            "method": "检查机器人模型文件配置是否正确 or 检查 curtis中 can ID配置的是否正确"
+        },
+        "0x55": {
+            "des": "1220C handshake fault",
+            "reason": "行走驱动器和转向控制器握手错误",
+            "method": "检查和curtis1220C之间的can线连接 or 检查curtis中配置的can baudrate 和 can ID 配置是否正确"
+        },
+        "0x56": {
+            "des": "1220C ShutDown Throttle Fault",
+            "reason": "1220C 故障",
+            "method": "将curtis-1309模块连接到1220C上面，检查相关报错信息"
+        },
+        "0x57": {
+            "des": "1220C Limited Fault",
+            "reason": "1220C故障",
+            "method": "将curtis-1309模块连接到1220C上面，检查相关报错信息"
+        },
+        "0x68": {
+            "des": "VCL Run Time Error",
+            "reason": "运行时间VCL 代码错误",
+            "method": "曾经遇到can信号导致curtis驱动器崩溃的情况，首先检查我们控制器can线信号，然后联系curtis供应商"
+        },
+        "0x69": {
+            "des": "External Supply Out of Range",
+            "reason": "外部电源电流（总电流: 5V（ 26 管脚） 以及12V （25 管脚） ） 超出限制； 范围上限由External Supply Max定义， 下限由External SupplMin 定义",
+            "method": "检查 Monitor »Outputs: ExtSupply Current 或 调整外部电流"
+        },
+        "0x71": {
+            "des": "OS General",
+            "reason": "操作系统故障:内部控制失效",
+            "method": "断电重启curtis驱动器"
+        },
+        "0x72": {
+            "des": "PDO Timeout",
+            "reason": "PDO 超时:CAN PDO 信息接收时间超时",
+            "method": "检查can 通信是否正常，检查can线路接线是否正常、检查模型文件配置是否正确"
+        },
+        "0x73": {
+            "des": "Stall Detected",
+            "reason": "电机堵转:检测不到电机编码器",
+            "method": "检查电机存在机械堵转 or 检查电机编码器失效 or 检查是否接线错误 or 检查输入点击编码器电源是否故障"
+        },
+        "0x74": {
+            "des": "Fault On Other Traction Controlle",
+            "reason": "其他牵引控制器故障 ，双驱错误: 查看其他驱动器；",
+            "method": "联系curtis供应商"
+        },
+        "0x75": {
+            "des": "Dual Severe Faul",
+            "reason": "双驱动错误 :查看其它驱动器",
+            "method": "联系curtis供应商"
+        },
+        "0x87": {
+            "des": "Motor Characterization Fault",
+            "reason": "电机匹配过程失败",
+            "method": "查找curtis驱动器内部错误信息，修改错误重新匹配:"
+        },
+        "0x89": {
+            "des": "Motor Type Fault",
+            "reason": "电机类型错误 ",
+            "method": "电机类型数值超出范围，配置正确的值，断掉重启curtis驱动器"
+        },
+        "0x91": {
+            "des": "VCl/OSMismatch",
+            "reason": "控制器中VCL/OS 不匹配，",
+            "method": "联系相关人员，更新正确的VCL和 OS 程序"
+        },
+        "0x92": {
+            "des": "EM Brake Failed to Set",
+            "reason": "电磁刹锁死后， 车辆仍然在移动",
+            "method": "电磁刹车制动力太小 or 检查加速器是否正常 or 检查curtis参数是否符合文档 or 断电重启curtis驱动器"
+        },
+        "0x93": {
+            "des": "Encoder LOS(Limited Operating Strategy)",
+            "reason": "编码器受限操作状态:由于电机堵转或者编码器故障， 使得受限操作状态被激活",
+            "method": "检查电机堵转 or 电机编码器故障 or 检查电机编码器接线，断电重启curtis驱动器"
+        },
+        "0x94": {
+            "des": "Emer Rev Timeout",
+            "reason": "紧急反向反应超时 ",
+            "method": "检查紧急反向开关的状态 or 检查相关接线和curtis驱动器参数的配置"
+        },
+        "0x98": {
+            "des": "IllegalModel Numbe",
+            "reason": "控制器型号错误，控制器无法识别",
+            "method": "请联系curtis供应商"
+        },
+        "0x99": {
+            "des": "Dualmotor Parameter Mismatch",
+            "reason": "双电机参数匹配错误",
+            "method": "请联系curtis供应商"
+        }
+    },
+    "Curtis-1232-HeLi": {
+        "match_bit":false,
+        "0x12": {
+            "des": "Controller Overcurrent",
+            "reason": "控制器电流过载 :相位电流超过了限定电流",
+            "method": "检查电机外部U，V，W连接短路 or 检查电机参数是否不匹配 or 检查控制器是否有故障:后断电重启curtis控制器"
+        },
+        "0x13": {
+            "des": "Current Sensor Fault",
+            "reason": "电流传感器故障 :控制器电流传感器读数偏差",
+            "method": "检查电机U、V、W通过定子是否对车体短路，导致漏电 or 检查控制器是否有故障:后断电重启curtis"
+        },
+        "0x14": {
+            "des": "PreCharge Failed",
+            "reason": "预充电失败 :钥匙开关输入电压对电容器充电失败",
+            "method": "检查是否电容器正端外接负载使电容器不能正常充电  查看菜单Monitor>>Battery:Capacitor Voltage:后通过VCL函数percharge()重新设置或者互锁开关重新输入"
+        },
+        "0x15": {
+            "des": "Controller Severe Undertemp",
+            "reason": "控制器温度过低:散热温度低于-40℃",
+            "method": "检查外部环境是否温度太低 or 检查菜单Monitor>>Controller:Temperature :温度升至-40℃以上或者断电重启curtis控制器"
+        },
+        "0x16": {
+            "des": "Controller Severe Overtemp",
+            "reason": "控制器温度过高:散热器温度超过95℃",
+            "method": "检查控制器工作环境 or 车辆超载 or 控制安装错误  检查Monitor>>Controller:Temperature : 断电重启curtis控制器"
+        },
+        "0x17": {
+            "des": "Severe Undervoltage",
+            "reason": "电压过低:MOSFEET桥工作室电容电压低于最低啊电压限制",
+            "method": "检查电池参数设置错误 or 电池阻抗过大 or 电池连接断开 or 熔断器断开或主接触器未连接 检查Monitor Battery>>Capacitor Voltage :将电容电压升高到高，后断电重启curtis控制器"
+        },
+        "0x18": {
+            "des": "Severe Overvoltage",
+            "reason": "电压过高:MOSFEET桥工作室电容电压超过了最高电压限制",
+            "method": "检查电池参数设置错误 or 电池阻抗过高 or 再生制动时电池连接断开 检查检查Monitor Battery>>Capacitor Voltage:降低电压，后断电重启curtis控制器"
+        },
+        "0x21": {
+            "des": "Controller Undertemp Cutback",
+            "reason": "控制器温度过低导致性能消减:散热器温度低于-25℃",
+            "method": "检查控制器在受限工作条件下工作 :使散热器温度高于-25℃"
+        },
+        "0x22": {
+            "des": "Controller Overtemp Cutback",
+            "reason": "控制器温度过高导致性能消减:散热器温度超过85℃",
+            "method": "检查控制器工作环境严酷 or 检查车辆超载 or 查看菜单Controller:Temperature 5 :降低温度"
+        },
+        "0x23": {
+            "des": "Undervoltage Cutback",
+            "reason": "电压过低性能消减:电容电压过低",
+            "method": "检查电池电量不足 or 检查电池参数设置错误 or 电池阻抗过大 or 电池连接断开 or 查看Monitor >>Battery:Capacitor Voltage :将电容端电压升高到高于最低电压限制值"
+        },
+        "0x24": {
+            "des": "Overvoltage Cutback",
+            "reason": "电压过高性能消减:MOSFEET 桥工作时电容电压超过了最高电圧限制",
+            "method": "检查 再生制动过程中再生电流导致电池电压升高 or 电池参数设置错误 or 电池阻抗过大 or 再生制动是电池连接断开:将电容端电压降低与最高电压限制值"
+        },
+        "0x25": {
+            "des": "+5VSupply Failure",
+            "reason": "控制器输出5V电源失效 : 5v 输出(pin 26)有超过±10%的误差范围",
+            "method": "外接负载阻抗过低 or 查看菜单 Monitor » outputs:5 Volts and Ext Supply Current :调整输出电压至5V±10%范围"
+        },
+        "0x26": {
+            "des": "Digital Out 6 Failure",
+            "reason": "驱动6 输出失效:驱动6 输出电流超出15mA",
+            "method": "外接于驱动6 输出（ Pin19） 的负载阻抗过低 :检查接线错误 "
+        },
+        "0x27": {
+            "des": "Digital Out7 OVercurrent",
+            "reason": "驱动7 输出量输出过流:驱动7 输出电流超出15mA",
+            "method": "外接于驱动7 输出（ Pin20） 的负载阻抗过低 :检查接线错误"
+        },
+        "0x28": {
+            "des": "Motor TempHot Cutback",
+            "reason": "电机过热导致性能消减 : 电机温度传感器输入",
+            "method": "检查电机温度达到或者高于程序设定的警戒温度 or 检查电机温度设置参数 or 检查Monitor >> Motor >> Temperatureand >> Inputs:Analog2 or 检查是否行走的时候抱闸未打开"
+        },
+        "0x29": {
+            "des": "Motor Temp Sensor Fault",
+            "reason": "电机温度传感器故障 :电机温度传感器输入电压值为0 或大于10V ",
+            "method": "检查电机温度传感器连接错误 or 检查Monitor»Motor >> Temperatureand >> Inputs: Analog2"
+        },
+        "0x31": {
+            "des": "Coil1 Driver 、 Main Open/short",
+            "reason": "驱动1开路或者短路、主接触器线圈开路/短路:驱动1 输出（ 6 管脚） 开路或者短路，此故障只有在“Main Enable”设置为ON的时候才可能发生",
+            "method": "检查连接负载开路或短路 or 连接管脚污损 or 检查纠正错误的接线"
+        },
+        "0x32": {
+            "des": "Coil2 DriverOpen/Short、EMBrake Open/Short",
+            "reason": "驱动2 开路或短路、电磁刹车线圈开路/短路:驱动2 输出（ 5 管脚） 开路或者短路，此故障仅在“ EMbrakeType” 设置为0才发生",
+            "method": "检查连接负载开路或短路 or 连接管脚污损 or 检查纠正错误的接线"
+        },
+        "0x33": {
+            "des": "Coil3 Driver Open/short",
+            "reason": "驱动3开路或短路:驱动3输出开路或者短路",
+            "method": "检查连接负载开路或短路 or 连接管脚污损 or 检查纠正错误的接线"
+        },
+        "0x34": {
+            "des": "Coil4 Driver Open/short",
+            "reason": "驱动4开路或短路:驱动4输出开路或者短路",
+            "method": "检查连接负载开路或短路 or 连接管脚污损 or 检查纠正错误的接线"
+        },
+        "0x35": {
+            "des": "PDOpen/Short",
+            "reason": "比例驱动开路/短路:比例驱动（2管脚）开路或者短路",
+            "method": "检查连接负载开路或短路 or 连接管脚污损 or 检查纠正错误的接线"
+        },
+        "0x36": {
+            "des": "Encoder Fault",
+            "reason": "编码器失效",
+            "method": "检查电机编码器故障 or 检查编码器错误的接线，断电重启curtis控制器"
+        },
+        "0x37": {
+            "des": "Motor Open",
+            "reason": "电机缺相，U/V/W一相或者多相开路",
+            "method": "检查电机缺相 or 电机接线错误 or 查看Monitor»Motor: Motor RPM，断电重启curtis控制器"
+        },
+        "0x38": {
+            "des": "Main Contactor Welded",
+            "reason": "主接触器粘连:电容端先于主接触器吸合， 电容电压没有释放",
+            "method": "一般情况下其他的错误会导致0x38，请检查有无其他的错误，如果没有，检查主接触器接线"
+        },
+        "0x39": {
+            "des": "Main ContactorDid Not Close",
+            "reason": "主接触器未闭合: 当需要主接触器闭合时候， 电容电压未达到B+电压",
+            "method": "主接触器未闭合 or 熔断器断开 or 主接触器触点氧化，熔化， 或者连接状态不稳定"
+        },
+        "0x41": {
+            "des": "Throttle Wiper High",
+            "reason": "加速器输出偏高 :加速器电位器（16 管脚） 输出电压高于输出电压限制",
+            "method": "检查加速器电位器输出电压过高 or 查看Monitor»Inputs:Throttle Pot，降低加速器电位器输出电压，检查是否接线错误"
+        },
+        "0x42": {
+            "des": "Throttle Wiper Low",
+            "reason": "加速器输出偏低 :加速器电位器（17 管脚） 输出电压低于输出电压限制 ",
+            "method": "检查加速器电位器输出电压过低 or 查看Monitor»Inputs:Throttle Pot，增加加速器电位器输出电压，检查是否接线错误"
+        },
+        "0x43": {
+            "des": "Pot2 Wiper High",
+            "reason": "",
+            "method": "检查电位器2 输出电压过高 or 检查Monitor »Inputs: Pot2 Raw ,检查是否接线错误"
+        },
+        "0x44": {
+            "des": "Pot2 Wiper Low",
+            "reason": "电位器2 输出过低:电位器2（17 管脚）输出电压低于输出电压限制",
+            "method": "检查电位器2 输出电压过低 or 检查Monitor »Inputs: Pot2 Raw ,检查是否接线错误"
+        },
+        "0x45": {
+            "des": "PotLowOvercurrent",
+            "reason": "电位器低端电流过高:电位器低端（18 管脚） 电流超过了10mA",
+            "method": "电位器阻抗过低 or 查看监控菜单 Monitor >> Outputs: Pot Low or 断电重启curtis控制器"
+        },
+        "0x46": {
+            "des": "EEPROM Failure",
+            "reason": "EEPROM失效:控制器操作系统试图向EEPROM 写入并且失败",
+            "method": "下载正确的软件，烧写正确的软件版本"
+        },
+        "0x47": {
+            "des": "HPD/Sequencing Fault 或 Emer RevHPD 或 Pump HPD",
+            "reason": "高踏板保护/操作顺序失败:由于钥匙启动， 互锁， 方向， 以及加速器输入设置错误导致高踏板保护以及启动顺序错误",
+            "method": "钥匙启动， 互锁， 方向以及加速器输入顺序设置错误 or 接线， 开关钥匙， 互锁方向， 或加速器输入故障 or 在curtis中没有EMR reverse brake 但是在设置项里面却打开了，将之关掉"
+        },
+        "0x49": {
+            "des": "ParameterChange",
+            "reason": "参数的更改需要钥匙开关的重启动",
+            "method": "断电重启curtis驱动器"
+        },
+        "0x51": {
+            "des": "PDO fault VCU Trac ",
+            "reason": "0x203 的数据接收不到",
+            "method": "检查can 通信是否正常，检查can线路接线是否正常、检查模型文件配置是否正确"
+        },
+        "0x52": {
+            "des": "PDO fault 1220C",
+            "reason": "行走驱动器和1220通讯失败",
+            "method": "检查1220C和行走驱动器的can总线连接是否正常 or 检查行走驱动器和1220的can baudrate 和 can ID配置的是否正确"
+        },
+        "0x53": {
+            "des": "PDO fault 1253C",
+            "reason": "行走驱动器和1253C通讯失败",
+            "method": "检查1253C和行走驱动器的can总线连接是否正常 or 检查行走驱动器和1253的can baudrate 和 can ID配置的是否正确"
+        },
+        "0x54": {
+            "des": "battery charging",
+            "reason": "电池正在充电",
+            "method": "电池充电报这个错误正常"
+        },
+        "0x55": {
+            "des": "handshake fault",
+            "reason": "1232和1220C握手失败",
+            "method": "检查1220C和行走驱动器的can总线连接是否正常 or 检查行走驱动器和1220的can baudrate 和 can ID配置的是否正确"
+        },
+        "0x56": {
+            "des": "1220C shutdown fault",
+            "reason": "1220C因为错误关闭",
+            "method": "通过1309模块检查1220C的报错"
+        },
+        "0x57": {
+            "des": "1220C limit fault",
+            "reason": "1220C 限位报错",
+            "method": "请联系合力"
+        },
+        "0x58": {
+            "des": "VCL EMR Startup fault",
+            "reason": "EMR 紧急反向开关在curtis上电之前就已经上电",
+            "method": "检查EMR的相关接线"
+        },
+        "0x59": {
+            "des": "lift lower HPD fault",
+            "reason": "HPD 错误导致上升速度太慢",
+            "method": "请联系合力"
+        },
+        "0x61": {
+            "des": "EPO state flag Rmr stop",
+            "reason": "xxxxxxxxx",
+            "method": "请联系合力"
+        },
+        "0x62": {
+            "des": "BMS hot temperature",
+            "reason": "电池BMS 温度太高",
+            "method": "请联系合力"
+        },
+        "0x63": {
+            "des": "BMS severe overvoltage",
+            "reason": "电池BMS 控制器检测电压过高",
+            "method": "请联系合力"
+        },
+        "0x64": {
+            "des": "BMS cut down fault",
+            "reason": "电池BMS 设备连接不上",
+            "method": "请联系合力"
+        },
+        "0x65": {
+            "des": "BMS over current",
+            "reason": "电池BMS过流",
+            "method": "请联系合力"
+        },
+        "0x66": {
+            "des": "PDO fault BMS",
+            "reason": "电池BMS通信失败",
+            "method": "请联系合力"
+        },
+        "0x67": {
+            "des": "BMS Undervoltage",
+            "reason": "电池BMS检测电压过低",
+            "method": "看一下剩余电量，确认是否需要充电，如果不需要充电，请联系合力"
+        },
+        "0x68": {
+            "des": "VCL Run Time Error",
+            "reason": "运行时间VCL 代码错误",
+            "method": "曾经遇到can信号导致curtis驱动器崩溃的情况，首先检查我们控制器can线信号，然后联系curtis供应商"
+        },
+        "0x69": {
+            "des": "External Supply Out of Range",
+            "reason": "外部电源电流（总电流: 5V（ 26 管脚） 以及12V （25 管脚） ） 超出限制； 范围上限由External Supply Max定义， 下限由External SupplMin 定义",
+            "method": "检查 Monitor »Outputs: ExtSupply Current 或 调整外部电流"
+        },
+        "0x71": {
+            "des": "OS General",
+            "reason": "操作系统故障:内部控制失效",
+            "method": "断电重启curtis驱动器"
+        },
+        "0x72": {
+            "des": "PDO Timeout",
+            "reason": "PDO 超时:CAN PDO 信息接收时间超时",
+            "method": "检查can 通信是否正常，检查can线路接线是否正常、检查模型文件配置是否正确"
+        },
+        "0x73": {
+            "des": "Stall Detected",
+            "reason": "电机堵转:检测不到电机编码器",
+            "method": "检查电机存在机械堵转 or 检查电机编码器失效 or 检查是否接线错误 or 检查输入点击编码器电源是否故障"
+        },
+        "0x74": {
+            "des": "Fault On Other Traction Controlle",
+            "reason": "其他牵引控制器故障 ，双驱错误: 查看其他驱动器；",
+            "method": "联系curtis供应商"
+        },
+        "0x75": {
+            "des": "Dual Severe Faul",
+            "reason": "双驱动错误 :查看其它驱动器",
+            "method": "联系curtis供应商"
+        },
+        "0x87": {
+            "des": "Motor Characterization Fault",
+            "reason": "电机匹配过程失败",
+            "method": "查找curtis驱动器内部错误信息，修改错误重新匹配:"
+        },
+        "0x89": {
+            "des": "Motor Type Fault",
+            "reason": "电机类型错误 ",
+            "method": "电机类型数值超出范围，配置正确的值，断掉重启curtis驱动器"
+        },
+        "0x91": {
+            "des": "VCl/OSMismatch",
+            "reason": "控制器中VCL/OS 不匹配，",
+            "method": "联系相关人员，更新正确的VCL和 OS 程序"
+        },
+        "0x92": {
+            "des": "EM Brake Failed to Set",
+            "reason": "电磁刹锁死后， 车辆仍然在移动",
+            "method": "电磁刹车制动力太小 or 检查加速器是否正常 or 检查curtis参数是否符合文档 or 断电重启curtis驱动器"
+        },
+        "0x93": {
+            "des": "Encoder LOS(Limited Operating Strategy)",
+            "reason": "编码器受限操作状态:由于电机堵转或者编码器故障， 使得受限操作状态被激活",
+            "method": "检查电机堵转 or 电机编码器故障 or 检查电机编码器接线，断电重启curtis驱动器"
+        },
+        "0x94": {
+            "des": "Emer Rev Timeout",
+            "reason": "紧急反向反应超时 ",
+            "method": "检查紧急反向开关的状态 or 检查相关接线和curtis驱动器参数的配置"
+        },
+        "0x98": {
+            "des": "IllegalModel Numbe",
+            "reason": "控制器型号错误，控制器无法识别",
+            "method": "请联系curtis供应商"
+        },
+        "0x99": {
+            "des": "Dualmotor Parameter Mismatch",
+            "reason": "双电机参数匹配错误",
+            "method": "请联系curtis供应商"
+        }
+    },
+    "Curtis-1298-Nuoli": {
+        "match_bit":false,
+        "0x12": {
+            "des": "Controller Overcurrent",
+            "reason": "控制器电流过载 :相位电流超过了限定电流",
+            "method": "检查电机外部U，V，W连接短路 or 检查电机参数是否不匹配 or 检查控制器是否有故障:后断电重启curtis控制器"
+        },
+        "0x13": {
+            "des": "Current Sensor Fault",
+            "reason": "电流传感器故障 :控制器电流传感器读数偏差",
+            "method": "检查电机U、V、W通过定子是否对车体短路，导致漏电 or 检查控制器是否有故障:后断电重启curtis"
+        },
+        "0x14": {
+            "des": "PreCharge Failed",
+            "reason": "预充电失败 :钥匙开关输入电压对电容器充电失败",
+            "method": "检查是否电容器正端外接负载使电容器不能正常充电  查看菜单Monitor>>Battery:Capacitor Voltage:后通过VCL函数percharge()重新设置或者互锁开关重新输入"
+        },
+        "0x15": {
+            "des": "Controller Severe Undertemp",
+            "reason": "控制器温度过低:散热温度低于-40℃",
+            "method": "检查外部环境是否温度太低 or 检查菜单Monitor>>Controller:Temperature :温度升至-40℃以上或者断电重启curtis控制器"
+        },
+        "0x16": {
+            "des": "Controller Severe Overtemp",
+            "reason": "控制器温度过高:散热器温度超过95℃",
+            "method": "检查控制器工作环境 or 车辆超载 or 控制安装错误  检查Monitor>>Controller:Temperature : 断电重启curtis控制器"
+        },
+        "0x17": {
+            "des": "Severe Undervoltage",
+            "reason": "电压过低:MOSFEET桥工作室电容电压低于最低啊电压限制",
+            "method": "检查电池参数设置错误 or 电池阻抗过大 or 电池连接断开 or 熔断器断开或主接触器未连接 检查Monitor Battery>>Capacitor Voltage :将电容电压升高到高，后断电重启curtis控制器"
+        },
+        "0x18": {
+            "des": "Severe Overvoltage",
+            "reason": "电压过高:MOSFEET桥工作室电容电压超过了最高电压限制",
+            "method": "检查电池参数设置错误 or 电池阻抗过高 or 再生制动时电池连接断开 检查检查Monitor Battery>>Capacitor Voltage:降低电压，后断电重启curtis控制器"
+        },
+        "0x21": {
+            "des": "Controller Undertemp Cutback",
+            "reason": "控制器温度过低导致性能消减:散热器温度低于-25℃",
+            "method": "检查控制器在受限工作条件下工作 :使散热器温度高于-25℃"
+        },
+        "0x22": {
+            "des": "Controller Overtemp Cutback",
+            "reason": "控制器温度过高导致性能消减:散热器温度超过85℃",
+            "method": "检查控制器工作环境严酷 or 检查车辆超载 or 查看菜单Controller:Temperature 5 :降低温度"
+        },
+        "0x23": {
+            "des": "Undervoltage Cutback",
+            "reason": "电压过低性能消减:电容电压过低",
+            "method": "检查电池电量不足 or 检查电池参数设置错误 or 电池阻抗过大 or 电池连接断开 or 查看Monitor >>Battery:Capacitor Voltage :将电容端电压升高到高于最低电压限制值"
+        },
+        "0x24": {
+            "des": "Overvoltage Cutback",
+            "reason": "电压过高性能消减:MOSFEET 桥工作时电容电压超过了最高电圧限制",
+            "method": "检查 再生制动过程中再生电流导致电池电压升高 or 电池参数设置错误 or 电池阻抗过大 or 再生制动是电池连接断开:将电容端电压降低与最高电压限制值"
+        },
+        "0x25": {
+            "des": "+5VSupply Failure",
+            "reason": "控制器输出5V电源失效 : 5v 输出(pin 26)有超过±10%的误差范围",
+            "method": "外接负载阻抗过低 or 查看菜单 Monitor » outputs:5 Volts and Ext Supply Current :调整输出电压至5V±10%范围"
+        },
+        "0x26": {
+            "des": "Digital Out 6 Failure",
+            "reason": "驱动6 输出失效:驱动6 输出电流超出15mA",
+            "method": "外接于驱动6 输出（ Pin19） 的负载阻抗过低 :检查接线错误 "
+        },
+        "0x27": {
+            "des": "Digital Out7 OVercurrent",
+            "reason": "驱动7 输出量输出过流:驱动7 输出电流超出15mA",
+            "method": "外接于驱动7 输出（ Pin20） 的负载阻抗过低 :检查接线错误"
+        },
+        "0x28": {
+            "des": "Motor TempHot Cutback",
+            "reason": "电机过热导致性能消减 : 电机温度传感器输入",
+            "method": "检查电机温度达到或者高于程序设定的警戒温度 or 检查电机温度设置参数 or 检查Monitor >> Motor >> Temperatureand >> Inputs:Analog2 or 检查是否行走的时候抱闸未打开"
+        },
+        "0x29": {
+            "des": "Motor Temp Sensor Fault",
+            "reason": "电机温度传感器故障 :电机温度传感器输入电压值为0 或大于10V ",
+            "method": "检查电机温度传感器连接错误 or 检查Monitor»Motor >> Temperatureand >> Inputs: Analog2"
+        },
+        "0x31": {
+            "des": "Coil1 Driver 、 Main Open/short",
+            "reason": "驱动1开路或者短路、主接触器线圈开路/短路:驱动1 输出（ 6 管脚） 开路或者短路，此故障只有在“Main Enable”设置为ON的时候才可能发生",
+            "method": "检查连接负载开路或短路 or 连接管脚污损 or 检查纠正错误的接线"
+        },
+        "0x32": {
+            "des": "Coil2 DriverOpen/Short、EMBrake Open/Short",
+            "reason": "驱动2 开路或短路、电磁刹车线圈开路/短路:驱动2 输出（ 5 管脚） 开路或者短路，此故障仅在“ EMbrakeType” 设置为0才发生",
+            "method": "检查连接负载开路或短路 or 连接管脚污损 or 检查纠正错误的接线"
+        },
+        "0x33": {
+            "des": "Coil3 Driver Open/short",
+            "reason": "驱动3开路或短路:驱动3输出开路或者短路",
+            "method": "检查连接负载开路或短路 or 连接管脚污损 or 检查纠正错误的接线"
+        },
+        "0x34": {
+            "des": "Coil4 Driver Open/short",
+            "reason": "驱动4开路或短路:驱动4输出开路或者短路",
+            "method": "检查连接负载开路或短路 or 连接管脚污损 or 检查纠正错误的接线"
+        },
+        "0x35": {
+            "des": "PDOpen/Short",
+            "reason": "比例驱动开路/短路:比例驱动（2管脚）开路或者短路",
+            "method": "检查连接负载开路或短路 or 连接管脚污损 or 检查纠正错误的接线"
+        },
+        "0x36": {
+            "des": "Encoder Fault",
+            "reason": "编码器失效",
+            "method": "检查电机编码器故障 or 检查编码器错误的接线，断电重启curtis控制器"
+        },
+        "0x37": {
+            "des": "Motor Open",
+            "reason": "电机缺相，U/V/W一相或者多相开路",
+            "method": "检查电机缺相 or 电机接线错误 or 查看Monitor»Motor: Motor RPM，断电重启curtis控制器"
+        },
+        "0x38": {
+            "des": "Main Contactor Welded",
+            "reason": "主接触器粘连:电容端先于主接触器吸合， 电容电压没有释放",
+            "method": "一般情况下其他的错误会导致0x38，请检查有无其他的错误，如果没有，检查主接触器接线"
+        },
+        "0x39": {
+            "des": "Main ContactorDid Not Close",
+            "reason": "主接触器未闭合: 当需要主接触器闭合时候， 电容电压未达到B+电压",
+            "method": "主接触器未闭合 or 熔断器断开 or 主接触器触点氧化，熔化， 或者连接状态不稳定"
+        },
+        "0x41": {
+            "des": "Throttle Wiper High",
+            "reason": "加速器输出偏高 :加速器电位器（16 管脚） 输出电压高于输出电压限制",
+            "method": "检查加速器电位器输出电压过高 or 查看Monitor»Inputs:Throttle Pot，降低加速器电位器输出电压，检查是否接线错误"
+        },
+        "0x42": {
+            "des": "Throttle Wiper Low",
+            "reason": "加速器输出偏低 :加速器电位器（17 管脚） 输出电压低于输出电压限制 ",
+            "method": "检查加速器电位器输出电压过低 or 查看Monitor»Inputs:Throttle Pot，增加加速器电位器输出电压，检查是否接线错误"
+        },
+        "0x43": {
+            "des": "Pot2 Wiper High",
+            "reason": "",
+            "method": "检查电位器2 输出电压过高 or 检查Monitor »Inputs: Pot2 Raw ,检查是否接线错误"
+        },
+        "0x44": {
+            "des": "Pot2 Wiper Low",
+            "reason": "电位器2 输出过低:电位器2（17 管脚）输出电压低于输出电压限制",
+            "method": "检查电位器2 输出电压过低 or 检查Monitor »Inputs: Pot2 Raw ,检查是否接线错误"
+        },
+        "0x45": {
+            "des": "PotLowOvercurrent",
+            "reason": "电位器低端电流过高:电位器低端（18 管脚） 电流超过了10mA",
+            "method": "电位器阻抗过低 or 查看监控菜单 Monitor >> Outputs: Pot Low or 断电重启curtis控制器"
+        },
+        "0x46": {
+            "des": "EEPROM Failure",
+            "reason": "EEPROM失效:控制器操作系统试图向EEPROM 写入并且失败",
+            "method": "下载正确的软件，烧写正确的软件版本"
+        },
+        "0x47": {
+            "des": "HPD/Sequencing Fault 或 Emer RevHPD 或 Pump HPD",
+            "reason": "高踏板保护/操作顺序失败:由于钥匙启动， 互锁， 方向， 以及加速器输入设置错误导致高踏板保护以及启动顺序错误",
+            "method": "钥匙启动， 互锁， 方向以及加速器输入顺序设置错误 or 接线， 开关钥匙， 互锁方向， 或加速器输入故障 or 在curtis中没有EMR reverse brake 但是在设置项里面却打开了，将之关掉"
+        },
+        "0x49": {
+            "des": "ParameterChange",
+            "reason": "参数的更改需要钥匙开关的重启动",
+            "method": "断电重启curtis驱动器"
+        },
+        "0x51": {
+            "des": "user ",
+            "reason": "",
+            "method": ""
+        },
+        "0x52": {
+            "des": "",
+            "reason": "",
+            "method": ""
+        },
+        "0x53": {
+            "des": "",
+            "reason": "",
+            "method": ""
+        },
+        "0x54": {
+            "des": "",
+            "reason": "",
+            "method": ""
+        },
+        "0x55": {
+            "des": "",
+            "reason": "",
+            "method": ""
+        },
+        "0x56": {
+            "des": "",
+            "reason": "",
+            "method": ""
+        },
+        "0x57": {
+            "des": "",
+            "reason": "",
+            "method": ""
+        },
+        "0x59": {
+            "des": "",
+            "reason": "",
+            "method": ""
+        },
+        "0x60": {
+            "des": "",
+            "reason": "",
+            "method": ""
+        },
+        "0x61": {
+            "des": "",
+            "reason": "",
+            "method": ""
+        },
+        "0x68": {
+            "des": "VCL Run Time Error",
+            "reason": "运行时间VCL 代码错误",
+            "method": "曾经遇到can信号导致curtis驱动器崩溃的情况，首先检查我们控制器can线信号，然后联系curtis供应商"
+        },
+        "0x69": {
+            "des": "External Supply Out of Range",
+            "reason": "外部电源电流（总电流: 5V（ 26 管脚） 以及12V （25 管脚） ） 超出限制； 范围上限由External Supply Max定义， 下限由External SupplMin 定义",
+            "method": "检查 Monitor »Outputs: ExtSupply Current 或 调整外部电流"
+        },
+        "0x71": {
+            "des": "OS General",
+            "reason": "操作系统故障:内部控制失效",
+            "method": "断电重启curtis驱动器"
+        },
+        "0x72": {
+            "des": "PDO Timeout",
+            "reason": "PDO 超时:CAN PDO 信息接收时间超时",
+            "method": "检查can 通信是否正常，检查can线路接线是否正常、检查模型文件配置是否正确"
+        },
+        "0x73": {
+            "des": "Stall Detected",
+            "reason": "电机堵转:检测不到电机编码器",
+            "method": "检查电机存在机械堵转 or 检查电机编码器失效 or 检查是否接线错误 or 检查输入点击编码器电源是否故障"
+        },
+        "0x74": {
+            "des": "Fault On Other Traction Controlle",
+            "reason": "其他牵引控制器故障 ，双驱错误: 查看其他驱动器；",
+            "method": "联系curtis供应商"
+        },
+        "0x75": {
+            "des": "Dual Severe Faul",
+            "reason": "双驱动错误 :查看其它驱动器",
+            "method": "联系curtis供应商"
+        },
+        "0x87": {
+            "des": "Motor Characterization Fault",
+            "reason": "电机匹配过程失败",
+            "method": "查找curtis驱动器内部错误信息，修改错误重新匹配:"
+        },
+        "0x89": {
+            "des": "Motor Type Fault",
+            "reason": "电机类型错误 ",
+            "method": "电机类型数值超出范围，配置正确的值，断掉重启curtis驱动器"
+        },
+        "0x91": {
+            "des": "VCl/OSMismatch",
+            "reason": "控制器中VCL/OS 不匹配，",
+            "method": "联系相关人员，更新正确的VCL和 OS 程序"
+        },
+        "0x92": {
+            "des": "EM Brake Failed to Set",
+            "reason": "电磁刹锁死后， 车辆仍然在移动",
+            "method": "电磁刹车制动力太小 or 检查加速器是否正常 or 检查curtis参数是否符合文档 or 断电重启curtis驱动器"
+        },
+        "0x93": {
+            "des": "Encoder LOS(Limited Operating Strategy)",
+            "reason": "编码器受限操作状态:由于电机堵转或者编码器故障， 使得受限操作状态被激活",
+            "method": "检查电机堵转 or 电机编码器故障 or 检查电机编码器接线，断电重启curtis驱动器"
+        },
+        "0x94": {
+            "des": "Emer Rev Timeout",
+            "reason": "紧急反向反应超时 ",
+            "method": "检查紧急反向开关的状态 or 检查相关接线和curtis驱动器参数的配置"
+        },
+        "0x98": {
+            "des": "IllegalModel Numbe",
+            "reason": "控制器型号错误，控制器无法识别",
+            "method": "请联系curtis供应商"
+        },
+        "0x99": {
+            "des": "Dualmotor Parameter Mismatch",
+            "reason": "双电机参数匹配错误",
+            "method": "请联系curtis供应商"
+        }
+    },
+    "Curtis-1234-HangCha": {
+        "match_bit":false,
+        "0x12": {
+            "des": "Controller Overcurrent",
+            "reason": "控制器电流过载 :相位电流超过了限定电流",
+            "method": "检查电机外部U，V，W连接短路 or 检查电机参数是否不匹配 or 检查控制器是否有故障:后断电重启curtis控制器"
+        },
+        "0x13": {
+            "des": "Current Sensor Fault",
+            "reason": "电流传感器故障 :控制器电流传感器读数偏差",
+            "method": "检查电机U、V、W通过定子是否对车体短路，导致漏电 or 检查控制器是否有故障:后断电重启curtis"
+        },
+        "0x14": {
+            "des": "PreCharge Failed",
+            "reason": "预充电失败 :钥匙开关输入电压对电容器充电失败",
+            "method": "检查是否电容器正端外接负载使电容器不能正常充电  查看菜单Monitor>>Battery:Capacitor Voltage:后通过VCL函数percharge()重新设置或者互锁开关重新输入"
+        },
+        "0x15": {
+            "des": "Controller Severe Undertemp",
+            "reason": "控制器温度过低:散热温度低于-40℃",
+            "method": "检查外部环境是否温度太低 or 检查菜单Monitor>>Controller:Temperature :温度升至-40℃以上或者断电重启curtis控制器"
+        },
+        "0x16": {
+            "des": "Controller Severe Overtemp",
+            "reason": "控制器温度过高:散热器温度超过95℃",
+            "method": "检查控制器工作环境 or 车辆超载 or 控制安装错误  检查Monitor>>Controller:Temperature : 断电重启curtis控制器"
+        },
+        "0x17": {
+            "des": "Severe Undervoltage",
+            "reason": "电压过低:MOSFEET桥工作室电容电压低于最低啊电压限制",
+            "method": "检查电池参数设置错误 or 电池阻抗过大 or 电池连接断开 or 熔断器断开或主接触器未连接 检查Monitor Battery>>Capacitor Voltage :将电容电压升高到高，后断电重启curtis控制器"
+        },
+        "0x18": {
+            "des": "Severe Overvoltage",
+            "reason": "电压过高:MOSFEET桥工作室电容电压超过了最高电压限制",
+            "method": "检查电池参数设置错误 or 电池阻抗过高 or 再生制动时电池连接断开 检查检查Monitor Battery>>Capacitor Voltage:降低电压，后断电重启curtis控制器"
+        },
+        "0x21": {
+            "des": "Controller Undertemp Cutback",
+            "reason": "控制器温度过低导致性能消减:散热器温度低于-25℃",
+            "method": "检查控制器在受限工作条件下工作 :使散热器温度高于-25℃"
+        },
+        "0x22": {
+            "des": "Controller Overtemp Cutback",
+            "reason": "控制器温度过高导致性能消减:散热器温度超过85℃",
+            "method": "检查控制器工作环境严酷 or 检查车辆超载 or 查看菜单Controller:Temperature 5 :降低温度"
+        },
+        "0x23": {
+            "des": "Undervoltage Cutback",
+            "reason": "电压过低性能消减:电容电压过低",
+            "method": "检查电池电量不足 or 检查电池参数设置错误 or 电池阻抗过大 or 电池连接断开 or 查看Monitor >>Battery:Capacitor Voltage :将电容端电压升高到高于最低电压限制值"
+        },
+        "0x24": {
+            "des": "Overvoltage Cutback",
+            "reason": "电压过高性能消减:MOSFEET 桥工作时电容电压超过了最高电圧限制",
+            "method": "检查 再生制动过程中再生电流导致电池电压升高 or 电池参数设置错误 or 电池阻抗过大 or 再生制动是电池连接断开:将电容端电压降低与最高电压限制值"
+        },
+        "0x25": {
+            "des": "+5VSupply Failure",
+            "reason": "控制器输出5V电源失效 : 5v 输出(pin 26)有超过±10%的误差范围",
+            "method": "外接负载阻抗过低 or 查看菜单 Monitor » outputs:5 Volts and Ext Supply Current :调整输出电压至5V±10%范围"
+        },
+        "0x26": {
+            "des": "Digital Out 6 Failure",
+            "reason": "驱动6 输出失效:驱动6 输出电流超出15mA",
+            "method": "外接于驱动6 输出（ Pin19） 的负载阻抗过低 :检查接线错误 "
+        },
+        "0x27": {
+            "des": "Digital Out7 OVercurrent",
+            "reason": "驱动7 输出量输出过流:驱动7 输出电流超出15mA",
+            "method": "外接于驱动7 输出（ Pin20） 的负载阻抗过低 :检查接线错误"
+        },
+        "0x28": {
+            "des": "Motor TempHot Cutback",
+            "reason": "电机过热导致性能消减 : 电机温度传感器输入",
+            "method": "检查电机温度达到或者高于程序设定的警戒温度 or 检查电机温度设置参数 or 检查Monitor >> Motor >> Temperatureand >> Inputs:Analog2 or 检查是否行走的时候抱闸未打开"
+        },
+        "0x29": {
+            "des": "Motor Temp Sensor Fault",
+            "reason": "电机温度传感器故障 :电机温度传感器输入电压值为0 或大于10V ",
+            "method": "检查电机温度传感器连接错误 or 检查Monitor»Motor >> Temperatureand >> Inputs: Analog2"
+        },
+        "0x31": {
+            "des": "Coil1 Driver 、 Main Open/short",
+            "reason": "驱动1开路或者短路、主接触器线圈开路/短路:驱动1 输出（ 6 管脚） 开路或者短路，此故障只有在“Main Enable”设置为ON的时候才可能发生",
+            "method": "检查连接负载开路或短路 or 连接管脚污损 or 检查纠正错误的接线"
+        },
+        "0x32": {
+            "des": "Coil2 DriverOpen/Short、EMBrake Open/Short",
+            "reason": "驱动2 开路或短路、电磁刹车线圈开路/短路:驱动2 输出（ 5 管脚） 开路或者短路，此故障仅在“ EMbrakeType” 设置为0才发生",
+            "method": "检查连接负载开路或短路 or 连接管脚污损 or 检查纠正错误的接线"
+        },
+        "0x33": {
+            "des": "Coil3 Driver Open/short",
+            "reason": "驱动3开路或短路:驱动3输出开路或者短路",
+            "method": "检查连接负载开路或短路 or 连接管脚污损 or 检查纠正错误的接线"
+        },
+        "0x34": {
+            "des": "Coil4 Driver Open/short",
+            "reason": "驱动4开路或短路:驱动4输出开路或者短路",
+            "method": "检查连接负载开路或短路 or 连接管脚污损 or 检查纠正错误的接线"
+        },
+        "0x35": {
+            "des": "PDOpen/Short",
+            "reason": "比例驱动开路/短路:比例驱动（2管脚）开路或者短路",
+            "method": "检查连接负载开路或短路 or 连接管脚污损 or 检查纠正错误的接线"
+        },
+        "0x36": {
+            "des": "Encoder Fault",
+            "reason": "编码器失效",
+            "method": "检查电机编码器故障 or 检查编码器错误的接线，断电重启curtis控制器"
+        },
+        "0x37": {
+            "des": "Motor Open",
+            "reason": "电机缺相，U/V/W一相或者多相开路",
+            "method": "检查电机缺相 or 电机接线错误 or 查看Monitor»Motor: Motor RPM，断电重启curtis控制器"
+        },
+        "0x38": {
+            "des": "Main Contactor Welded",
+            "reason": "主接触器粘连:电容端先于主接触器吸合， 电容电压没有释放",
+            "method": "一般情况下其他的错误会导致0x38，请检查有无其他的错误，如果没有，检查主接触器接线"
+        },
+        "0x39": {
+            "des": "Main ContactorDid Not Close",
+            "reason": "主接触器未闭合: 当需要主接触器闭合时候， 电容电压未达到B+电压",
+            "method": "主接触器未闭合 or 熔断器断开 or 主接触器触点氧化，熔化， 或者连接状态不稳定"
+        },
+        "0x41": {
+            "des": "Throttle Wiper High",
+            "reason": "加速器输出偏高 :加速器电位器（16 管脚） 输出电压高于输出电压限制",
+            "method": "检查加速器电位器输出电压过高 or 查看Monitor»Inputs:Throttle Pot，降低加速器电位器输出电压，检查是否接线错误"
+        },
+        "0x42": {
+            "des": "Throttle Wiper Low",
+            "reason": "加速器输出偏低 :加速器电位器（17 管脚） 输出电压低于输出电压限制 ",
+            "method": "检查加速器电位器输出电压过低 or 查看Monitor»Inputs:Throttle Pot，增加加速器电位器输出电压，检查是否接线错误"
+        },
+        "0x43": {
+            "des": "Pot2 Wiper High",
+            "reason": "",
+            "method": "检查电位器2 输出电压过高 or 检查Monitor »Inputs: Pot2 Raw ,检查是否接线错误"
+        },
+        "0x44": {
+            "des": "Pot2 Wiper Low",
+            "reason": "电位器2 输出过低:电位器2（17 管脚）输出电压低于输出电压限制",
+            "method": "检查电位器2 输出电压过低 or 检查Monitor »Inputs: Pot2 Raw ,检查是否接线错误"
+        },
+        "0x45": {
+            "des": "PotLowOvercurrent",
+            "reason": "电位器低端电流过高:电位器低端（18 管脚） 电流超过了10mA",
+            "method": "电位器阻抗过低 or 查看监控菜单 Monitor >> Outputs: Pot Low or 断电重启curtis控制器"
+        },
+        "0x46": {
+            "des": "EEPROM Failure",
+            "reason": "EEPROM失效:控制器操作系统试图向EEPROM 写入并且失败",
+            "method": "下载正确的软件，烧写正确的软件版本"
+        },
+        "0x47": {
+            "des": "HPD/Sequencing Fault 或 Emer RevHPD 或 Pump HPD",
+            "reason": "高踏板保护/操作顺序失败:由于钥匙启动， 互锁， 方向， 以及加速器输入设置错误导致高踏板保护以及启动顺序错误",
+            "method": "钥匙启动， 互锁， 方向以及加速器输入顺序设置错误 or 接线， 开关钥匙， 互锁方向， 或加速器输入故障 or 在curtis中没有EMR reverse brake 但是在设置项里面却打开了，将之关掉"
+        },
+        "0x49": {
+            "des": "ParameterChange",
+            "reason": "参数的更改需要钥匙开关的重启动",
+            "method": "断电重启curtis驱动器"
+        },
+        "0x51": {
+            "des": "user ",
+            "reason": "",
+            "method": ""
+        },
+        "0x52": {
+            "des": "",
+            "reason": "",
+            "method": ""
+        },
+        "0x53": {
+            "des": "",
+            "reason": "",
+            "method": ""
+        },
+        "0x54": {
+            "des": "",
+            "reason": "",
+            "method": ""
+        },
+        "0x55": {
+            "des": "",
+            "reason": "",
+            "method": ""
+        },
+        "0x56": {
+            "des": "",
+            "reason": "",
+            "method": ""
+        },
+        "0x57": {
+            "des": "",
+            "reason": "",
+            "method": ""
+        },
+        "0x59": {
+            "des": "",
+            "reason": "",
+            "method": ""
+        },
+        "0x60": {
+            "des": "",
+            "reason": "",
+            "method": ""
+        },
+        "0x61": {
+            "des": "",
+            "reason": "",
+            "method": ""
+        },
+        "0x68": {
+            "des": "VCL Run Time Error",
+            "reason": "运行时间VCL 代码错误",
+            "method": "曾经遇到can信号导致curtis驱动器崩溃的情况，首先检查我们控制器can线信号，然后联系curtis供应商"
+        },
+        "0x69": {
+            "des": "External Supply Out of Range",
+            "reason": "外部电源电流（总电流: 5V（ 26 管脚） 以及12V （25 管脚） ） 超出限制； 范围上限由External Supply Max定义， 下限由External SupplMin 定义",
+            "method": "检查 Monitor »Outputs: ExtSupply Current 或 调整外部电流"
+        },
+        "0x71": {
+            "des": "OS General",
+            "reason": "操作系统故障:内部控制失效",
+            "method": "断电重启curtis驱动器"
+        },
+        "0x72": {
+            "des": "PDO Timeout",
+            "reason": "PDO 超时:CAN PDO 信息接收时间超时",
+            "method": "检查can 通信是否正常，检查can线路接线是否正常、检查模型文件配置是否正确"
+        },
+        "0x73": {
+            "des": "Stall Detected",
+            "reason": "电机堵转:检测不到电机编码器",
+            "method": "检查电机存在机械堵转 or 检查电机编码器失效 or 检查是否接线错误 or 检查输入点击编码器电源是否故障"
+        },
+        "0x74": {
+            "des": "Fault On Other Traction Controlle",
+            "reason": "其他牵引控制器故障 ，双驱错误: 查看其他驱动器；",
+            "method": "联系curtis供应商"
+        },
+        "0x75": {
+            "des": "Dual Severe Faul",
+            "reason": "双驱动错误 :查看其它驱动器",
+            "method": "联系curtis供应商"
+        },
+        "0x87": {
+            "des": "Motor Characterization Fault",
+            "reason": "电机匹配过程失败",
+            "method": "查找curtis驱动器内部错误信息，修改错误重新匹配:"
+        },
+        "0x89": {
+            "des": "Motor Type Fault",
+            "reason": "电机类型错误 ",
+            "method": "电机类型数值超出范围，配置正确的值，断掉重启curtis驱动器"
+        },
+        "0x91": {
+            "des": "VCl/OSMismatch",
+            "reason": "控制器中VCL/OS 不匹配，",
+            "method": "联系相关人员，更新正确的VCL和 OS 程序"
+        },
+        "0x92": {
+            "des": "EM Brake Failed to Set",
+            "reason": "电磁刹锁死后， 车辆仍然在移动",
+            "method": "电磁刹车制动力太小 or 检查加速器是否正常 or 检查curtis参数是否符合文档 or 断电重启curtis驱动器"
+        },
+        "0x93": {
+            "des": "Encoder LOS(Limited Operating Strategy)",
+            "reason": "编码器受限操作状态:由于电机堵转或者编码器故障， 使得受限操作状态被激活",
+            "method": "检查电机堵转 or 电机编码器故障 or 检查电机编码器接线，断电重启curtis驱动器"
+        },
+        "0x94": {
+            "des": "Emer Rev Timeout",
+            "reason": "紧急反向反应超时 ",
+            "method": "检查紧急反向开关的状态 or 检查相关接线和curtis驱动器参数的配置"
+        },
+        "0x98": {
+            "des": "IllegalModel Numbe",
+            "reason": "控制器型号错误，控制器无法识别",
+            "method": "请联系curtis供应商"
+        },
+        "0x99": {
+            "des": "Dualmotor Parameter Mismatch",
+            "reason": "双电机参数匹配错误",
+            "method": "请联系curtis供应商"
+        }
+    },
+    "Curtis-1234-ZhiChe": {
+        "match_bit":false,
+        "0x12": {
+            "des": "Controller Overcurrent",
+            "reason": "控制器电流过载 :相位电流超过了限定电流",
+            "method": "检查电机外部U，V，W连接短路 or 检查电机参数是否不匹配 or 检查控制器是否有故障:后断电重启curtis控制器"
+        },
+        "0x13": {
+            "des": "Current Sensor Fault",
+            "reason": "电流传感器故障 :控制器电流传感器读数偏差",
+            "method": "检查电机U、V、W通过定子是否对车体短路，导致漏电 or 检查控制器是否有故障:后断电重启curtis"
+        },
+        "0x14": {
+            "des": "PreCharge Failed",
+            "reason": "预充电失败 :钥匙开关输入电压对电容器充电失败",
+            "method": "检查是否电容器正端外接负载使电容器不能正常充电  查看菜单Monitor>>Battery:Capacitor Voltage:后通过VCL函数percharge()重新设置或者互锁开关重新输入"
+        },
+        "0x15": {
+            "des": "Controller Severe Undertemp",
+            "reason": "控制器温度过低:散热温度低于-40℃",
+            "method": "检查外部环境是否温度太低 or 检查菜单Monitor>>Controller:Temperature :温度升至-40℃以上或者断电重启curtis控制器"
+        },
+        "0x16": {
+            "des": "Controller Severe Overtemp",
+            "reason": "控制器温度过高:散热器温度超过95℃",
+            "method": "检查控制器工作环境 or 车辆超载 or 控制安装错误  检查Monitor>>Controller:Temperature : 断电重启curtis控制器"
+        },
+        "0x17": {
+            "des": "Severe Undervoltage",
+            "reason": "电压过低:MOSFEET桥工作室电容电压低于最低啊电压限制",
+            "method": "检查电池参数设置错误 or 电池阻抗过大 or 电池连接断开 or 熔断器断开或主接触器未连接 检查Monitor Battery>>Capacitor Voltage :将电容电压升高到高，后断电重启curtis控制器"
+        },
+        "0x18": {
+            "des": "Severe Overvoltage",
+            "reason": "电压过高:MOSFEET桥工作室电容电压超过了最高电压限制",
+            "method": "检查电池参数设置错误 or 电池阻抗过高 or 再生制动时电池连接断开 检查检查Monitor Battery>>Capacitor Voltage:降低电压，后断电重启curtis控制器"
+        },
+        "0x21": {
+            "des": "Controller Undertemp Cutback",
+            "reason": "控制器温度过低导致性能消减:散热器温度低于-25℃",
+            "method": "检查控制器在受限工作条件下工作 :使散热器温度高于-25℃"
+        },
+        "0x22": {
+            "des": "Controller Overtemp Cutback",
+            "reason": "控制器温度过高导致性能消减:散热器温度超过85℃",
+            "method": "检查控制器工作环境严酷 or 检查车辆超载 or 查看菜单Controller:Temperature 5 :降低温度"
+        },
+        "0x23": {
+            "des": "Undervoltage Cutback",
+            "reason": "电压过低性能消减:电容电压过低",
+            "method": "检查电池电量不足 or 检查电池参数设置错误 or 电池阻抗过大 or 电池连接断开 or 查看Monitor >>Battery:Capacitor Voltage :将电容端电压升高到高于最低电压限制值"
+        },
+        "0x24": {
+            "des": "Overvoltage Cutback",
+            "reason": "电压过高性能消减:MOSFEET 桥工作时电容电压超过了最高电圧限制",
+            "method": "检查 再生制动过程中再生电流导致电池电压升高 or 电池参数设置错误 or 电池阻抗过大 or 再生制动是电池连接断开:将电容端电压降低与最高电压限制值"
+        },
+        "0x25": {
+            "des": "+5VSupply Failure",
+            "reason": "控制器输出5V电源失效 : 5v 输出(pin 26)有超过±10%的误差范围",
+            "method": "外接负载阻抗过低 or 查看菜单 Monitor » outputs:5 Volts and Ext Supply Current :调整输出电压至5V±10%范围"
+        },
+        "0x26": {
+            "des": "Digital Out 6 Failure",
+            "reason": "驱动6 输出失效:驱动6 输出电流超出15mA",
+            "method": "外接于驱动6 输出（ Pin19） 的负载阻抗过低 :检查接线错误 "
+        },
+        "0x27": {
+            "des": "Digital Out7 OVercurrent",
+            "reason": "驱动7 输出量输出过流:驱动7 输出电流超出15mA",
+            "method": "外接于驱动7 输出（ Pin20） 的负载阻抗过低 :检查接线错误"
+        },
+        "0x28": {
+            "des": "Motor TempHot Cutback",
+            "reason": "电机过热导致性能消减 : 电机温度传感器输入",
+            "method": "检查电机温度达到或者高于程序设定的警戒温度 or 检查电机温度设置参数 or 检查Monitor >> Motor >> Temperatureand >> Inputs:Analog2 or 检查是否行走的时候抱闸未打开"
+        },
+        "0x29": {
+            "des": "Motor Temp Sensor Fault",
+            "reason": "电机温度传感器故障 :电机温度传感器输入电压值为0 或大于10V ",
+            "method": "检查电机温度传感器连接错误 or 检查Monitor»Motor >> Temperatureand >> Inputs: Analog2"
+        },
+        "0x31": {
+            "des": "Coil1 Driver 、 Main Open/short",
+            "reason": "驱动1开路或者短路、主接触器线圈开路/短路:驱动1 输出（ 6 管脚） 开路或者短路，此故障只有在“Main Enable”设置为ON的时候才可能发生",
+            "method": "检查连接负载开路或短路 or 连接管脚污损 or 检查纠正错误的接线"
+        },
+        "0x32": {
+            "des": "Coil2 DriverOpen/Short、EMBrake Open/Short",
+            "reason": "驱动2 开路或短路、电磁刹车线圈开路/短路:驱动2 输出（ 5 管脚） 开路或者短路，此故障仅在“ EMbrakeType” 设置为0才发生",
+            "method": "检查连接负载开路或短路 or 连接管脚污损 or 检查纠正错误的接线"
+        },
+        "0x33": {
+            "des": "Coil3 Driver Open/short",
+            "reason": "驱动3开路或短路:驱动3输出开路或者短路",
+            "method": "检查连接负载开路或短路 or 连接管脚污损 or 检查纠正错误的接线"
+        },
+        "0x34": {
+            "des": "Coil4 Driver Open/short",
+            "reason": "驱动4开路或短路:驱动4输出开路或者短路",
+            "method": "检查连接负载开路或短路 or 连接管脚污损 or 检查纠正错误的接线"
+        },
+        "0x35": {
+            "des": "PDOpen/Short",
+            "reason": "比例驱动开路/短路:比例驱动（2管脚）开路或者短路",
+            "method": "检查连接负载开路或短路 or 连接管脚污损 or 检查纠正错误的接线"
+        },
+        "0x36": {
+            "des": "Encoder Fault",
+            "reason": "编码器失效",
+            "method": "检查电机编码器故障 or 检查编码器错误的接线，断电重启curtis控制器"
+        },
+        "0x37": {
+            "des": "Motor Open",
+            "reason": "电机缺相，U/V/W一相或者多相开路",
+            "method": "检查电机缺相 or 电机接线错误 or 查看Monitor»Motor: Motor RPM，断电重启curtis控制器"
+        },
+        "0x38": {
+            "des": "Main Contactor Welded",
+            "reason": "主接触器粘连:电容端先于主接触器吸合， 电容电压没有释放",
+            "method": "一般情况下其他的错误会导致0x38，请检查有无其他的错误，如果没有，检查主接触器接线"
+        },
+        "0x39": {
+            "des": "Main ContactorDid Not Close",
+            "reason": "主接触器未闭合: 当需要主接触器闭合时候， 电容电压未达到B+电压",
+            "method": "主接触器未闭合 or 熔断器断开 or 主接触器触点氧化，熔化， 或者连接状态不稳定"
+        },
+        "0x41": {
+            "des": "Throttle Wiper High",
+            "reason": "加速器输出偏高 :加速器电位器（16 管脚） 输出电压高于输出电压限制",
+            "method": "检查加速器电位器输出电压过高 or 查看Monitor»Inputs:Throttle Pot，降低加速器电位器输出电压，检查是否接线错误"
+        },
+        "0x42": {
+            "des": "Throttle Wiper Low",
+            "reason": "加速器输出偏低 :加速器电位器（17 管脚） 输出电压低于输出电压限制 ",
+            "method": "检查加速器电位器输出电压过低 or 查看Monitor»Inputs:Throttle Pot，增加加速器电位器输出电压，检查是否接线错误"
+        },
+        "0x43": {
+            "des": "Pot2 Wiper High",
+            "reason": "",
+            "method": "检查电位器2 输出电压过高 or 检查Monitor »Inputs: Pot2 Raw ,检查是否接线错误"
+        },
+        "0x44": {
+            "des": "Pot2 Wiper Low",
+            "reason": "电位器2 输出过低:电位器2（17 管脚）输出电压低于输出电压限制",
+            "method": "检查电位器2 输出电压过低 or 检查Monitor »Inputs: Pot2 Raw ,检查是否接线错误"
+        },
+        "0x45": {
+            "des": "PotLowOvercurrent",
+            "reason": "电位器低端电流过高:电位器低端（18 管脚） 电流超过了10mA",
+            "method": "电位器阻抗过低 or 查看监控菜单 Monitor >> Outputs: Pot Low or 断电重启curtis控制器"
+        },
+        "0x46": {
+            "des": "EEPROM Failure",
+            "reason": "EEPROM失效:控制器操作系统试图向EEPROM 写入并且失败",
+            "method": "下载正确的软件，烧写正确的软件版本"
+        },
+        "0x47": {
+            "des": "HPD/Sequencing Fault 或 Emer RevHPD 或 Pump HPD",
+            "reason": "高踏板保护/操作顺序失败:由于钥匙启动， 互锁， 方向， 以及加速器输入设置错误导致高踏板保护以及启动顺序错误",
+            "method": "钥匙启动， 互锁， 方向以及加速器输入顺序设置错误 or 接线， 开关钥匙， 互锁方向， 或加速器输入故障 or 在curtis中没有EMR reverse brake 但是在设置项里面却打开了，将之关掉"
+        },
+        "0x49": {
+            "des": "ParameterChange",
+            "reason": "参数的更改需要钥匙开关的重启动",
+            "method": "断电重启curtis驱动器"
+        },
+        "0x51": {
+            "des": "user ",
+            "reason": "",
+            "method": ""
+        },
+        "0x52": {
+            "des": "",
+            "reason": "",
+            "method": ""
+        },
+        "0x53": {
+            "des": "",
+            "reason": "",
+            "method": ""
+        },
+        "0x54": {
+            "des": "",
+            "reason": "",
+            "method": ""
+        },
+        "0x55": {
+            "des": "",
+            "reason": "",
+            "method": ""
+        },
+        "0x56": {
+            "des": "",
+            "reason": "",
+            "method": ""
+        },
+        "0x57": {
+            "des": "",
+            "reason": "",
+            "method": ""
+        },
+        "0x59": {
+            "des": "",
+            "reason": "",
+            "method": ""
+        },
+        "0x60": {
+            "des": "",
+            "reason": "",
+            "method": ""
+        },
+        "0x61": {
+            "des": "",
+            "reason": "",
+            "method": ""
+        },
+        "0x68": {
+            "des": "VCL Run Time Error",
+            "reason": "运行时间VCL 代码错误",
+            "method": "曾经遇到can信号导致curtis驱动器崩溃的情况，首先检查我们控制器can线信号，然后联系curtis供应商"
+        },
+        "0x69": {
+            "des": "External Supply Out of Range",
+            "reason": "外部电源电流（总电流: 5V（ 26 管脚） 以及12V （25 管脚） ） 超出限制； 范围上限由External Supply Max定义， 下限由External SupplMin 定义",
+            "method": "检查 Monitor »Outputs: ExtSupply Current 或 调整外部电流"
+        },
+        "0x71": {
+            "des": "OS General",
+            "reason": "操作系统故障:内部控制失效",
+            "method": "断电重启curtis驱动器"
+        },
+        "0x72": {
+            "des": "PDO Timeout",
+            "reason": "PDO 超时:CAN PDO 信息接收时间超时",
+            "method": "检查can 通信是否正常，检查can线路接线是否正常、检查模型文件配置是否正确"
+        },
+        "0x73": {
+            "des": "Stall Detected",
+            "reason": "电机堵转:检测不到电机编码器",
+            "method": "检查电机存在机械堵转 or 检查电机编码器失效 or 检查是否接线错误 or 检查输入点击编码器电源是否故障"
+        },
+        "0x74": {
+            "des": "Fault On Other Traction Controlle",
+            "reason": "其他牵引控制器故障 ，双驱错误: 查看其他驱动器；",
+            "method": "联系curtis供应商"
+        },
+        "0x75": {
+            "des": "Dual Severe Faul",
+            "reason": "双驱动错误 :查看其它驱动器",
+            "method": "联系curtis供应商"
+        },
+        "0x87": {
+            "des": "Motor Characterization Fault",
+            "reason": "电机匹配过程失败",
+            "method": "查找curtis驱动器内部错误信息，修改错误重新匹配:"
+        },
+        "0x89": {
+            "des": "Motor Type Fault",
+            "reason": "电机类型错误 ",
+            "method": "电机类型数值超出范围，配置正确的值，断掉重启curtis驱动器"
+        },
+        "0x91": {
+            "des": "VCl/OSMismatch",
+            "reason": "控制器中VCL/OS 不匹配，",
+            "method": "联系相关人员，更新正确的VCL和 OS 程序"
+        },
+        "0x92": {
+            "des": "EM Brake Failed to Set",
+            "reason": "电磁刹锁死后， 车辆仍然在移动",
+            "method": "电磁刹车制动力太小 or 检查加速器是否正常 or 检查curtis参数是否符合文档 or 断电重启curtis驱动器"
+        },
+        "0x93": {
+            "des": "Encoder LOS(Limited Operating Strategy)",
+            "reason": "编码器受限操作状态:由于电机堵转或者编码器故障， 使得受限操作状态被激活",
+            "method": "检查电机堵转 or 电机编码器故障 or 检查电机编码器接线，断电重启curtis驱动器"
+        },
+        "0x94": {
+            "des": "Emer Rev Timeout",
+            "reason": "紧急反向反应超时 ",
+            "method": "检查紧急反向开关的状态 or 检查相关接线和curtis驱动器参数的配置"
+        },
+        "0x98": {
+            "des": "IllegalModel Numbe",
+            "reason": "控制器型号错误，控制器无法识别",
+            "method": "请联系curtis供应商"
+        },
+        "0x99": {
+            "des": "Dualmotor Parameter Mismatch",
+            "reason": "双电机参数匹配错误",
+            "method": "请联系curtis供应商"
+        }
+    },
+    "Curtis-1232e-Triwin": {
+        "match_bit":false,
+        "0x12": {
+            "des": "Controller Overcurrent",
+            "reason": "控制器电流过载 :相位电流超过了限定电流",
+            "method": "检查电机外部U，V，W连接短路 or 检查电机参数是否不匹配 or 检查控制器是否有故障:后断电重启curtis控制器"
+        },
+        "0x13": {
+            "des": "Current Sensor Fault",
+            "reason": "电流传感器故障 :控制器电流传感器读数偏差",
+            "method": "检查电机U、V、W通过定子是否对车体短路，导致漏电 or 检查控制器是否有故障:后断电重启curtis"
+        },
+        "0x14": {
+            "des": "PreCharge Failed",
+            "reason": "预充电失败 :钥匙开关输入电压对电容器充电失败",
+            "method": "检查是否电容器正端外接负载使电容器不能正常充电  查看菜单Monitor>>Battery:Capacitor Voltage:后通过VCL函数percharge()重新设置或者互锁开关重新输入"
+        },
+        "0x15": {
+            "des": "Controller Severe Undertemp",
+            "reason": "控制器温度过低:散热温度低于-40℃",
+            "method": "检查外部环境是否温度太低 or 检查菜单Monitor>>Controller:Temperature :温度升至-40℃以上或者断电重启curtis控制器"
+        },
+        "0x16": {
+            "des": "Controller Severe Overtemp",
+            "reason": "控制器温度过高:散热器温度超过95℃",
+            "method": "检查控制器工作环境 or 车辆超载 or 控制安装错误  检查Monitor>>Controller:Temperature : 断电重启curtis控制器"
+        },
+        "0x17": {
+            "des": "Severe Undervoltage",
+            "reason": "电压过低:MOSFEET桥工作室电容电压低于最低啊电压限制",
+            "method": "检查电池参数设置错误 or 电池阻抗过大 or 电池连接断开 or 熔断器断开或主接触器未连接 检查Monitor Battery>>Capacitor Voltage :将电容电压升高到高，后断电重启curtis控制器"
+        },
+        "0x18": {
+            "des": "Severe Overvoltage",
+            "reason": "电压过高:MOSFEET桥工作室电容电压超过了最高电压限制",
+            "method": "检查电池参数设置错误 or 电池阻抗过高 or 再生制动时电池连接断开 检查检查Monitor Battery>>Capacitor Voltage:降低电压，后断电重启curtis控制器"
+        },
+        "0x21": {
+            "des": "Controller Undertemp Cutback",
+            "reason": "控制器温度过低导致性能消减:散热器温度低于-25℃",
+            "method": "检查控制器在受限工作条件下工作 :使散热器温度高于-25℃"
+        },
+        "0x22": {
+            "des": "Controller Overtemp Cutback",
+            "reason": "控制器温度过高导致性能消减:散热器温度超过85℃",
+            "method": "检查控制器工作环境严酷 or 检查车辆超载 or 查看菜单Controller:Temperature 5 :降低温度"
+        },
+        "0x23": {
+            "des": "Undervoltage Cutback",
+            "reason": "电压过低性能消减:电容电压过低",
+            "method": "检查电池电量不足 or 检查电池参数设置错误 or 电池阻抗过大 or 电池连接断开 or 查看Monitor >>Battery:Capacitor Voltage :将电容端电压升高到高于最低电压限制值"
+        },
+        "0x24": {
+            "des": "Overvoltage Cutback",
+            "reason": "电压过高性能消减:MOSFEET 桥工作时电容电压超过了最高电圧限制",
+            "method": "检查 再生制动过程中再生电流导致电池电压升高 or 电池参数设置错误 or 电池阻抗过大 or 再生制动是电池连接断开:将电容端电压降低与最高电压限制值"
+        },
+        "0x25": {
+            "des": "+5VSupply Failure",
+            "reason": "控制器输出5V电源失效 : 5v 输出(pin 26)有超过±10%的误差范围",
+            "method": "外接负载阻抗过低 or 查看菜单 Monitor » outputs:5 Volts and Ext Supply Current :调整输出电压至5V±10%范围"
+        },
+        "0x26": {
+            "des": "Digital Out 6 Failure",
+            "reason": "驱动6 输出失效:驱动6 输出电流超出15mA",
+            "method": "外接于驱动6 输出（ Pin19） 的负载阻抗过低 :检查接线错误 "
+        },
+        "0x27": {
+            "des": "Digital Out7 OVercurrent",
+            "reason": "驱动7 输出量输出过流:驱动7 输出电流超出15mA",
+            "method": "外接于驱动7 输出（ Pin20） 的负载阻抗过低 :检查接线错误"
+        },
+        "0x28": {
+            "des": "Motor TempHot Cutback",
+            "reason": "电机过热导致性能消减 : 电机温度传感器输入",
+            "method": "检查电机温度达到或者高于程序设定的警戒温度 or 检查电机温度设置参数 or 检查Monitor >> Motor >> Temperatureand >> Inputs:Analog2 or 检查是否行走的时候抱闸未打开"
+        },
+        "0x29": {
+            "des": "Motor Temp Sensor Fault",
+            "reason": "电机温度传感器故障 :电机温度传感器输入电压值为0 或大于10V ",
+            "method": "检查电机温度传感器连接错误 or 检查Monitor»Motor >> Temperatureand >> Inputs: Analog2"
+        },
+        "0x31": {
+            "des": "Coil1 Driver 、 Main Open/short",
+            "reason": "驱动1开路或者短路、主接触器线圈开路/短路:驱动1 输出（ 6 管脚） 开路或者短路，此故障只有在“Main Enable”设置为ON的时候才可能发生",
+            "method": "检查连接负载开路或短路 or 连接管脚污损 or 检查纠正错误的接线"
+        },
+        "0x32": {
+            "des": "Coil2 DriverOpen/Short、EMBrake Open/Short",
+            "reason": "驱动2 开路或短路、电磁刹车线圈开路/短路:驱动2 输出（ 5 管脚） 开路或者短路，此故障仅在“ EMbrakeType” 设置为0才发生",
+            "method": "检查连接负载开路或短路 or 连接管脚污损 or 检查纠正错误的接线"
+        },
+        "0x33": {
+            "des": "Coil3 Driver Open/short",
+            "reason": "驱动3开路或短路:驱动3输出开路或者短路",
+            "method": "检查连接负载开路或短路 or 连接管脚污损 or 检查纠正错误的接线"
+        },
+        "0x34": {
+            "des": "Coil4 Driver Open/short",
+            "reason": "驱动4开路或短路:驱动4输出开路或者短路",
+            "method": "检查连接负载开路或短路 or 连接管脚污损 or 检查纠正错误的接线"
+        },
+        "0x35": {
+            "des": "PDOpen/Short",
+            "reason": "比例驱动开路/短路:比例驱动（2管脚）开路或者短路",
+            "method": "检查连接负载开路或短路 or 连接管脚污损 or 检查纠正错误的接线"
+        },
+        "0x36": {
+            "des": "Encoder Fault",
+            "reason": "编码器失效",
+            "method": "检查电机编码器故障 or 检查编码器错误的接线，断电重启curtis控制器"
+        },
+        "0x37": {
+            "des": "Motor Open",
+            "reason": "电机缺相，U/V/W一相或者多相开路",
+            "method": "检查电机缺相 or 电机接线错误 or 查看Monitor»Motor: Motor RPM，断电重启curtis控制器"
+        },
+        "0x38": {
+            "des": "Main Contactor Welded",
+            "reason": "主接触器粘连:电容端先于主接触器吸合， 电容电压没有释放",
+            "method": "一般情况下其他的错误会导致0x38，请检查有无其他的错误，如果没有，检查主接触器接线"
+        },
+        "0x39": {
+            "des": "Main ContactorDid Not Close",
+            "reason": "主接触器未闭合: 当需要主接触器闭合时候， 电容电压未达到B+电压",
+            "method": "主接触器未闭合 or 熔断器断开 or 主接触器触点氧化，熔化， 或者连接状态不稳定"
+        },
+        "0x41": {
+            "des": "Throttle Wiper High",
+            "reason": "加速器输出偏高 :加速器电位器（16 管脚） 输出电压高于输出电压限制",
+            "method": "检查加速器电位器输出电压过高 or 查看Monitor»Inputs:Throttle Pot，降低加速器电位器输出电压，检查是否接线错误"
+        },
+        "0x42": {
+            "des": "Throttle Wiper Low",
+            "reason": "加速器输出偏低 :加速器电位器（17 管脚） 输出电压低于输出电压限制 ",
+            "method": "检查加速器电位器输出电压过低 or 查看Monitor»Inputs:Throttle Pot，增加加速器电位器输出电压，检查是否接线错误"
+        },
+        "0x43": {
+            "des": "Pot2 Wiper High",
+            "reason": "",
+            "method": "检查电位器2 输出电压过高 or 检查Monitor »Inputs: Pot2 Raw ,检查是否接线错误"
+        },
+        "0x44": {
+            "des": "Pot2 Wiper Low",
+            "reason": "电位器2 输出过低:电位器2（17 管脚）输出电压低于输出电压限制",
+            "method": "检查电位器2 输出电压过低 or 检查Monitor »Inputs: Pot2 Raw ,检查是否接线错误"
+        },
+        "0x45": {
+            "des": "PotLowOvercurrent",
+            "reason": "电位器低端电流过高:电位器低端（18 管脚） 电流超过了10mA",
+            "method": "电位器阻抗过低 or 查看监控菜单 Monitor >> Outputs: Pot Low or 断电重启curtis控制器"
+        },
+        "0x46": {
+            "des": "EEPROM Failure",
+            "reason": "EEPROM失效:控制器操作系统试图向EEPROM 写入并且失败",
+            "method": "下载正确的软件，烧写正确的软件版本"
+        },
+        "0x47": {
+            "des": "HPD/Sequencing Fault 或 Emer RevHPD 或 Pump HPD",
+            "reason": "高踏板保护/操作顺序失败:由于钥匙启动， 互锁， 方向， 以及加速器输入设置错误导致高踏板保护以及启动顺序错误",
+            "method": "钥匙启动， 互锁， 方向以及加速器输入顺序设置错误 or 接线， 开关钥匙， 互锁方向， 或加速器输入故障 or 在curtis中没有EMR reverse brake 但是在设置项里面却打开了，将之关掉"
+        },
+        "0x49": {
+            "des": "ParameterChange",
+            "reason": "参数的更改需要钥匙开关的重启动",
+            "method": "断电重启curtis驱动器"
+        },
+        "0x51": {
+            "des": "user ",
+            "reason": "",
+            "method": ""
+        },
+        "0x52": {
+            "des": "",
+            "reason": "",
+            "method": ""
+        },
+        "0x53": {
+            "des": "",
+            "reason": "",
+            "method": ""
+        },
+        "0x54": {
+            "des": "",
+            "reason": "",
+            "method": ""
+        },
+        "0x55": {
+            "des": "",
+            "reason": "",
+            "method": ""
+        },
+        "0x56": {
+            "des": "",
+            "reason": "",
+            "method": ""
+        },
+        "0x57": {
+            "des": "",
+            "reason": "",
+            "method": ""
+        },
+        "0x59": {
+            "des": "",
+            "reason": "",
+            "method": ""
+        },
+        "0x60": {
+            "des": "",
+            "reason": "",
+            "method": ""
+        },
+        "0x61": {
+            "des": "",
+            "reason": "",
+            "method": ""
+        },
+        "0x68": {
+            "des": "VCL Run Time Error",
+            "reason": "运行时间VCL 代码错误",
+            "method": "曾经遇到can信号导致curtis驱动器崩溃的情况，首先检查我们控制器can线信号，然后联系curtis供应商"
+        },
+        "0x69": {
+            "des": "External Supply Out of Range",
+            "reason": "外部电源电流（总电流: 5V（ 26 管脚） 以及12V （25 管脚） ） 超出限制； 范围上限由External Supply Max定义， 下限由External SupplMin 定义",
+            "method": "检查 Monitor »Outputs: ExtSupply Current 或 调整外部电流"
+        },
+        "0x71": {
+            "des": "OS General",
+            "reason": "操作系统故障:内部控制失效",
+            "method": "断电重启curtis驱动器"
+        },
+        "0x72": {
+            "des": "PDO Timeout",
+            "reason": "PDO 超时:CAN PDO 信息接收时间超时",
+            "method": "检查can 通信是否正常，检查can线路接线是否正常、检查模型文件配置是否正确"
+        },
+        "0x73": {
+            "des": "Stall Detected",
+            "reason": "电机堵转:检测不到电机编码器",
+            "method": "检查电机存在机械堵转 or 检查电机编码器失效 or 检查是否接线错误 or 检查输入点击编码器电源是否故障"
+        },
+        "0x74": {
+            "des": "Fault On Other Traction Controlle",
+            "reason": "其他牵引控制器故障 ，双驱错误: 查看其他驱动器；",
+            "method": "联系curtis供应商"
+        },
+        "0x75": {
+            "des": "Dual Severe Faul",
+            "reason": "双驱动错误 :查看其它驱动器",
+            "method": "联系curtis供应商"
+        },
+        "0x87": {
+            "des": "Motor Characterization Fault",
+            "reason": "电机匹配过程失败",
+            "method": "查找curtis驱动器内部错误信息，修改错误重新匹配:"
+        },
+        "0x89": {
+            "des": "Motor Type Fault",
+            "reason": "电机类型错误 ",
+            "method": "电机类型数值超出范围，配置正确的值，断掉重启curtis驱动器"
+        },
+        "0x91": {
+            "des": "VCl/OSMismatch",
+            "reason": "控制器中VCL/OS 不匹配，",
+            "method": "联系相关人员，更新正确的VCL和 OS 程序"
+        },
+        "0x92": {
+            "des": "EM Brake Failed to Set",
+            "reason": "电磁刹锁死后， 车辆仍然在移动",
+            "method": "电磁刹车制动力太小 or 检查加速器是否正常 or 检查curtis参数是否符合文档 or 断电重启curtis驱动器"
+        },
+        "0x93": {
+            "des": "Encoder LOS(Limited Operating Strategy)",
+            "reason": "编码器受限操作状态:由于电机堵转或者编码器故障， 使得受限操作状态被激活",
+            "method": "检查电机堵转 or 电机编码器故障 or 检查电机编码器接线，断电重启curtis驱动器"
+        },
+        "0x94": {
+            "des": "Emer Rev Timeout",
+            "reason": "紧急反向反应超时 ",
+            "method": "检查紧急反向开关的状态 or 检查相关接线和curtis驱动器参数的配置"
+        },
+        "0x98": {
+            "des": "IllegalModel Numbe",
+            "reason": "控制器型号错误，控制器无法识别",
+            "method": "请联系curtis供应商"
+        },
+        "0x99": {
+            "des": "Dualmotor Parameter Mismatch",
+            "reason": "双电机参数匹配错误",
+            "method": "请联系curtis供应商"
+        }
+    },
+    "Keya-48150-2E-CANOpen": {
+        "match_bit":true,
+        "0x0001": {
+            "des": "Disable",
+            "reason": "使能",
+            "method": "重启"
+        },
+        "0x0002": {
+            "des": "Over Voltage",
+            "reason": "过压",
+            "method": "查看外部供电是否超出供电范围"
+        },
+        "0x0004": {
+            "des": "Over Current",
+            "reason": "过流",
+            "method": "查看外部供电是否存在过流"
+        },
+        "0x0008": {
+            "des": "EEPROM Param error",
+            "reason": "EEPROM参数错误",
+            "method": "联系驱动器供应商"
+        },
+        "0x0010": {
+            "des": "Under Voltage",
+            "reason": "驱动器欠压",
+            "method": "查看外部供电是否稳定以及是否低于驱动器供电范围，如果均正常，联系驱动器供应商更换驱动器"
+        },
+        "0x0020": {
+            "des": "default",
+            "reason": "预留，保持为0",
+            "method": "联系鸣志供应商"
+        },
+        "0x0040": {
+            "des": "Software over Current",
+            "reason": "过流（软件设定值）",
+            "method": "检查软件设定值"
+        },
+        "0x0080": {
+            "des": "Control mode error",
+            "reason": "控制模式选择错误",
+            "method": "重新配置控制模式"
+        },
+        "0x0100": {
+            "des": "Working mode error",
+            "reason": "工作模式错误",
+            "method": "设备重上电"
+        },
+        "0x0200": {
+            "des": "Mixed mode error",
+            "reason": "混合模式故障",
+            "method": "有一路设备故障，针对排查"
+        },
+        "0x0400": {
+            "des": "Over temperature",
+            "reason": "过温",
+            "method": "关机冷却一段时间，如未能消除，联系驱动器供应商"
+        },
+        "0x0800": {
+            "des": "Hall Error",
+            "reason": "霍尔故障",
+            "method": "检查编码器相关接线，如果未能恢复，联系驱动器供应商"
+        },
+        "0x1000": {
+            "des": "default",
+            "reason": "预留，保持为0",
+            "method": "联系鸣志供应商"
+        },
+        "0x2000": {
+            "des": "Over temperature motor",
+            "reason": "电机过温",
+            "method": "关机冷却一段时间，如未能消除，联系驱动器供应商"
+        },
+        "0x4000": {
+            "des": "Watchdog trigger",
+            "reason": "CAN线看门狗触发",
+            "method": "检查can线是否连接正常"
+        },
+        "0x8000": {
+            "des": "locked-rotor",
+            "reason": "堵转",
+            "method": "检查三相线以及编码器线，增大加减速，更换大电机或者减小负载，如未能解决，联系驱动器供应商"
+        }
+    },
+    "Nanotec-AE-CANOpen": {
+        "match_bit":false,
+        "0x1200": {
+            "des": "泄放电阻阻值过小",
+            "reason": "再生泄放电阻阻值过小",
+            "method": "返厂检修"
+        },
+        "0x1301": {
+            "des": "通讯超时,上位机指令间隔时间超过 Fn0E3 检测时间设定值",
+            "reason": "上位机指令间隔时间超过 Fn0E3 检测时间设定值",
+            "method": "重新配置上位机通讯指令间隔时间"
+        },
+        "0x1320": {
+            "des": "掉线停止",
+            "reason": "上位机指令间隔时间超过 Fn1CD 将立即停止（停止方式可选）",
+            "method": "重新配置上位机通讯指令间隔时间"
+        },
+        "0x1401": {
+            "des": "伺服电机不响应驱动指令：1. 电机堵转，2. 电机线缆断开，3. 伺服电机故障",
+            "reason": "1. 电机堵转；2. 电机线缆断开；3. 伺服电机故障",
+            "method": "1.检查机械安装;2.转矩限制过小;3.检查电机线缆;4.返厂检修"
+        },
+        "0x1500": {
+            "des": "编码器AB报警",
+            "reason": "1. 未接编码器；2. 编码器损坏或者编码器线损坏；3. 噪声干扰严重",
+            "method": "1.确认编码器接线可靠无误；2.转动电机同时查看 Dn04 是否变化；3.转动电机同时查看 Dn2E 是否变化；4.确认接线没有问题可加大 Fn0E5；"
+        },
+        "0x1510": {
+            "des": "编码器UVW报警",
+            "reason": "1. 未接编码器；2. 编码器损坏或者编码器线损坏；3. 噪声干扰严重",
+            "method": "1.确认编码器接线可靠无误；2.转动电机同时查看 Dn04 是否变化；3.转动电机同时查看 Dn2E 是否变化；4.确认接线没有问题可加大 Fn0E5；"
+        },
+        "0x1600": {
+            "des": "Fram读写异常",
+            "reason": "Fram 数据写操作校验错误",
+            "method": "返厂检修"
+        },
+        "0x1700": {
+            "des": "电子齿轮参数异常",
+            "reason": "1. 功率电源电压过低；2. 欠压检测电压门槛过高；3. 驱动器电压测量回路故障",
+            "method": "重新配置电子齿轮参数"
+        },
+        "0x2200": {
+            "des": "功率电源欠压",
+            "reason": "1. 功率电源电压过低；2. 欠压检测电压门槛过高；3. 驱动器电压测量回路故障",
+            "method": "1.检查供电电压及 Dn80；2.重置 Fn 0D1 欠压检测门值；3.通过 Fn 0D2 忽略欠压报警；4.返厂检修"
+        },
+        "0x2500": {
+            "des": "过电流",
+            "reason": "1. 电机启制动过猛；2. 驱动器损坏；3. 电机接线 U、V、W 短路或某绕组与外壳短路；4. 电机故障；5. 功率模块自动保护；6. 伺服电机剧烈振荡",
+            "method": "1.断开电机接线，如通电刚进入伺服使能状态就出现报警，则驱动器坏，需更换；2.断开电源，检查电机 U、V、W 接线和测量其与外壳之间的绝缘电阻是否正确；测量电机三相电阻，如果不平衡，则电机已坏，需更换电机；3.重新调整伺服增益参数，使伺服电机运行平稳；4.提高电流检测门槛 Fn 0D5，提高窗口滤波宽度 Fn 0D6"
+        },
+        "0x2501": {
+            "des": "过电流",
+            "reason": "1. 电机启制动过猛；2. 驱动器损坏；3. 电机接线 U、V、W 短路或某绕组与外壳短路；4. 电机故障；5. 功率模块自动保护；6. 伺服电机剧烈振荡",
+            "method": "1.断开电机接线，如通电刚进入伺服使能状态就出现报警，则驱动器坏，需更换；2.断开电源，检查电机 U、V、W 接线和测量其与外壳之间的绝缘电阻是否正确；测量电机三相电阻，如果不平衡，则电机已坏，需更换电机；3.重新调整伺服增益参数，使伺服电机运行平稳；4.提高电流检测门槛 Fn 0D5，提高窗口滤波宽度 Fn 0D6"
+        },
+        "0x2502": {
+            "des": "过电流",
+            "reason": "1. 电机启制动过猛；2. 驱动器损坏；3. 电机接线 U、V、W 短路或某绕组与外壳短路；4. 电机故障；5. 功率模块自动保护；6. 伺服电机剧烈振荡",
+            "method": "1.断开电机接线，如通电刚进入伺服使能状态就出现报警，则驱动器坏，需更换；2.断开电源，检查电机 U、V、W 接线和测量其与外壳之间的绝缘电阻是否正确；测量电机三相电阻，如果不平衡，则电机已坏，需更换电机；3.重新调整伺服增益参数，使伺服电机运行平稳；4.提高电流检测门槛 Fn 0D5，提高窗口滤波宽度 Fn 0D6"
+        },
+        "0x2510": {
+            "des": "过载",
+            "reason": "1.负载过大；2.电机振荡；3.电磁制动器抱死；4.电机及编码器接线错误；5.编码器反馈线与电机连接松动；6. 电机故障",
+            "method": "1.增加驱动器和电机容量，增大速度曲线加减速时间，减小电机负载；2.重新调整增益；3.确认电机运行时电磁制动器打开；4.检查电机、编码器接线；5.检查编码器及电机轴连接牢固；6.返厂检修"
+        },
+        "0x2520": {
+            "des": "超速",
+            "reason": "1. 给定速度指令过大；2. 编码器反馈信号出错；3. 负载波动过大",
+            "method": "1 确认指令转速不超过最大转速；2 确认编码器接线正确；3 检查机械安装；4 返厂检修"
+        },
+        "0x2530": {
+            "des": "功率电源过压",
+            "reason": "1. 功率电源电压过高；2. 驱动器电压测量回路故障",
+            "method": "1 检查供电电压及 Dn80；2 返厂检修"
+        },
+        "0x2600": {
+            "des": "参数配置异常",
+            "reason": "当前配置参数值超过允许范围",
+            "method": "1 恢复出厂设置，重启动；2 重新配置参数；"
+        },
+        "0x2610": {
+            "des": "位置偏差计数器溢出",
+            "reason": "1. 位置指令输入频率过高；2. 位置环增益太小；3. 电机或编码器接线错误；4. 电机转矩不足、负载过大",
+            "method": "1 正确调整输入指令脉冲频率；2 重新调整有关增益；3 纠正电机及编码器电缆接线；4 更换大功率电机或减小负载"
+        },
+        "0x2645": {
+            "des": "位置超差",
+            "reason": "1. 位置指令输入频率过高；2. 位置环增益太小；3. 位置超差设定值 Fn 0DA 太小；4. 电机或编码器接线错误；",
+            "method": "1 正确调整输入指令脉冲频率；2 重新调整有关增益；3 重新调整 Fn 0DA 设定值；4 纠正电机及编码器电缆接线;5 更换大功率电机或减小负载"
+        },
+        "0x2660": {
+            "des": "1 相报警",
+            "reason": "1 相电流检测 ADC 零点故障",
+            "method": "返厂检修"
+        },
+        "0x2661": {
+            "des": "2 相报警",
+            "reason": "2 相电流检测 ADC 零点故障",
+            "method": "返厂检修"
+        },
+        "0x2900": {
+            "des": "堵转或失速",
+            "reason": "1. 编码器或编码器接线出错；2. 电机 UVW 相线接错；3. 位置指令输入频率过高；4. 加减速时间过短；5. 速度环超调过大；6. 负载惯量过大；7. 电机故障",
+            "method": "1 更换伺服电机或编码器，纠正编码器电缆接线；2 纠正电机 UVW 相线；3 调整输入指令脉冲频率；4 增大加减速时间；5 重新调整有关增益，或者减小负载惯量比参数；6 减少负载惯量或换大电机；7 返厂检修"
+        },
+        "0x3110": {
+            "des": "驱动器电机不匹配",
+            "reason": "驱动器不匹配该型号的电机",
+            "method": "选择合适电机"
+        },
+        "0x3600": {
+            "des": "编码器 Z 脉冲丢失错误报警",
+            "reason": "1. 编码器接线错误；2. 编码器损坏；3. 噪声干扰严重",
+            "method": "1 确认编码器接线可靠、无误；2 缩短编码器反馈配线，严格按照接线要求配线；3 加大 QEP 编码器采样滤波周期设定值Fn 135【须专业人员配置】；4 返厂检修"
+        },
+        "0x3601": {
+            "des": "编码器 Z 脉冲丢失错误报警",
+            "reason": "1. 编码器接线错误；2. 编码器损坏；3. 噪声干扰严重",
+            "method": "1 确认编码器接线可靠、无误；2 缩短编码器反馈配线，严格按照接线要求配线；3 加大 QEP 编码器采样滤波周期设定值Fn 135【须专业人员配置】；4 返厂检修"
+        },
+        "0x1330": {
+            "des": "自主停车",
+            "reason": "启动了自主停车功能",
+            "method": "关闭自主停车 Fn1BF=0"
+        },
+        "0x2630": {
+            "des": "过温报警",
+            "reason": "1．控制板温度过高;2．报警参数设置错误",
+            "method": "检查 Fn0E7 温度报警门限值；查看当前检测温度 Dn25"
+        },
+        "0x2605": {
+            "des": "找零超时",
+            "reason": "找零位失败",
+            "method": "联系厂家"
+        }
+    },
+    "AMC-DZCANTE-CANOpen":{
+        "match_bit":true,
+        "0x0001":{
+            "des":"Drive Reset",
+            "reason":"驱动器重启",
+            "method":"设备重启"
+        },
+        "0x0002":{
+            "des":"Drive Internal Erro",
+            "reason":"驱动器内部错误",
+            "method":"联系驱动器供应商"
+        },
+        "0x0004":{
+            "des":"Short Circuit",
+            "reason":"短路",
+            "method":"检查接线"
+        },
+        "0x0008":{
+            "des":"Over Current",
+            "reason":"过流",
+            "method":"查看外部供电是否存在过流"
+        },
+        "0x0010":{
+            "des":"Under Voltage",
+            "reason":"内部电压过低",
+            "method":"联系鸣志供应商"
+        },
+        "0x0020":{
+            "des":"Over Voltage",
+            "reason":"过压",
+            "method":"查看外部供电是否超出供电范围"
+        },
+        "0x0040":{
+            "des":"Over temperature drive",
+            "reason":"驱动器过温",
+            "method":"关机冷却一段时间，如未能消除，联系驱动器供应商"
+        }
+    },
+    "Maxon-Canopen":{
+        "match_bit":false,
+        "0x2310":{
+            "des":"Over Current",
+            "reason":"过流",
+            "method":"查看外部供电是否存在过流"
+        },
+        "0x3210":{
+            "des":"Over Voltage",
+            "reason":"过压",
+            "method":"查看外部供电是否超出供电范围"
+        },
+        "0x3220":{
+            "des":"Low Voltage",
+            "reason":"电压过低",
+            "method":"查看外部供电是否低于供电范围及是否按照操作手册配置电压过低阈值"
+        },
+        "0x4210":{
+            "des":"Over temperature",
+            "reason":"过温",
+            "method":"关机冷却一段时间，如未能消除，联系驱动器供应商"
+        },
+        "0x4380":{
+            "des":"Over temperature motor",
+            "reason":"电机过温",
+            "method":"关机冷却一段时间，如未能消除，联系驱动器供应商"
+        },
+        "0x7388":{
+            "des":"Hall Error",
+            "reason":"霍尔故障",
+            "method":"检查编码器相关接线，如果未能恢复，联系驱动器供应商"
+        },
+        "0xFF02":{
+            "des":"Watchdog trigger",
+            "reason":"CAN线看门狗触发",
+            "method":"检查can线是否连接正常"
+        }
+    },
+    "TianTai-LVSI-CANOpen":{
+        "match_bit":false,
+        "0x2330":{
+            "des":"短路异常",
+            "reason":"短路",
+            "method":"更正电路"
+        },
+        "0x2310":{
+            "des":"过流异常",
+            "reason":"过流",
+            "method":"更正电路"
+        },
+        "0x4210":{
+            "des":"过温异常",
+            "reason":"减少负载；改善电机散热情况；减少加/减速度",
+            "method":"重新导入参数文件"
+        },
+        "0x1721":{
+            "des":"堵转异常",
+            "reason":"电机堵转",
+            "method":"检查电机是否卡主，负载是否过大"
+        },
+        "0x7385":{
+            "des":"霍尔顺序异常（预留）",
+            "reason":"无",
+            "method":"无，联系供应商"
+        },
+        "0x3110":{
+            "des":"过压异常",
+            "reason":"电机电压过大",
+            "method":"检查电机接线；检查电压"
+        },
+        "0x3120":{
+            "des":"欠压异常",
+            "reason":"电机电压小",
+            "method":"检查电机接线；检查电压"
+        },
+        "0xff05":{
+            "des":"PWM 异常（预留）",
+            "reason":"无",
+            "method":"无，联系供应商"
+        },
+        "0xff01":{
+            "des":"电机学习异常",
+            "reason":"电机学习异常",
+            "method":"无，联系供应商"
+        },
+        "0xff02":{
+            "des":"电流偏置异常",
+            "reason":"电流偏置异常",
+            "method":"无，联系供应商"
+        },
+        "0x8130":{
+            "des":"通信异常",
+            "reason":"通信失败",
+            "method":"检查模型文件以及can电路是否松动"
+        },
+        "0x3286":{
+            "des":"缺相异常（预留）",
+            "reason":"三相电源缺相",
+            "method":"检查电源连线"
+        },
+        "0x8400":{
+            "des":"失速异常",
+            "reason":"电机速度超过所定义的最大速度，速度不正确",
+            "method":"减小电机运行速度；增大最大速度限值或者联系供应商"
+        },
+        "0xff03":{
+            "des":"力矩异常",
+            "reason":"电机力矩参数有误",
+            "method":"无，联系供应商"
+        },
+        "0x3230":{
+            "des":"过载异常（预留）",
+            "reason":"电机已进入过载状态",
+            "method":"减少负载；检查加/减速度是否太大"
+        },
+        "0x7305":{
+            "des":"编码器异常（预留）",
+            "reason":"电机碰触正向限位",
+            "method":"如果是误报，请检查限位设置和限位开关"
+        },
+        "0xff04":{
+            "des":"预留",
+            "reason":"预留",
+            "method":"无"
+        },
+        "0x8611":{
+            "des":"位置跟随异常",
+            "reason":"位置模式位置跟踪误差超过限值",
+            "method":"减少负载；检查加/减速度是否太大"
+        }
+    },
+    "Tongyi-lxL-CANOpen":{
+        "match_bit":true,
+        "0x01":{
+            "des":"DCBUS 过压",
+            "reason":"驱动器直流输入电压过大",
+            "method":"检查电源输入侧是否大于最大输入值"
+        },
+        "0x02":{
+            "des":"DCBUS 欠压",
+            "reason":"过流",
+            "method":"更正电路"
+        },
+        "0x04":{
+            "des":"电机过流",
+            "reason":"驱动器的输出电流已经到达了峰值电流，而仍无法满足负载需求",
+            "method":"请检查驱动器电流环比例值是否过大；电机连接负载是否堵转；驱动器型号是否选择的过小"
+        },
+        "0x08":{
+            "des":"编码器故障",
+            "reason":"编码器故障",
+            "method":"检查编码器接线，请联系供应商"
+        },
+        "0x10":{
+            "des":"控制电源欠压",
+            "reason":"逻辑电源故障",
+            "method":"驱动器内部逻辑电源故障，硬件故障，联系供应商"
+        },
+        "0x20":{
+            "des":"电机过热",
+            "reason":"电机过热",
+            "method":"是否配置充电去使能功能"
+        },
+        "0x40":{
+            "des":"驱动过热",
+            "reason":"驱动器内部温度过高",
+            "method":"是否配置充电去使能功能"
+        },
+        "0x80":{
+            "des":"电机过载报警",
+            "reason":"电机过载",
+            "method":"请检查负载是否过大超出电机的额定功率，调整电机过载保护时间设定，联系供应商"
+        },
+        "0x100":{
+            "des":"霍尔信号异常",
+            "reason":"霍尔信号异常",
+            "method":"霍尔信号断线或缺相，检测霍尔接线，联系供应商"
+        },
+        "0x200":{
+            "des":"编码器断线",
+            "reason":"编码器断线",
+            "method":"编码器断线，联系供应商"
+        },
+        "0x400":{
+            "des":"电机过速",
+            "reason":"电机过速报警",
+            "method":"请检查电机运行速度是否超出限制速度"
+        },
+        "0x800":{
+            "des":"指令超差错误",
+            "reason":"位置/速度指令与电机实际值超出允许范围",
+            "method":"增大增益或增大超差允许值"
+        },
+        "0x1000":{
+            "des":"存储参数校验错误",
+            "reason":"FRAM 参数校验错误",
+            "method":"从启驱动器，若继续出现此错误，请参数恢复出厂设置，从新调整参数，联系供应商"
+        },
+        "0x2000":{
+            "des":"功率模块过流（硬件）",
+            "reason":"MOS/IGBT 过流硬件保护",
+            "method":"无，联系供应商"
+        },
+        "0x10000":{
+            "des":"电流检测基准错误",
+            "reason":"电流基准错误",
+            "method":"硬件故障，联系供应商"
+        },
+        "0x20000":{
+            "des":"缺相报警",
+            "reason":"电机缺相",
+            "method":"检测电机动力线接线"
+        },
+        "0x80000":{
+            "des":"开门狗超时错误",
+            "reason":"软件开门狗超时",
+            "method":"开机复位清楚故障"
+        }
+    },
+    "RoboteQ-SeerCanopen":{
+        "match_bit":true,
+        "0x01":{
+            "des":"Amps Limit currently active",
+            "reason":"驱动器中电流限制触发",
+            "method":"调整驱动器中的电机电流限制或放大过流时间"
+        },
+        "0x02":{
+            "des":"Motor stalled",
+            "reason":"电机堵转",
+            "method":"检查是否电机存在卡住的情况，如抱闸误触发"
+        },
+        "0x04":{
+            "des":"Loop Error detected",
+            "reason":"驱动器的指令跟踪误差过大",
+            "method":"请检查驱动器速度、位置指令跟踪阈值及时间设置，适当放大"
+        },
+        "0x08":{
+            "des":"Safety Stop active",
+            "reason":"驱动器安全停止开关触发",
+            "method":"检查接线，请联系供应商"
+        },
+        "0x10":{
+            "des":"Forward Limit triggered",
+            "reason":"正向限位触发",
+            "method":"请检查正向限位是否存在误触发情况"
+        },
+        "0x20":{
+            "des":"Reverse Limit triggered",
+            "reason":"负向限位触发",
+            "method":"请检查负向限位是否存在误触发情况"
+        },
+        "0x40":{
+            "des":"Amps Trigger activated",
+            "reason":"未知",
+            "method":"未知,请联系供应商"
+        }
+    }
+}

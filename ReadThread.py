@@ -106,6 +106,7 @@ class ReadThread(QThread):
         self.rstatus = RobotStatus()
         self.tlist = []
         self.log =  []
+        self.output_fname = ""
         if self.filenames:
             self.reader = ReadLog(self.filenames)
             self.reader.thread_num = self.cpu_num
@@ -139,11 +140,11 @@ class ReadThread(QThread):
             self.tlist = [tmin + timedelta(microseconds=x) for x in range(0, int(dt.total_seconds()*1e6+1000),1000)]
             #save Error
             ts = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-            output_fname = "Report_" + str(ts).replace(':','-').replace(' ','_') + ".txt"
+            self.output_fname = "Report_" + str(ts).replace(':','-').replace(' ','_') + ".txt"
             path = os.path.dirname(self.filenames[0])
-            output_fname = path + "/" + output_fname
-            self.log.append("Report File:" + Fdir2Flink(output_fname))
-            fid = open(output_fname,"w") 
+            self.output_fname = path + "/" + self.output_fname
+            self.log.append("Report File:" + Fdir2Flink(self.output_fname))
+            fid = open(self.output_fname,"w") 
             print("="*20, file = fid)
             print("Files: ", self.filenames, file = fid)
             print(len(self.fatal.content()[0]), " FATALs, ", len(self.err.content()[0]), " ERRORs, ", 
@@ -236,5 +237,7 @@ class ReadThread(QThread):
         else:
             return [[],[]]
 
+    def getReportFileAddr(self):
+        return self.output_fname
 
 

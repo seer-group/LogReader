@@ -27,6 +27,18 @@ def getMotorNameTypeDict(model_path):
                 # print("name %s: %s" % (motor_name, motor_type))
     return name_type_dict
 
+def getMotorNameBrandDict(model_path):
+    name_brand_dict = {}
+    for device in getMotorFromModel(model_path):
+        motor_name = device["name"]
+        device_params = device["deviceParams"]
+        for param in device_params:
+            if param["key"] == "brand":
+                motor_brand = param["comboParam"]["childKey"]
+                name_brand_dict[motor_name] = motor_brand
+                # print("name %s: %s" % (motor_name, motor_type))
+    return name_brand_dict
+
 def getMotorNames(model_path):
     name_list = []
     for device in getMotorFromModel(model_path):
