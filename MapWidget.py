@@ -495,10 +495,12 @@ class MapWidget(QtWidgets.QWidget):
         self.cp_name = None
         self.draw_size = [] #xmin xmax ymin ymax
         self.map_data = lines.Line2D([],[], marker = '.', linestyle = '', markersize = 1.0)
-        self.laser_data = LineCollection([], linewidths=0.5, linestyle='solid')
+        self.laser_data = LineCollection([], linewidths=3, linestyle='solid')
         self.laser_data_points = PatchCollection([])
         self.laser_org_color = np.array([1,0,0,0.5])
-        self.laser_color = self.laser_org_color
+        self.laser_color = self.laser_org_color[:]
+        self.laser_point_org_color = np.array([1,0,0,1.0])
+        self.laser_point_color = self.laser_point_org_color[:]
         self.laser_data.set_color(self.laser_org_color)
         self.laser_data.set_zorder(11)
         self.laser_data_points.set_color(self.laser_org_color)
@@ -507,21 +509,26 @@ class MapWidget(QtWidgets.QWidget):
         self.laser_data_points.set_linewidth(2.0)
         self.laser_data_points.set_zorder(10)
         self.robot_data = lines.Line2D([],[], linestyle = '-', color='k')
+        self.robot_data.set_zorder(20)
         self.robot_data_c0 = lines.Line2D([],[], linestyle = '-', linewidth = 2, color='k')
+        self.robot_data_c0.set_zorder(20)
         self.robot_loc_data = lines.Line2D([],[], linestyle = '--', color='gray')
+        self.robot_loc_data.set_zorder(20)
         self.robot_loc_data_c0 = lines.Line2D([],[], linestyle = '--', linewidth = 2, color='gray')
+        self.robot_loc_data_c0.set_zorder(20)
         self.obs_points = lines.Line2D([],[], linestyle = '', marker = '*', markersize = 8.0, color='k')
+        self.obs_points.set_zorder(40)
         self.depthCamera_hole_points = lines.Line2D([],[], linestyle = '', marker = 'o', markersize = 4.0, color='black')
         self.depthCamera_obs_points = lines.Line2D([],[], linestyle = '', marker = 'o', markersize = 4.0, color='gray')
         self.particle_points = lines.Line2D([],[], linestyle = '', marker = 'o', markersize = 4.0, color='b')
-        self.particle_points.set_zorder(101)
+        self.particle_points.set_zorder(30)
         self.trajectory = lines.Line2D([],[], linestyle = '', marker = 'o', markersize = 2.0, color='m')
         self.trajectory_next = lines.Line2D([],[], linestyle = '', marker = 'o', markersize = 2.0, color='mediumpurple')
         self.cur_arrow = patches.FancyArrow(0, 0, 0.5, 0,
                                             length_includes_head=True,# 增加的长度包含箭头部分
                                             width=0.05,
                                             head_width=0.1, head_length=0.16, fc='r', ec='b')
-        self.cur_arrow.set_zorder(100)
+        self.cur_arrow.set_zorder(20)
         self.org_arrow_xy = self.cur_arrow.get_xy().copy()
 
         self.robot_pos = [0., 0., 0.]
@@ -980,24 +987,30 @@ class MapWidget(QtWidgets.QWidget):
             self.ax.add_patch(self.cur_arrow) #add robot arrow again
             for line in self.read_map.lines:
                 path = Polygon(line, closed=False, facecolor='none', edgecolor='orange', lw=1)
+                path.set_zorder(19)
                 self.ax.add_patch(path)
             for circle in self.read_map.circles:
                 wedge = patches.Arc([circle[0], circle[1]], circle[2]*2, circle[2]*2, 0, circle[3], circle[4], facecolor = 'none', ec="orange", lw = 1)
+                wedge.set_zorder(19)
                 self.ax.add_patch(wedge)
             for vert in self.read_map.straights:
                 path = Path(vert, self.read_map.straight_codes)
                 patch = patches.PathPatch(path, facecolor='none', edgecolor='orange', lw=2)
+                patch.set_zorder(19)
                 self.ax.add_patch(patch)
             pr = 0.25
             for (pt,name) in zip(self.read_map.points, self.read_map.p_names):
                 circle = patches.Circle((pt[0], pt[1]), pr, facecolor='orange',
                 edgecolor=(0, 0.8, 0.8), linewidth=3, alpha=0.5)
+                circle.set_zorder(19)
                 self.ax.add_patch(circle)
                 text_path = TextPath((pt[0],pt[1]), name[0], size = 0.2)
                 text_path = patches.PathPatch(text_path, ec="none", lw=3, fc="k")
+                text_path.set_zorder(19)
                 self.ax.add_patch(text_path)
                 if pt[2] != None:
                     arrow = patches.Arrow(pt[0],pt[1], pr * np.cos(pt[2]), pr*np.sin(pt[2]), pr)
+                    arrow.set_zorder(19)
                     self.ax.add_patch(arrow)
             self.setWindowTitle("{} : {}".format('MapViewer', os.path.split(self.map_name)[1]))
             font = QtGui.QFont()
@@ -1078,6 +1091,7 @@ class MapWidget(QtWidgets.QWidget):
                         circle = Circle((c[0], c[1]), 0.01)
                         patches.append(circle)
                     self.laser_data_points.set_paths(patches)
+                    self.laser_data_points.set_color(self.laser_point_color)
                 # laser_data = GetGlobalPos(laser_data, self.robot_pos)
 
                 cross_shape = np.array([xxdata,xydata])
@@ -1138,6 +1152,7 @@ class MapWidget(QtWidgets.QWidget):
                             circle = Circle((c[0], c[1]), 0.01)
                             patches.append(circle)
                         self.laser_data_points.set_paths(patches)
+                        self.laser_data_points.set_color(self.laser_point_color)
                         self.static_canvas.figure.canvas.draw()
 
     def readtrajectory(self, x, y, xn, yn, x0, y0, r0):
@@ -1173,10 +1188,12 @@ class MapWidget(QtWidgets.QWidget):
         self.laser_org_data = laser_org_data
         if len(laser_rssi) == len(laser_org_data.T) and len(laser_rssi) > 0:
             color = self.cm(laser_rssi/255.) # 将透过率变成颜色变化
+            self.laser_point_color = self.cm(laser_rssi/255.)
             color[:,3] = color[:,3] * 0.2 # 改变透明度
             self.laser_color = color
         else:
-            self.laser_color = self.laser_org_color
+            self.laser_color = self.laser_org_color[:]
+            self.laser_point_color = self.laser_point_org_color[:]
         self.laser_index = laser_index
         if obs_pos:
             self.obs_points.set_xdata([obs_pos[0]])
@@ -1230,15 +1247,18 @@ class MapWidget(QtWidgets.QWidget):
             self.robot_data_c0.set_ydata(cross_shape[1])
             if self.laser_index in self.check_lasers:
                 self.laser_data.set_visible(self.check_lasers[self.laser_index].isChecked())
+                self.laser_data_points.set_visible(self.check_lasers[self.laser_index].isChecked())
 
             lines, cs = convert2LaserPoints(self.laser_org_data, self.laser_pos[self.laser_index], self.robot_pos)
             self.laser_data.set_segments(lines)
+            self.laser_data.set_color(self.laser_color)
             patches = []
             for c in cs:
                 circle = Circle((c[0], c[1]), 0.01)
                 patches.append(circle)
             self.laser_data_points.set_paths(patches)
-            self.laser_data.set_color(self.laser_color)
+            self.laser_data_points.set_color(self.laser_point_color)
+            self.laser_data_points.set_edgecolor('r')
 
             cross_shape = np.array([xxdata,xydata])
             cross_shape = GetGlobalPos(cross_shape,robot_loc_pos)
