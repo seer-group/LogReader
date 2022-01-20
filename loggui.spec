@@ -1,10 +1,11 @@
-# -*- mode: python -*-
+# -*- mode: python ; coding: utf-8 -*-
+
 
 block_cipher = None
 
 
 a = Analysis(['loggui.py'],
-             pathex=['F:\\Github\\LogReader'],
+             pathex=[],
              binaries=[],
              datas=[('images/*','images'),
                     ('log_config.json','.'),

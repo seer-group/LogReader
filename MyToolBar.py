@@ -2,7 +2,7 @@ from matplotlib.backend_tools import ToolBase, ToolToggleBase
 import matplotlib.lines as lines
 import matplotlib.text as text
 import math, os
-from matplotlib.backends.backend_qt5agg import  FigureCanvas, NavigationToolbar2QT
+from matplotlib.backends.backend_qt5agg import  FigureCanvasQTAgg as FigureCanvas, NavigationToolbar2QT
 from PyQt5 import QtGui, QtCore,QtWidgets
 from datetime import datetime
 

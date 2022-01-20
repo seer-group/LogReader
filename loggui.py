@@ -1,16 +1,17 @@
-from typing import Text
+# from typing import Text
 import matplotlib
 matplotlib.use('Qt5Agg')
 matplotlib.rcParams['font.sans-serif']=['FangSong']
 matplotlib.rcParams['axes.unicode_minus'] = False
-from matplotlib.backends.backend_qt5agg import (
-    FigureCanvas, NavigationToolbar2QT as NavigationToolbar)
+from matplotlib.backends.backend_qt5agg import (FigureCanvasQTAgg as FigureCanvas)
+# from matplotlib.backends.backend_qt5agg import (FigureCanvasQTAgg as FigureCanvas, NavigationToolbar2QT as NavigationToolbar)
+# from matplotlib.backends.backend_qt5agg import (FigureCanvasQTAgg as FigureCanvas)
 from PyQt5 import QtCore, QtWidgets,QtGui
 from matplotlib.figure import Figure
 from datetime import datetime
 from datetime import timedelta
 import os, sys
-from numpy import searchsorted
+# from numpy import searchsorted
 from ExtendedComboBox import ExtendedComboBox
 from Widget import Widget
 from ReadThread import ReadThread, Fdir2Flink
@@ -45,7 +46,44 @@ class XYSelection:
         vbox.addLayout(x_form)
         self.groupBox.setLayout(vbox)
 
+#增加一个选项按钮
+class ChooseDrawData(QtWidgets.QWidget):
+    def __init__(self):
+        super().__init__()
 
+        self.DrawGoodPos=None
+
+        self.setGeometry(200, 200, 400, 400)
+        self.setWindowTitle('选择绘制目标：')
+        self.setWindowIcon(QtGui.QIcon('rbk.ico'))
+
+        self.btn1 = QtWidgets.QPushButton(self)
+        self.btn1.setText('绘制GoodPos轨迹')
+        self.btn1.clicked.connect(self.show1)
+        self.btn2 = QtWidgets.QPushButton(self)
+        self.btn2.setText('绘制xxx轨迹')
+        self.btn2.clicked.connect(self.show2)
+        self.btn3 = QtWidgets.QPushButton(self)
+        self.btn3.setText('绘制xxx轨迹')
+        self.btn3.clicked.connect(self.show3)
+
+        layout = QtWidgets.QVBoxLayout()
+        layout.addWidget(self.btn1)
+        layout.addWidget(self.btn2)
+        layout.addWidget(self.btn3)
+        self.setLayout(layout)
+
+    def show1(self):
+        reply = QtWidgets.QMessageBox.information(self,"请确认：","是否绘制？",QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,QtWidgets.QMessageBox.Yes)
+        self.DrawGoodPos=reply
+    def show2(self):
+        reply = QtWidgets.QMessageBox.information(self,"请确认：","是否绘制？",QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,QtWidgets.QMessageBox.Yes)
+        print(2)
+    def show3(self):
+        reply = QtWidgets.QMessageBox.information(self,"请确认：","是否绘制？",QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,QtWidgets.QMessageBox.Yes)
+        print(3)
+
+#
 class DataSelection(QtWidgets.QWidget):
     getdata = pyqtSignal('PyQt_PyObject')
     def __init__(self):
@@ -80,6 +118,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
         self.finishReadFlag = False
+        # self.JudgeFirstRead=0
         self.filenames = []
         self.lines_dict = {"fatal":[],"error":[],"warning":[],"notice":[], "taskstart":[], "taskfinish":[], "service":[]} 
         self.setWindowTitle('Log分析器')
@@ -93,6 +132,13 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.log_widget = None
         self.sts_widget = None
         self.motor_view_widget = None
+
+    # def testSaveData(self):
+    #     # self.JudgeFirstRead +=1
+    #     curcombo = self.sender()
+    #     if curcombo is not None:
+    #         text = curcombo.currentText()  # 给出目前的选项
+
 
     def setupUI(self):
         """初始化窗口结构""" 
@@ -259,6 +305,13 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.check_tstart = QtWidgets.QCheckBox('TASK START',self)
         self.check_tfinish = QtWidgets.QCheckBox('TASK FINISHED',self)
         self.check_service = QtWidgets.QCheckBox('SERVICE',self)
+        # 绘制轨迹选择窗口
+        self.check_canbeDraw = QtWidgets.QCheckBox('绘制轨迹', self)
+        self.check_canbeDraw_ischeck=False
+        # self.SaveCheckDatakind=[]
+        # self.SaveCheckDatakind_fignum=[]
+        self.chooseDrawData=ChooseDrawData()
+
         self.hbox.addWidget(self.check_all)
         self.hbox.addWidget(self.check_fatal)
         self.hbox.addWidget(self.check_err)
@@ -267,7 +320,11 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.hbox.addWidget(self.check_tstart)
         self.hbox.addWidget(self.check_tfinish)
         self.hbox.addWidget(self.check_service)
+        # ---绘制选项添加
+        self.hbox.addWidget(self.check_canbeDraw)
+
         self.hbox.setAlignment(QtCore.Qt.AlignLeft)
+
         self.layout.addLayout(self.hbox)
         self.check_fatal.stateChanged.connect(self.changeCheckBox)
         self.check_err.stateChanged.connect(self.changeCheckBox)
@@ -276,6 +333,9 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.check_tstart.stateChanged.connect(self.changeCheckBox)
         self.check_tfinish.stateChanged.connect(self.changeCheckBox)
         self.check_service.stateChanged.connect(self.changeCheckBox)
+
+        self.check_canbeDraw.stateChanged.connect(self.changeCheckBox)
+
         self.check_all.stateChanged.connect(self.changeCheckBoxAll)
         self.check_all.setChecked(True)
 
@@ -366,6 +426,16 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             content = '\n'.join(contents)
         return content
 
+    def RoationOdom(self,x,y,r0):
+
+        xnext,ynext=np.array(x),np.array(y)
+        xnext_Roation = xnext * np.cos(r0) - ynext * np.sin(r0)
+        ynext_Roation = xnext * np.sin(r0) + ynext * np.cos(r0)
+
+        #
+        # theta_Odo_Tmp,theta_Fram_Tmp=np.array(theta_Odo)+180 ,
+        return xnext_Roation,ynext_Roation
+
     def updateMap(self, mouse_time, in_loc_idx, in_laser_idx, in_laser_channel):
         loc_idx = in_loc_idx
         laser_idx = in_laser_idx
@@ -378,13 +448,70 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 if loc_idx < 0:
                     loc_ts = np.array(self.read_thread.content['LocationEachFrame']['t'])
                     loc_idx = (np.abs(loc_ts - mouse_time)).argmin()
+                    loc_ts_odo = np.array(self.read_thread.content['Odometer']['t'])
+                    loc_idx_odo = (np.abs(loc_ts_odo - mouse_time)).argmin()
                 if loc_idx < 1:
                     loc_idx = 1
+                    loc_idx_odo = 1
+                if loc_idx > 1:
+                    loc_ts_odo = np.array(self.read_thread.content['Odometer']['t'])
+                    loc_idx_odo = (np.abs(loc_ts_odo - mouse_time)).argmin()
                 if self.map_widget:
-                    self.map_widget.readtrajectory(self.read_thread.content['LocationEachFrame']['x'][0:loc_idx], self.read_thread.content['LocationEachFrame']['y'][0:loc_idx],
-                                                self.read_thread.content['LocationEachFrame']['x'][loc_idx::], self.read_thread.content['LocationEachFrame']['y'][loc_idx::],
-                                                self.read_thread.content['LocationEachFrame']['x'][loc_idx], self.read_thread.content['LocationEachFrame']['y'][loc_idx], 
-                                                np.deg2rad(self.read_thread.content['LocationEachFrame']['theta'][loc_idx]))
+                    # 绘制不同轨迹 Ex1 GoodPos
+                    if self.chooseDrawData.DrawGoodPos == 16384:
+                        self.map_widget.trajectory_GoodPos.set_visible(True)
+                        self.map_widget.readtrajectoryGoodPos(self.read_thread.content['GoodsPos']['x'],
+                                                              self.read_thread.content['GoodsPos']['y'])
+                    else:
+                        self.map_widget.trajectory_GoodPos.set_visible(False)
+                        # self.map_widget.trajectory.set_visible(True)
+                        # self.map_widget.trajectory_next.set_visible(True)
+
+                        # self.trajectory_True.set_visible(False)
+                        # self.map_widget.readtrajectoryGoodPos([0],[0])
+                    #Test 6
+                    # self.map_widget.check_odomTraj.isChecked()
+                    self.map_widget.readtrajectory(self.read_thread.content['LocationEachFrame']['x'][0:loc_idx],
+                                                   self.read_thread.content['LocationEachFrame']['y'][0:loc_idx],
+                                                   self.read_thread.content['LocationEachFrame']['x'][loc_idx::],
+                                                   self.read_thread.content['LocationEachFrame']['y'][loc_idx::],
+                                                   self.read_thread.content['LocationEachFrame']['x'][loc_idx],
+                                                   self.read_thread.content['LocationEachFrame']['y'][loc_idx], #画出行驶路线的箭头
+                                                   np.deg2rad(
+                                                       self.read_thread.content['LocationEachFrame']['theta'][loc_idx]))
+
+                    if (self.map_widget.ischecke_odomTraj == True and self.map_widget.ischecke_odomTraj_count==0):
+                        Framex = self.read_thread.content['LocationEachFrame']['x'][loc_idx]
+                        Framey = self.read_thread.content['LocationEachFrame']['y'][loc_idx]
+                        Relativex = self.read_thread.content['Odometer']['x'][loc_idx_odo]
+                        Relativey = self.read_thread.content['Odometer']['y'][loc_idx_odo]
+                        xnext, ynext = self.RoationOdom(self.read_thread.content['Odometer']['x'],
+                                                        self.read_thread.content['Odometer']['y'],
+                                                        (-np.deg2rad(self.read_thread.content['Odometer']['theta'][
+                                                                         loc_idx_odo] + 180) + np.deg2rad(
+                                                            self.read_thread.content['LocationEachFrame']['theta'][
+                                                                loc_idx] + 180)))
+                        Diffx = self.read_thread.content['LocationEachFrame']['x'][loc_idx] - xnext[loc_idx_odo]
+                        Diffy = self.read_thread.content['LocationEachFrame']['y'][loc_idx] - ynext[loc_idx_odo]
+
+                        self.map_widget.odomTraj_theta=self.read_thread.content['LocationEachFrame']['theta'][loc_idx]+ \
+                                                       (np.array(self.read_thread.content['Odometer']['theta'])-self.read_thread.content['Odometer']['theta'][loc_idx_odo])
+                        #
+                        self.map_widget.odomTraj_theta[self.map_widget.odomTraj_theta >180]=-(180-(self.map_widget.odomTraj_theta[self.map_widget.odomTraj_theta >180]-180))
+                        self.map_widget.odomTraj_theta[self.map_widget.odomTraj_theta <-180] =(180-((-self.map_widget.odomTraj_theta[self.map_widget.odomTraj_theta <-180])-180))
+
+                        self.map_widget.odomTraj_x= xnext + Diffx
+                        self.map_widget.odomTraj_y = ynext + Diffy
+                        self.map_widget.ischecke_odomTraj_count = 2
+                        self.map_widget.check_odomTraj_time = mouse_time
+
+
+                #
+                    #
+                    # self.map_widget.readtrajectory(self.read_thread.content['LocationEachFrame']['x'][0:loc_idx], self.read_thread.content['LocationEachFrame']['y'][0:loc_idx],
+                    #                             self.read_thread.content['LocationEachFrame']['x'][loc_idx::], self.read_thread.content['LocationEachFrame']['y'][loc_idx::],
+                    #                             self.read_thread.content['LocationEachFrame']['x'][loc_idx], self.read_thread.content['LocationEachFrame']['y'][loc_idx],
+                    #                             np.deg2rad(self.read_thread.content['LocationEachFrame']['theta'][loc_idx]))
         else :
             if 'Location' in self.read_thread.content:
                 loc_ts = np.array(self.read_thread.content['Location']['t'])
@@ -400,9 +527,12 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 if loc_idx < 0:
                     loc_ts = np.array(self.read_thread.content['LocationEachFrame']['t'])
                     loc_idx = (np.abs(loc_ts - mouse_time)).argmin()
+                    loc_ts_odo = np.array(self.read_thread.content['Odometer']['t'])
+                    loc_idx_odo = (np.abs(loc_ts_odo - mouse_time)).argmin()
                 robot_loc_pos = [self.read_thread.content['LocationEachFrame']['x'][loc_idx],
                             self.read_thread.content['LocationEachFrame']['y'][loc_idx],
                             np.deg2rad(self.read_thread.content['LocationEachFrame']['theta'][loc_idx])]
+
                 loc_info = (str(self.read_thread.content['LocationEachFrame']['t'][loc_idx]) 
                                     + ' , ' + str((int)(self.read_thread.content['LocationEachFrame']['timestamp'][loc_idx]))
                                     + ' , ' + str(self.read_thread.content['LocationEachFrame']['x'][loc_idx])
@@ -493,9 +623,56 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                     pos_ts = np.array(self.read_thread.content['LocationEachFrame']['timestamp'][loc_min_ind:loc_max_ind])
                     pos_idx = (np.abs(pos_ts - ts)).argmin()
                     pos_idx = loc_min_ind + pos_idx
-                    robot_pos = [self.read_thread.content['LocationEachFrame']['x'][pos_idx],
-                                self.read_thread.content['LocationEachFrame']['y'][pos_idx],
-                                np.deg2rad(self.read_thread.content['LocationEachFrame']['theta'][pos_idx])]
+
+                    # Odom区间寻找最小值
+                    loc_min_ind_odo = loc_idx_odo - 100
+                    loc_max_ind_odo = loc_idx_odo + 100
+                    if loc_min_ind_odo < 0:
+                        loc_min_ind_odo = 0
+                    if loc_max_ind_odo >= len(self.read_thread.content['Odometer']['timestamp']):
+                        loc_max_ind_odo = len(self.read_thread.content['Odometer']['timestamp']) - 1
+                        if loc_max_ind_odo < 0:
+                            loc_max_ind_odo = 0
+                    pos_ts_odo = np.array(self.read_thread.content['Odometer']['timestamp'][loc_min_ind_odo:loc_max_ind_odo])
+                    pos_idx_odo = (np.abs(pos_ts_odo - ts)).argmin()
+                    pos_idx_odo = loc_min_ind_odo + pos_idx_odo
+                    #
+                    if self.map_widget:
+                        if (self.map_widget.ischecke_odomTraj == True and self.map_widget.ischecke_odomTraj_count == 2 and self.map_widget.Slider.value_changed() > 0):
+                            if (self.map_widget.check_odomTraj_time < mouse_time):
+                                robot_pos = \
+                                    [self.map_widget.odomTraj_x[pos_idx_odo],
+                                     self.map_widget.odomTraj_y[pos_idx_odo],
+                                     np.deg2rad(self.map_widget.odomTraj_theta[pos_idx_odo])]
+                                # self.map_widget.odomTraj_theta
+
+                                # 传递选择的外推时间
+                                self.map_widget.Slider_value = self.map_widget.Slider.value_changed()
+                                NowOdomNeedtime=self.map_widget.check_odomTraj_time+timedelta(seconds=self.map_widget.Slider_value)
+
+                                # print(self.map_widget.Slider_value)
+                                loc_ts_odo_need = np.array(self.read_thread.content['Odometer']['t'])
+                                loc_idx_odo_need = (np.abs(loc_ts_odo_need - NowOdomNeedtime)).argmin()
+
+                                self.map_widget.readtrajectory_True(self.map_widget.odomTraj_x[pos_idx_odo:loc_idx_odo_need],
+                                                                    self.map_widget.odomTraj_y[pos_idx_odo:loc_idx_odo_need])
+
+                            else:
+                                robot_pos = [self.read_thread.content['LocationEachFrame']['x'][pos_idx],
+                                            self.read_thread.content['LocationEachFrame']['y'][pos_idx],
+                                            np.deg2rad(self.read_thread.content['LocationEachFrame']['theta'][pos_idx])]
+                        else:
+                            robot_pos = [self.read_thread.content['LocationEachFrame']['x'][pos_idx],
+                                        self.read_thread.content['LocationEachFrame']['y'][pos_idx],
+                                        np.deg2rad(self.read_thread.content['LocationEachFrame']['theta'][pos_idx])]
+                    else:
+                        robot_pos = [self.read_thread.content['LocationEachFrame']['x'][pos_idx],
+                                     self.read_thread.content['LocationEachFrame']['y'][pos_idx],
+                                     np.deg2rad(self.read_thread.content['LocationEachFrame']['theta'][pos_idx])]
+                    # robot_pos = [self.read_thread.content['LocationEachFrame']['x'][pos_idx],
+                    #             self.read_thread.content['LocationEachFrame']['y'][pos_idx],
+                    #             np.deg2rad(self.read_thread.content['LocationEachFrame']['theta'][pos_idx])]
+
                     laser_info = (str(self.read_thread.content['LocationEachFrame']['t'][pos_idx]) 
                                         + ' , ' + str((int)(self.read_thread.content['LocationEachFrame']['timestamp'][pos_idx]))
                                         + ' , ' + str(self.read_thread.content['LocationEachFrame']['x'][pos_idx])
@@ -694,6 +871,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 pass
 
     def resetData(self, cur_ax):
+
         indx = self.axs.tolist().index(cur_ax)
         xy = self.xys[indx]        
         group_name = xy.y_combo.currentText().split('.')[0]
@@ -994,13 +1172,16 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         QtWidgets.QMessageBox.about(self, "关于", """Log Viewer V2.3.1.b""")
 
     def ycombo_onActivated(self):
+        # self.testSaveData()
         curcombo = self.sender()
         index = 0
         for (ind, xy) in enumerate(self.xys):
             if xy.y_combo == curcombo:
                 index = ind
-                break; 
-        text = curcombo.currentText()
+                break;
+        #  index 表示图像位置
+
+        text = curcombo.currentText() #给出目前的选项
         current_x_index = self.xys[index].x_combo.currentIndex()
         self.xys[index].x_combo.clear()
         self.xys[index].x_combo.addItems(['t'])
@@ -1238,6 +1419,17 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
 
     def changeCheckBox(self):
+        # ---这里的判定可能会有一点问题
+        self.check_canbeDraw_ischeck = False
+        if self.check_canbeDraw.isChecked(): #勾选取消的时候并不会到该界面
+            if self.check_canbeDraw_ischeck==False:
+                self.check_canbeDraw_ischeck=True
+                self.chooseDrawData.show()
+            else:
+                self.check_canbeDraw_ischeck = False
+        self.chooseDrawData.DrawGoodPos=None
+        # 这里的判定不知道为什么不成立 需要这样奇怪的形式可行
+
         if self.check_err.isChecked() and self.check_fatal.isChecked() and self.check_notice.isChecked() and \
         self.check_war.isChecked() and self.check_tstart.isChecked() and self.check_tfinish.isChecked() and \
         self.check_service.isChecked():
