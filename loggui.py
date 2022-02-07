@@ -94,6 +94,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.sts_widget = None
         self.motor_view_widget = None
         self.dataViews = [] #显示特定数据框
+        self.in_close = False
         self.setupUI()
 
     def setupUI(self):
@@ -1121,7 +1122,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                         data = (self.read_thread.getData(xy.y_combo.currentText())[0], t)
                         self.drawdata(ax, data,
                                     self.read_thread.ylabel[xy.y_combo.currentText()], False)
-                self.updateMapSelectLine()
+                self.updateMidLine()
 
 
     def drawdata(self, ax, data, ylabel, resize = False, replot = True):
@@ -1519,6 +1520,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.viewMotorErr(False)
 
     def closeEvent(self, event):
+        self.in_close = True
         if self.map_widget:
             self.map_widget.close()
         if self.log_widget:
@@ -1560,9 +1562,10 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             self.updateDataView(d)
 
     def dataViewClosed(self, other):
-        self.dataViews.remove(other)
-        if len(self.dataViews) < 1:
-            self.data_action.setChecked(False)
+        if not self.in_close:
+            self.dataViews.remove(other)
+            if len(self.dataViews) < 1:
+                self.data_action.setChecked(False)
     
     def dataViewNewOne(self, other):
         dataView = DataView()
