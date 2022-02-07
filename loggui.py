@@ -87,7 +87,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.read_thread.signal.connect(self.readFinished)
         self.mid_line_t = None #中间蓝线对应的时间
         self.mid_line_select = False #中间蓝线是否被选择上
-        self.map_select_lines = []
+        self.mid_select_lines = []
         self.mouse_pressed = False
         self.map_widget = None
         self.log_widget = None
@@ -788,10 +788,10 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
     def keyPressEvent(self,event):
         if self.map_action.isChecked():
-            if len(self.map_select_lines) > 1:
+            if len(self.mid_select_lines) > 1:
                 if (event.key() == QtCore.Qt.Key_A or event.key() == QtCore.Qt.Key_D
                     or event.key() == QtCore.Qt.Key_Left or event.key() == QtCore.Qt.Key_Right):
-                    cur_t = self.map_select_lines[0].get_xdata()[0]
+                    cur_t = self.mid_select_lines[0].get_xdata()[0]
                     if type(cur_t) is not datetime:
                         cur_t = cur_t * 86400 - 62135712000
                         cur_t = datetime.fromtimestamp(cur_t)
@@ -972,7 +972,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.setWindowTitle('Log分析器: {0}'.format([f.split('/')[-1] for f in self.filenames]))
         if self.read_thread.filenames:
             #画图 mcl.t, mcl.x
-            self.map_select_lines = []
+            self.mid_select_lines = []
             keys = list(self.read_thread.data.keys())
             for ax, xy in zip(self.axs, self.xys):
                 last_combo_ind = xy.y_combo.currentIndex()
@@ -1093,7 +1093,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             self.xy_hbox.addWidget(selection.groupBox)
         if self.finishReadFlag:
             if self.read_thread.filenames:
-                self.map_select_lines = []
+                self.mid_select_lines = []
                 keys = list(self.read_thread.data.keys())
                 count = 0
                 for ax, xy in zip(self.axs, self.xys):
@@ -1143,8 +1143,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             ax.set_ylabel(ylabel)
             ax.grid()
             ind = np.where(self.axs == ax)[0][0]
-            if self.map_select_lines:
-                ax.add_line(self.map_select_lines[ind])
+            if self.mid_select_lines:
+                ax.add_line(self.mid_select_lines[ind])
             self.ruler.add_ruler(ax)
         else:
             if data[1] and data[0]:
@@ -1335,10 +1335,10 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             self.motor_view_widget.show()
             (xmin,xmax) = self.axs[0].get_xlim()
             tmid = (xmin+xmax)/2.0 
-            if len(self.map_select_lines) > 1:
-                for ln in self.map_select_lines:
+            if len(self.mid_select_lines) > 1:
+                for ln in self.mid_select_lines:
                     ln.set_visible(True)
-                cur_t = self.map_select_lines[0].get_xdata()[0]
+                cur_t = self.mid_select_lines[0].get_xdata()[0]
                 if type(cur_t) is not datetime:
                     cur_t = cur_t * 86400 - 62135712000
                     cur_t = datetime.fromtimestamp(cur_t)
@@ -1346,7 +1346,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             else:
                 for ax in self.axs:
                     wl = ax.axvline(tmid, color = 'c', linewidth = 10, alpha = 0.5, picker = 10)
-                    self.map_select_lines.append(wl) 
+                    self.mid_select_lines.append(wl) 
                     mouse_time = tmid * 86400 - 62135712000
                     if mouse_time > 1e6:
                         mouse_time = datetime.fromtimestamp(mouse_time)
@@ -1464,15 +1464,15 @@ class ApplicationWindow(QtWidgets.QMainWindow):
     def updateMidLine(self):
         (xmin,xmax) = self.axs[0].get_xlim()
         tmid = (xmin+xmax)/2.0 
-        if len(self.map_select_lines) < 1:
+        if len(self.mid_select_lines) < 1:
             for ax in self.axs:
                 wl = ax.axvline(tmid, color = 'c', linewidth = 10, alpha = 0.5, picker = 10)
-                self.map_select_lines.append(wl) 
+                self.mid_select_lines.append(wl) 
                 mouse_time = tmid * 86400 - 62135712000
                 if mouse_time > 1e6:
                     self.mid_line_t = datetime.fromtimestamp(mouse_time)
         else:
-            cur_t = self.map_select_lines[0].get_xdata()[0]
+            cur_t = self.mid_select_lines[0].get_xdata()[0]
             if type(cur_t) is not datetime:
                 cur_t = cur_t * 86400 - 62135712000
                 cur_t = datetime.fromtimestamp(cur_t)
@@ -1483,10 +1483,10 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 xmax = xmax * 86400 - 62135712000
                 xmax = datetime.fromtimestamp(xmax)
             if cur_t >= xmin and cur_t <= xmax:
-                for ln in self.map_select_lines:
+                for ln in self.mid_select_lines:
                     ln.set_visible(True)
             else:
-                for ln in self.map_select_lines:
+                for ln in self.mid_select_lines:
                     ln.set_visible(True)
                     ln.set_xdata([tmid, tmid])
                     mouse_time = tmid * 86400 - 62135712000
@@ -1494,14 +1494,14 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                         self.mid_line_t = datetime.fromtimestamp(mouse_time)
 
     def updateMapSelectLine(self):
-        for ln in self.map_select_lines:
+        for ln in self.mid_select_lines:
             if self.mid_line_t is not None:
                 ln.set_xdata([self.mid_line_t,self.mid_line_t])
         self.static_canvas.figure.canvas.draw()
 
     def mapClosed(self,info):
         self.map_widget.hide()
-        for ln in self.map_select_lines:
+        for ln in self.mid_select_lines:
             ln.set_visible(False)
         self.map_action.setChecked(False)
         self.openMap(False)
