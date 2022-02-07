@@ -742,7 +742,18 @@
       { "index": 1, "name": "total_proc", "type": "double", "description": "rbk线程占用率", "unit":""},   
       { "index": 4, "name": "tid1", "type": "double", "description": 2, "unit":""},
       { "index": 7, "name": "tid2", "type": "double", "description": 5, "unit":""},
-      { "index": 10, "name": "tid3", "type": "double", "description": 8, "unit":""}
+      { "index": 10, "name": "tid3", "type": "double", "description": 8, "unit":""},
+      { "index": 13, "name": "tid4", "type": "double", "description": 11, "unit":""},
+      { "index": 16, "name": "tid5", "type": "double", "description": 14, "unit":""},
+      { "index": 19, "name": "tid6", "type": "double", "description": 17, "unit":""},
+      { "index": 22, "name": "tid7", "type": "double", "description": 20, "unit":""},      
+      { "index": 25, "name": "tid8", "type": "double", "description": 23, "unit":""},
+      { "index": 28, "name": "tid9", "type": "double", "description": 26, "unit":""},
+      { "index": 31, "name": "tid10", "type": "double", "description": 29, "unit":""},
+      { "index": 34, "name": "tid11", "type": "double", "description": 32, "unit":""},
+      { "index": 37, "name": "tid12", "type": "double", "description": 35, "unit":""},
+      { "index": 40, "name": "tid13", "type": "double", "description": 38, "unit":""},
+      { "index": 43, "name": "tid14", "type": "double", "description": 41, "unit":""}      
     ]
   },
   "MotorSend": {
