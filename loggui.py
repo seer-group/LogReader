@@ -17,7 +17,7 @@ from ReadThread import ReadThread, Fdir2Flink
 from loglib import ErrorLine, WarningLine, ReadLog, FatalLine, NoticeLine, TaskStart, TaskFinish, Service
 from MapWidget import MapWidget, Readmap
 from LogViewer import LogViewer
-from JsonView import JsonView
+from JsonView import JsonView, DataView
 from MyToolBar import MyToolBar, RulerShapeMap, RulerShape
 import logging
 import numpy as np
@@ -85,14 +85,16 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.setWindowTitle('Log分析器')
         self.read_thread = ReadThread()
         self.read_thread.signal.connect(self.readFinished)
-        self.setupUI()
-        self.map_select_flag = False
+        self.mid_line_t = None #中间蓝线对应的时间
+        self.mid_line_select = False #中间蓝线是否被选择上
         self.map_select_lines = []
         self.mouse_pressed = False
         self.map_widget = None
         self.log_widget = None
         self.sts_widget = None
         self.motor_view_widget = None
+        self.dataViews = [] #显示特定数据框
+        self.setupUI()
 
     def setupUI(self):
         """初始化窗口结构""" 
@@ -157,6 +159,12 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.motor_err_action.triggered.connect(self.viewMotorErr)
         self.tools_menu.addAction(self.motor_err_action)
 
+        self.data_action = QtWidgets.QAction('&Open Data', self.tools_menu, checkable = True)
+        self.data_action.setShortcut(QtCore.Qt.CTRL + QtCore.Qt.Key_D)
+        self.data_action.setChecked(True)
+        self.data_action.triggered.connect(self.openDataView)
+        self.tools_menu.addAction(self.data_action)
+
         self.motor_follow_action = QtWidgets.QAction('&View Motor Follow Cure', self.tools_menu, checkable = True)
         self.motor_follow_action.setShortcut(QtCore.Qt.CTRL + QtCore.Qt.Key_K)
         self.motor_follow_action.triggered.connect(self.drawMotorFollow)
@@ -205,9 +213,9 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.scroll.keyPressEvent = self.keyPressEvent
         # self.scroll.keyReleaseEvent = self.keyReleaseEvent
         self.is_keypressed = False
-        self.key_loc_idx = -1
-        self.key_laser_idx = -1
-        self.key_laser_channel = -1
+        self.key_loc_idx = -1   # 按键盘更新mid_line时，用于记住当前定位的位置
+        self.key_laser_idx = -1 # 按键盘更新时，用于记住当前激光的信息
+        self.key_laser_channel = -1 # 按键盘更新时， 用于记住当前激光的信息
         # self.layout.addWidget(self.scroll)
         self.ruler = RulerShapeMap()
         self.old_home = MyToolBar.home
@@ -282,6 +290,15 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.dataSelection = DataSelection()
         self.dataSelection.getdata.connect(self.addNewData)
         self.dataSelection.hide()
+
+        self.map_widget = MapWidget()
+        self.map_widget.setWindowIcon(QtGui.QIcon('rds.ico'))
+        self.map_widget.hiddened.connect(self.mapClosed)
+        self.map_widget.keyPressEvent = self.keyPressEvent
+
+        # dataView相关的初始化
+        self.dataViewNewOne(None)
+
 
     def static_canvas_resizeEvent(self, event):
         self.static_canvas_ORG_resizeEvent(event)
@@ -366,18 +383,17 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             content = '\n'.join(contents)
         return content
 
-    def updateMap(self, mouse_time, in_loc_idx, in_laser_idx, in_laser_channel):
-        loc_idx = in_loc_idx
-        laser_idx = in_laser_idx
-        min_laser_channel = in_laser_channel
-        for ln in self.map_select_lines:
-            ln.set_xdata([mouse_time,mouse_time])
-        self.static_canvas.figure.canvas.draw()
+    def updateMap(self):
+        if self.mid_line_t is None:
+            return
+        loc_idx = self.key_loc_idx
+        laser_idx = self.key_laser_idx
+        min_laser_channel = self.key_laser_channel
         if 'LocationEachFrame' in self.read_thread.content:
             if len(self.read_thread.content['LocationEachFrame']['x']) > 0 :
                 if loc_idx < 0:
                     loc_ts = np.array(self.read_thread.content['LocationEachFrame']['t'])
-                    loc_idx = (np.abs(loc_ts - mouse_time)).argmin()
+                    loc_idx = (np.abs(loc_ts - self.mid_line_t)).argmin()
                 if loc_idx < 1:
                     loc_idx = 1
                 if self.map_widget:
@@ -388,7 +404,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         else :
             if 'Location' in self.read_thread.content:
                 loc_ts = np.array(self.read_thread.content['Location']['t'])
-                loc_idx = (np.abs(loc_ts - mouse_time)).argmin()
+                loc_idx = (np.abs(loc_ts - self.mid_line_t)).argmin()
                 if self.map_widget:
                     self.map_widget.readtrajectory(self.read_thread.content['Location']['x'][0:loc_idx], self.read_thread.content['Location']['y'][0:loc_idx],
                                                 self.read_thread.content['Location']['x'][loc_idx::], self.read_thread.content['Location']['y'][loc_idx::],
@@ -399,7 +415,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 #最近的定位时间
                 if loc_idx < 0:
                     loc_ts = np.array(self.read_thread.content['LocationEachFrame']['t'])
-                    loc_idx = (np.abs(loc_ts - mouse_time)).argmin()
+                    loc_idx = (np.abs(loc_ts - self.mid_line_t)).argmin()
                 robot_loc_pos = [self.read_thread.content['LocationEachFrame']['x'][loc_idx],
                             self.read_thread.content['LocationEachFrame']['y'][loc_idx],
                             np.deg2rad(self.read_thread.content['LocationEachFrame']['theta'][loc_idx])]
@@ -412,8 +428,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 obs_info = ''
                 stop_ts = np.array(self.read_thread.content['StopPoints']['t'])
                 if len(stop_ts) > 0:
-                    stop_idx = (np.abs(stop_ts - mouse_time)).argmin()
-                    dt = (stop_ts[stop_idx] - mouse_time).total_seconds()
+                    stop_idx = (np.abs(stop_ts - self.mid_line_t)).argmin()
+                    dt = (stop_ts[stop_idx] - self.mid_line_t).total_seconds()
                     if abs(dt) < 0.5:
                         obs_pos = [self.read_thread.content['StopPoints']['x'][stop_idx], self.read_thread.content['StopPoints']['y'][stop_idx]]
                         stop_type = ["Ultrasonic", "Laser", "Fallingdown", "CollisionBar" ,"Infrared",
@@ -433,8 +449,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 t = np.array(self.read_thread.depthcamera.t())
                 depth_pos = []
                 if len(t) > 0:
-                    depthCamera_idx = (np.abs(t-mouse_time)).argmin()
-                    dt = (t[depthCamera_idx] - mouse_time).total_seconds()
+                    depthCamera_idx = (np.abs(t-self.mid_line_t)).argmin()
+                    dt = (t[depthCamera_idx] - self.mid_line_t).total_seconds()
                     if abs(dt) < 0.5:
                         pos_x = self.read_thread.depthcamera.x()[0][depthCamera_idx]
                         pos_y = self.read_thread.depthcamera.y()[0][depthCamera_idx]
@@ -445,8 +461,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 t = np.array(self.read_thread.particle.t())
                 particle_pos = []
                 if len(t) > 0:
-                    particle_idx = (np.abs(t-mouse_time)).argmin()
-                    dt = (t[particle_idx] - mouse_time).total_seconds()
+                    particle_idx = (np.abs(t-self.mid_line_t)).argmin()
+                    dt = (t[particle_idx] - self.mid_line_t).total_seconds()
                     if abs(dt) < 0.5:
                         pos_x = self.read_thread.particle.x()[0][particle_idx]
                         pos_y = self.read_thread.particle.y()[0][particle_idx]
@@ -470,8 +486,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                             t = np.array(self.read_thread.laser.t(index))
                             if len(t) < 1:
                                 continue
-                            tmp_laser_idx = (np.abs(t-mouse_time)).argmin()
-                            tmp_dt = np.min(np.abs(t-mouse_time))
+                            tmp_laser_idx = (np.abs(t-self.mid_line_t)).argmin()
+                            tmp_dt = np.min(np.abs(t-self.mid_line_t))
                             if min_dt == None or tmp_dt < min_dt:
                                 min_laser_channel = index
                                 laser_idx = tmp_laser_idx
@@ -507,109 +523,108 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.key_loc_idx = loc_idx
         self.key_laser_idx = laser_idx
         self.key_laser_channel = min_laser_channel
-        if self.read_thread.reader:
-            map_name = None
-            if len(self.read_thread.rstatus.chassis()[1]) > 0:
-                ts = np.array(self.read_thread.rstatus.chassis()[1])
-                idx = (np.abs(ts - mouse_time)).argmin()
-                j = json.loads(self.read_thread.rstatus.chassis()[0][idx])   
-                map_name = j.get("CURRENT_MAP",None)
-                if map_name:
-                    map_name = map_name + ".smap"
-                if self.sts_widget:
-                    if idx < len(self.read_thread.rstatus.version()[0]):
-                        j["ROBOKIT_VERSION_REDISTRIBUTE"] = "{}.{}".format(self.read_thread.rstatus.version()[0][idx],
-                                                                            j["ROBOKIT_VERSION_REDISTRIBUTE"])
-                    if idx < len(self.read_thread.rstatus.fatalNum()[0]):
-                        j["fatalNums"] = self.read_thread.rstatus.fatalNum()[0][idx]
-                    if idx < len(self.read_thread.rstatus.fatals()[0]):
-                        try:
-                            j["fatals"] = json.loads(self.read_thread.rstatus.fatals()[0][idx])
-                        except:
-                            j["fatals"] = self.read_thread.rstatus.fatals()[0][idx]
-                    if idx < len(self.read_thread.rstatus.errorNum()[0]):
-                        j["errorNums"] = self.read_thread.rstatus.errorNum()[0][idx]
-                    if idx < len(self.read_thread.rstatus.errors()[0]):
-                        try:
-                            j["errors"] = json.loads(self.read_thread.rstatus.errors()[0][idx])
-                        except:
-                            j["errors"] = self.read_thread.rstatus.errors()[0][idx]
-                    if idx < len(self.read_thread.rstatus.warningNum()[0]):
-                        j["warningNum"] = self.read_thread.rstatus.warningNum()[0][idx]
-                    if idx < len(self.read_thread.rstatus.warnings()[0]):
-                        try:
-                            j["warnings"] = json.loads(self.read_thread.rstatus.warnings()[0][idx])
-                        except:
-                            j["warnings"] = self.read_thread.rstatus.warnings()[0][idx]
-                    if idx < len(self.read_thread.rstatus.noticeNum()[0]):
-                        j["noticeNum"] = self.read_thread.rstatus.noticeNum()[0][idx]
-                    if idx < len(self.read_thread.rstatus.notices()[0]):
-                        try:
-                            j["notices"] = json.loads(self.read_thread.rstatus.notices()[0][idx])
-                        except:
-                            j["notices"] = self.read_thread.rstatus.notices()[0][idx]
-                    self.sts_widget.loadJson(json.dumps(j).encode())
-            if self.log_widget:
-                if 'LocationEachFrame' in self.read_thread.content:
-                    idx = self.read_thread.content['LocationEachFrame'].line_num[loc_idx]
-                    dt1 = (mouse_time - self.read_thread.reader.tmin).total_seconds()
-                    dt2 = (self.read_thread.content['LocationEachFrame']['t'][loc_idx] - self.read_thread.reader.tmin).total_seconds()
-                    ratio = dt1/ dt2
-                    idx = idx * ratio
-                    if idx > self.read_thread.reader.lines_num:
-                        idx = self.read_thread.reader.lines_num
-                    if idx < 0:
-                        idx = 0
-                    self.log_widget.setLineNum(idx)
-                if 'Location' in self.read_thread.content:
-                    self.log_widget.setLineNum(self.read_thread.content['Location'].line_num[loc_idx])
+        self.updateMapSelectLine()
+        self.updateLogView()
+        self.updateJsonView()
+        self.updateDataViews()
 
-            if self.map_widget:
-                if self.filenames:
-                    full_map_name = None
-                    dir_name, _ = os.path.split(self.filenames[0])
-                    pdir_name, _ = os.path.split(dir_name)
-                    if map_name:
-                        map_dir = os.path.join(pdir_name,"maps")
+        map_name = None
+        if len(self.read_thread.rstatus.chassis()[1]) > 0:
+            ts = np.array(self.read_thread.rstatus.chassis()[1])
+            idx = (np.abs(ts - self.mid_line_t)).argmin()
+            j = json.loads(self.read_thread.rstatus.chassis()[0][idx])   
+            map_name = j.get("CURRENT_MAP",None)
+            if map_name:
+                map_name = map_name + ".smap"
+
+        if self.map_widget:
+            if self.filenames:
+                full_map_name = None
+                dir_name, _ = os.path.split(self.filenames[0])
+                pdir_name, _ = os.path.split(dir_name)
+                if map_name:
+                    map_dir = os.path.join(pdir_name,"maps")
+                    full_map_name = os.path.join(map_dir,map_name)
+                    if not os.path.exists(full_map_name):
+                        map_dir = dir_name
                         full_map_name = os.path.join(map_dir,map_name)
                         if not os.path.exists(full_map_name):
-                            map_dir = dir_name
+                            map_dir = os.path.join(dir_name,"maps")
                             full_map_name = os.path.join(map_dir,map_name)
                             if not os.path.exists(full_map_name):
-                                map_dir = os.path.join(dir_name,"maps")
-                                full_map_name = os.path.join(map_dir,map_name)
-                                if not os.path.exists(full_map_name):
-                                    full_map_name = None
-                        if full_map_name == self.map_widget.map_name:
-                            full_map_name = None
+                                full_map_name = None
+                    if full_map_name == self.map_widget.map_name:
+                        full_map_name = None
 
-                    model_dir = os.path.join(pdir_name,"models")
+                model_dir = os.path.join(pdir_name,"models")
+                model_name = os.path.join(model_dir,"robot.model")
+                cp_name = os.path.join(model_dir,"robot.cp")
+                if not os.path.exists(model_name):
+                    model_dir = dir_name
                     model_name = os.path.join(model_dir,"robot.model")
                     cp_name = os.path.join(model_dir,"robot.cp")
                     if not os.path.exists(model_name):
-                        model_dir = dir_name
+                        model_dir = os.path.join(dir_name,"models")
                         model_name = os.path.join(model_dir,"robot.model")
                         cp_name = os.path.join(model_dir,"robot.cp")
                         if not os.path.exists(model_name):
-                            model_dir = os.path.join(dir_name,"models")
-                            model_name = os.path.join(model_dir,"robot.model")
-                            cp_name = os.path.join(model_dir,"robot.cp")
-                            if not os.path.exists(model_name):
-                                model_name = None      
+                            model_name = None      
 
-                    if model_name == self.map_widget.model_name:
-                        model_name = None
+                if model_name == self.map_widget.model_name:
+                    model_name = None
 
-                    if cp_name == self.map_widget.cp_name:
-                        cp_name = None
-                    self.map_widget.readFiles([full_map_name, model_name, cp_name]) 
-                else:
-                    self.map_widget.readFiles([None, None, None])
+                if cp_name == self.map_widget.cp_name:
+                    cp_name = None
+                self.map_widget.readFiles([full_map_name, model_name, cp_name]) 
+            else:
+                self.map_widget.readFiles([None, None, None])
 
                 
         if self.map_widget:
             self.map_widget.redraw()
 
+    def updateJsonView(self):
+        map_name = None
+        if len(self.read_thread.rstatus.chassis()[1]) > 0:
+            ts = np.array(self.read_thread.rstatus.chassis()[1])
+            idx = (np.abs(ts - self.mid_line_t)).argmin()
+            j = json.loads(self.read_thread.rstatus.chassis()[0][idx])   
+            map_name = j.get("CURRENT_MAP",None)
+            if map_name:
+                map_name = map_name + ".smap"
+            if self.sts_widget:
+                if idx < len(self.read_thread.rstatus.version()[0]):
+                    j["ROBOKIT_VERSION_REDISTRIBUTE"] = "{}.{}".format(self.read_thread.rstatus.version()[0][idx],
+                                                                        j["ROBOKIT_VERSION_REDISTRIBUTE"])
+                if idx < len(self.read_thread.rstatus.fatalNum()[0]):
+                    j["fatalNums"] = self.read_thread.rstatus.fatalNum()[0][idx]
+                if idx < len(self.read_thread.rstatus.fatals()[0]):
+                    try:
+                        j["fatals"] = json.loads(self.read_thread.rstatus.fatals()[0][idx])
+                    except:
+                        j["fatals"] = self.read_thread.rstatus.fatals()[0][idx]
+                if idx < len(self.read_thread.rstatus.errorNum()[0]):
+                    j["errorNums"] = self.read_thread.rstatus.errorNum()[0][idx]
+                if idx < len(self.read_thread.rstatus.errors()[0]):
+                    try:
+                        j["errors"] = json.loads(self.read_thread.rstatus.errors()[0][idx])
+                    except:
+                        j["errors"] = self.read_thread.rstatus.errors()[0][idx]
+                if idx < len(self.read_thread.rstatus.warningNum()[0]):
+                    j["warningNum"] = self.read_thread.rstatus.warningNum()[0][idx]
+                if idx < len(self.read_thread.rstatus.warnings()[0]):
+                    try:
+                        j["warnings"] = json.loads(self.read_thread.rstatus.warnings()[0][idx])
+                    except:
+                        j["warnings"] = self.read_thread.rstatus.warnings()[0][idx]
+                if idx < len(self.read_thread.rstatus.noticeNum()[0]):
+                    j["noticeNum"] = self.read_thread.rstatus.noticeNum()[0][idx]
+                if idx < len(self.read_thread.rstatus.notices()[0]):
+                    try:
+                        j["notices"] = json.loads(self.read_thread.rstatus.notices()[0][idx])
+                    except:
+                        j["notices"] = self.read_thread.rstatus.notices()[0][idx]
+                self.sts_widget.loadJson(j)    
 
     def mouse_press(self, event):
         self.mouse_pressed = True
@@ -635,8 +650,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                     content = self.get_content(mouse_time)
                     if content != "":
                         self.log_info.append(content[:-1])
-                if self.map_select_flag:
-                    self.updateMap(mouse_time, -1, -1, -1)
+                # if self.mid_line_select:
+                #     self.updateMap(mouse_time, -1, -1, -1)
 
     def mouse_move(self, event):
         if event.inaxes and self.finishReadFlag:
@@ -645,8 +660,9 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 mouse_time = datetime.fromtimestamp(mouse_time)
                 content = self.get_content(mouse_time)
                 self.info.setText(content)
-                if self.map_select_flag:
-                    self.updateMap(mouse_time, -1, -1, -1)
+                if self.mid_line_select:
+                    self.resetMidLineProperty(mouse_time)
+                    self.updateMap()
             else:
                 self.info.setText("")
         elif not self.finishReadFlag:
@@ -654,14 +670,15 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
     def mouse_release(self, event):
         self.mouse_pressed = False
-        self.map_select_flag = False
+        self.mid_line_select = False
 
     def moveHere(self, mtime):
         mouse_time = mtime
         if type(mouse_time) is not datetime:
             mouse_time = mtime * 86400 - 62135712000
             mouse_time = datetime.fromtimestamp(mouse_time)
-        self.updateMap(mouse_time, -1, -1, -1)
+        self.resetMidLineProperty(mouse_time)
+        self.updateMap()
 
     def savePlotData(self, cur_ax):
         indx = self.axs.tolist().index(cur_ax)
@@ -763,10 +780,11 @@ class ApplicationWindow(QtWidgets.QMainWindow):
     def onpick(self, event):
         if self.map_action.isChecked() \
         or self.view_action.isChecked() \
-        or self.json_action.isChecked():
-            self.map_select_flag = True
+        or self.json_action.isChecked() \
+        or self.data_action.isChecked():
+            self.mid_line_select = True
         else:
-            self.map_select_flag = False
+            self.mid_line_select = False
 
     def keyPressEvent(self,event):
         if self.map_action.isChecked():
@@ -822,16 +840,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                             if self.key_laser_idx >= len(t):
                                 self.key_laser_idx = 0
                             cur_t = t[self.key_laser_idx]
-                    self.updateMap(cur_t, self.key_loc_idx, self.key_laser_idx, self.key_laser_channel)
-
-
-    # def keyReleaseEvent(self, event): #####
-    #     print("keyRelease {}".format(event.key()))
-    #     if event.key() == QtCore.Qt.Key_A or event.key() == QtCore.Qt.Key_D:
-    #         self.key_loc_idx = -1
-    #     if event.key() == QtCore.Qt.Key_Left or event.key() == QtCore.Qt.Key_Right:
-    #         self.key_laser_idx = -1
-    #         self.key_laser_channel = -1
+                    self.mid_line_t = cur_t
+                    self.updateMap()
 
     def new_home(self, *args, **kwargs):
         for ax, xy in zip(self.axs, self.xys):
@@ -978,13 +988,18 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                         xy.x_combo.addItems(['timestamp'])
                 self.drawdata(ax, self.read_thread.getData(xy.y_combo.currentText()),
                                 self.read_thread.ylabel[xy.y_combo.currentText()], True)
-            self.updateMapSelectLine()
+            for d in self.dataViews:
+                self.initDataView(d)
             self.key_laser_channel = -1
             self.key_laser_idx = -1
             self.key_loc_idx = -1
+            self.updateMidLine()
+            self.updateMapSelectLine()
             self.openMap(self.map_action.isChecked())
             self.openViewer(self.view_action.isChecked())
             self.openJsonView(self.json_action.isChecked())
+            self.openDataView(self.data_action.isChecked())
+            self.updateMap()
 
 
     def fileQuit(self):
@@ -1287,52 +1302,9 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
     def openMap(self, checked):
         if checked:
-            if not self.map_widget:
-                self.map_widget = MapWidget()
-                self.map_widget.setWindowIcon(QtGui.QIcon('rbk.ico'))
-                self.map_widget.hiddened.connect(self.mapClosed)
-                self.map_widget.keyPressEvent = self.keyPressEvent
             self.map_widget.show()
-            (xmin,xmax) = self.axs[0].get_xlim()
-            tmid = (xmin+xmax)/2.0 
-            if len(self.map_select_lines) < 1:
-                for ax in self.axs:
-                    wl = ax.axvline(tmid, color = 'c', linewidth = 10, alpha = 0.5, picker = 10)
-                    self.map_select_lines.append(wl) 
-                    mouse_time = tmid * 86400 - 62135712000
-                    if mouse_time > 1e6:
-                        mouse_time = datetime.fromtimestamp(mouse_time)
-                        self.updateMap(mouse_time, -1, -1, -1)
-            else:
-                cur_t = self.map_select_lines[0].get_xdata()[0]
-                if type(cur_t) is not datetime:
-                    cur_t = cur_t * 86400 - 62135712000
-                    cur_t = datetime.fromtimestamp(cur_t)
-                if type(xmin) is not datetime:
-                    xmin = xmin * 86400 - 62135712000
-                    xmin = datetime.fromtimestamp(xmin)
-                if type(xmax) is not datetime:
-                    xmax = xmax * 86400 - 62135712000
-                    xmax = datetime.fromtimestamp(xmax)
-                if cur_t >= xmin and cur_t <= xmax:
-                    for ln in self.map_select_lines:
-                        ln.set_visible(True)
-                    self.updateMap(cur_t, self.key_loc_idx, self.key_laser_idx, self.key_laser_channel)
-                else:
-                    for ln in self.map_select_lines:
-                        ln.set_visible(True)
-                        ln.set_xdata([tmid, tmid])
-                        mouse_time = tmid * 86400 - 62135712000
-                        if mouse_time > 1e6:
-                            mouse_time = datetime.fromtimestamp(mouse_time)
-                            self.updateMap(mouse_time, -1, -1, -1)
-
-
         else:
-            if self.map_widget:
-                self.map_widget.hide()
-                for ln in self.map_select_lines:
-                    ln.set_visible(False)
+            self.map_widget.hide()
         self.static_canvas.figure.canvas.draw()
     
     def viewMotorErr(self, checked):
@@ -1394,30 +1366,41 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             if self.read_thread.reader:
                 self.log_widget.setText(self.read_thread.reader.lines)
             self.log_widget.show()
-
-            (xmin,xmax) = self.axs[0].get_xlim()
-            tmid = (xmin+xmax)/2.0 
-            if len(self.map_select_lines) > 1:
-                for ln in self.map_select_lines:
-                    ln.set_visible(True)
-                cur_t = self.map_select_lines[0].get_xdata()[0]
-                if type(cur_t) is not datetime:
-                    cur_t = cur_t * 86400 - 62135712000
-                    cur_t = datetime.fromtimestamp(cur_t)
-                self.updateMap(cur_t, self.key_loc_idx, self.key_laser_idx, self.key_laser_channel)
-            else:
-                for ax in self.axs:
-                    wl = ax.axvline(tmid, color = 'c', linewidth = 10, alpha = 0.5, picker = 10)
-                    self.map_select_lines.append(wl) 
-                    mouse_time = tmid * 86400 - 62135712000
-                    if mouse_time > 1e6:
-                        mouse_time = datetime.fromtimestamp(mouse_time)
-                        self.updateMap(mouse_time, -1, -1, -1)
-
+            self.updateLogView()
         else:
             if self.log_widget:
                 self.log_widget.hide()      
     
+    def updateLogView(self):
+        if self.log_widget is not None \
+            and self.mid_line_t is not None \
+                and self.read_thread.reader is not None \
+                    and self.key_loc_idx >= 0:
+            label = ''
+            if 'LocationEachFrame' in self.read_thread.content:
+                label = 'LocationEachFrame'
+            elif 'Location' in self.read_thread.content:
+                label = 'Location'
+            if label != '':
+                idx = self.read_thread.content[label].line_num[self.key_loc_idx]
+                dt1 = (self.mid_line_t - self.read_thread.reader.tmin).total_seconds()
+                dt2 = (self.read_thread.content[label]['t'][self.key_loc_idx] - self.read_thread.reader.tmin).total_seconds()
+                ratio = dt1/ dt2
+                idx = idx * ratio
+                if idx > self.read_thread.reader.lines_num:
+                    idx = self.read_thread.reader.lines_num
+                if idx < 0:
+                    idx = 0
+                self.log_widget.setLineNum(idx)
+
+    def openDataView(self, flag):
+        if flag:
+            if len(self.dataViews) < 1:
+                self.dataViewNewOne(None)
+        else:
+            if len(self.dataViews) > 0:
+                self.data_action.setChecked(True)
+
     def openJsonView(self, checked):
         if checked:
             if not self.sts_widget:
@@ -1425,24 +1408,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 self.sts_widget.setWindowIcon(QtGui.QIcon('rbk.ico'))
                 self.sts_widget.hiddened.connect(self.jsonViewerClosed)
             self.sts_widget.show()
-            (xmin,xmax) = self.axs[0].get_xlim()
-            tmid = (xmin+xmax)/2.0 
-            if len(self.map_select_lines) > 1:
-                for ln in self.map_select_lines:
-                    ln.set_visible(True)
-                cur_t = self.map_select_lines[0].get_xdata()[0]
-                if type(cur_t) is not datetime:
-                    cur_t = cur_t * 86400 - 62135712000
-                    cur_t = datetime.fromtimestamp(cur_t)
-                self.updateMap(cur_t, self.key_loc_idx, self.key_laser_idx, self.key_laser_channel)
-            else:
-                for ax in self.axs:
-                    wl = ax.axvline(tmid, color = 'c', linewidth = 10, alpha = 0.5, picker = 10)
-                    self.map_select_lines.append(wl) 
-                    mouse_time = tmid * 86400 - 62135712000
-                    if mouse_time > 1e6:
-                        mouse_time = datetime.fromtimestamp(mouse_time)
-                        self.updateMap(mouse_time, -1, -1, -1)
+            self.updateJsonView()
         else:
             if self.sts_widget:
                 self.sts_widget.hide()           
@@ -1489,17 +1455,49 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         else:
             self.log_info.append("Please choose the true model matched with log!!!")
 
-    def updateMapSelectLine(self):
-        if self.map_action.isChecked():
-            logging.debug('map_select_lines.size = ' + str(len(self.map_select_lines)))
-            (xmin,xmax) = self.axs[0].get_xlim()
-            if self.map_select_lines:
-                self.map_select_lines = []
-            tmid = (xmin+xmax)/2.0 
+    def resetMidLineProperty(self, t):
+        self.mid_line_t = t
+        self.key_laser_channel = -1
+        self.key_laser_idx = -1
+        self.key_loc_idx = -1
+
+    def updateMidLine(self):
+        (xmin,xmax) = self.axs[0].get_xlim()
+        tmid = (xmin+xmax)/2.0 
+        if len(self.map_select_lines) < 1:
             for ax in self.axs:
                 wl = ax.axvline(tmid, color = 'c', linewidth = 10, alpha = 0.5, picker = 10)
                 self.map_select_lines.append(wl) 
-            self.static_canvas.figure.canvas.draw()
+                mouse_time = tmid * 86400 - 62135712000
+                if mouse_time > 1e6:
+                    self.mid_line_t = datetime.fromtimestamp(mouse_time)
+        else:
+            cur_t = self.map_select_lines[0].get_xdata()[0]
+            if type(cur_t) is not datetime:
+                cur_t = cur_t * 86400 - 62135712000
+                cur_t = datetime.fromtimestamp(cur_t)
+            if type(xmin) is not datetime:
+                xmin = xmin * 86400 - 62135712000
+                xmin = datetime.fromtimestamp(xmin)
+            if type(xmax) is not datetime:
+                xmax = xmax * 86400 - 62135712000
+                xmax = datetime.fromtimestamp(xmax)
+            if cur_t >= xmin and cur_t <= xmax:
+                for ln in self.map_select_lines:
+                    ln.set_visible(True)
+            else:
+                for ln in self.map_select_lines:
+                    ln.set_visible(True)
+                    ln.set_xdata([tmid, tmid])
+                    mouse_time = tmid * 86400 - 62135712000
+                    if mouse_time > 1e6:
+                        self.mid_line_t = datetime.fromtimestamp(mouse_time)
+
+    def updateMapSelectLine(self):
+        for ln in self.map_select_lines:
+            if self.mid_line_t is not None:
+                ln.set_xdata([self.mid_line_t,self.mid_line_t])
+        self.static_canvas.figure.canvas.draw()
 
     def mapClosed(self,info):
         self.map_widget.hide()
@@ -1529,7 +1527,57 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             self.sts_widget.close()
         if self.motor_view_widget:
             self.motor_view_widget.close()
+        for d in self.dataViews:
+            d.close()
         self.close()
+
+    def updateDataView(self, d:DataView):
+        first_k = d.selection.y_combo.currentText()
+        t = None
+        if first_k in self.read_thread.content:
+            for name in self.read_thread.content[first_k].data.keys():
+                if name != 't':
+                    k = first_k+'.'+name
+                    t = self.read_thread.getData(k)[1]
+                    break
+        if t is None or len(t) < 1:
+            print(t, self.mid_line_t)
+            j = dict()
+            j[first_k] = "No Valid Data"
+            d.loadJson(j)
+            return
+        ts = np.array(t)
+        idx = (np.abs(ts - self.mid_line_t)).argmin()
+        j = dict()
+        for k in self.read_thread.content[first_k].data.keys():
+            if k[0] == '_':
+                continue
+            j[k] = self.read_thread.content[first_k].data[k][idx]
+        d.loadJson(j)
+
+    def updateDataViews(self):
+        for d in self.dataViews:
+            self.updateDataView(d)
+
+    def dataViewClosed(self, other):
+        self.dataViews.remove(other)
+        if len(self.dataViews) < 1:
+            self.data_action.setChecked(False)
+    
+    def dataViewNewOne(self, other):
+        dataView = DataView()
+        dataView.setWindowIcon(QtGui.QIcon('rbk.ico'))
+        dataView.closeMsg.connect(self.dataViewClosed)
+        dataView.newOneMsg.connect(self.dataViewNewOne)
+        dataView.dataViewMsg.connect(self.updateDataView)
+        dataView.setGeometry(850,50,400,900)
+        dataView.show()
+        self.initDataView(dataView)
+        self.dataViews.append(dataView)  
+        self.updateDataView(dataView) 
+
+    def initDataView(self, d:DataView):
+        d.setSelectionItems(list(self.read_thread.content.keys())) 
 
 
 if __name__ == "__main__":

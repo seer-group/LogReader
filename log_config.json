@@ -850,8 +850,8 @@
     ]
   },
   
-  "MotorInfo0": {
-    "type": "MotorInfo0",
+  "MotorInfo": {
+    "type": ["MotorInfo0", "MotorInfo1", "MotorInfo2", "MotorInfo3", "MotorInfo4", "MotorInfo5", "MotorInfo6"],
     "content": [
       { "index": 0, "name": "timestamp", "type": "int64", "description": "里程时间戳", "unit":""  },
       { "index": 1, "name": "postion", "type": "double", "description": "位置", "unit":"" },
@@ -863,109 +863,7 @@
       { "index": 7, "name": "emc", "type": "bool", "description": "急停", "unit":""  },
       { "index": 8, "name": "temperature", "type": "double", "description": "温度值", "unit":"degree"  },
       { "index": 9, "name": "encodercnt", "type": "int64", "description": "编码器", "unit":""  },
-      { "index": 11, "name": "errcode", "type": "int64", "description": "错误码", "unit":""  },
-      { "index": 12, "name": "raw_position", "type": "double", "description": "原始位置", "unit":""  },
-      { "index": 10, "name": "_grouop_name_"}
-    ]
-  },
-  "MotorInfo1": {
-    "type": "MotorInfo1",
-    "content": [
-      { "index": 0, "name": "timestamp", "type": "int64", "description": "里程时间戳", "unit":""  },
-      { "index": 1, "name": "postion", "type": "double", "description": "位置", "unit":"" },
-      { "index": 2, "name": "speed", "type": "double", "description": "速度", "unit":""  },
-      { "index": 3, "name": "current", "type": "double", "description": "电流", "unit":"degree"  },
-      { "index": 4, "name": "voltage", "type": "double", "description": "电压", "unit":""  },
-      { "index": 5, "name": "stop", "type": "bool", "description": "停止", "unit":""  },
-      { "index": 6, "name": "err", "type": "bool", "description": "错误", "unit":""  },
-      { "index": 7, "name": "emc", "type": "bool", "description": "急停", "unit":""  },
-      { "index": 8, "name": "temperature", "type": "double", "description": "温度值", "unit":"degree"  },
-      { "index": 9, "name": "encodercnt", "type": "int64", "description": "编码器", "unit":""  },
-      { "index": 11, "name": "errcode", "type": "int64", "description": "错误码", "unit":""  },
-      { "index": 12, "name": "raw_position", "type": "double", "description": "原始位置", "unit":""  }
-    ]
-  },
-  "MotorInfo2": {
-    "type": "MotorInfo2",
-    "content": [
-      { "index": 0, "name": "timestamp", "type": "int64", "description": "里程时间戳", "unit":""  },
-      { "index": 1, "name": "postion", "type": "double", "description": "位置", "unit":"" },
-      { "index": 2, "name": "speed", "type": "double", "description": "速度", "unit":""  },
-      { "index": 3, "name": "current", "type": "double", "description": "电流", "unit":"degree"  },
-      { "index": 4, "name": "voltage", "type": "double", "description": "电压", "unit":""  },
-      { "index": 5, "name": "stop", "type": "bool", "description": "停止", "unit":""  },
-      { "index": 6, "name": "err", "type": "bool", "description": "错误", "unit":""  },
-      { "index": 7, "name": "emc", "type": "bool", "description": "急停", "unit":""  },
-      { "index": 8, "name": "temperature", "type": "double", "description": "温度值", "unit":"degree"  },
-      { "index": 9, "name": "encodercnt", "type": "int64", "description": "编码器", "unit":""  },
-      { "index": 11, "name": "errcode", "type": "int64", "description": "错误码", "unit":""  },
-      { "index": 12, "name": "raw_position", "type": "double", "description": "原始位置", "unit":""  }
-    ]
-  },
-  "MotorInfo3": {
-    "type": "MotorInfo3",
-    "content": [
-      { "index": 0, "name": "timestamp", "type": "int64", "description": "里程时间戳", "unit":""  },
-      { "index": 1, "name": "postion", "type": "double", "description": "位置", "unit":"" },
-      { "index": 2, "name": "speed", "type": "double", "description": "速度", "unit":""  },
-      { "index": 3, "name": "current", "type": "double", "description": "电流", "unit":"degree"  },
-      { "index": 4, "name": "voltage", "type": "double", "description": "电压", "unit":""  },
-      { "index": 5, "name": "stop", "type": "bool", "description": "停止", "unit":""  },
-      { "index": 6, "name": "err", "type": "bool", "description": "错误", "unit":""  },
-      { "index": 7, "name": "emc", "type": "bool", "description": "急停", "unit":""  },
-      { "index": 8, "name": "temperature", "type": "double", "description": "温度值", "unit":"degree"  },
-      { "index": 9, "name": "encodercnt", "type": "int64", "description": "编码器", "unit":""  },
-      { "index": 11, "name": "errcode", "type": "int64", "description": "错误码", "unit":""  },
-      { "index": 12, "name": "raw_position", "type": "double", "description": "原始位置", "unit":""  }
-    ]
-  },
-  "MotorInfo4": {
-    "type": "MotorInfo4",
-    "content": [
-      { "index": 0, "name": "timestamp", "type": "int64", "description": "里程时间戳", "unit":""  },
-      { "index": 1, "name": "postion", "type": "double", "description": "位置", "unit":"" },
-      { "index": 2, "name": "speed", "type": "double", "description": "速度", "unit":""  },
-      { "index": 3, "name": "current", "type": "double", "description": "电流", "unit":"degree"  },
-      { "index": 4, "name": "voltage", "type": "double", "description": "电压", "unit":""  },
-      { "index": 5, "name": "stop", "type": "bool", "description": "停止", "unit":""  },
-      { "index": 6, "name": "err", "type": "bool", "description": "错误", "unit":""  },
-      { "index": 7, "name": "emc", "type": "bool", "description": "急停", "unit":""  },
-      { "index": 8, "name": "temperature", "type": "double", "description": "温度值", "unit":"degree"  },
-      { "index": 9, "name": "encodercnt", "type": "int64", "description": "编码器", "unit":""  },
-      { "index": 11, "name": "errcode", "type": "int64", "description": "错误码", "unit":""  },
-      { "index": 12, "name": "raw_position", "type": "double", "description": "原始位置", "unit":""  }
-    ]
-  },
-  "MotorInfo5": {
-    "type": "MotorInfo5",
-    "content": [
-      { "index": 0, "name": "timestamp", "type": "int64", "description": "里程时间戳", "unit":""  },
-      { "index": 1, "name": "postion", "type": "double", "description": "位置", "unit":"" },
-      { "index": 2, "name": "speed", "type": "double", "description": "速度", "unit":""  },
-      { "index": 3, "name": "current", "type": "double", "description": "电流", "unit":"degree"  },
-      { "index": 4, "name": "voltage", "type": "double", "description": "电压", "unit":""  },
-      { "index": 5, "name": "stop", "type": "bool", "description": "停止", "unit":""  },
-      { "index": 6, "name": "err", "type": "bool", "description": "错误", "unit":""  },
-      { "index": 7, "name": "emc", "type": "bool", "description": "急停", "unit":""  },
-      { "index": 8, "name": "temperature", "type": "double", "description": "温度值", "unit":"degree"  },
-      { "index": 9, "name": "encodercnt", "type": "int64", "description": "编码器", "unit":""  },
-      { "index": 11, "name": "errcode", "type": "int64", "description": "错误码", "unit":""  },
-      { "index": 12, "name": "raw_position", "type": "double", "description": "原始位置", "unit":""  }
-    ]
-  },
-  "MotorInfo6": {
-    "type": "MotorInfo6",
-    "content": [
-      { "index": 0, "name": "timestamp", "type": "int64", "description": "里程时间戳", "unit":""  },
-      { "index": 1, "name": "postion", "type": "double", "description": "位置", "unit":" " },
-      { "index": 2, "name": "speed", "type": "double", "description": "速度", "unit":" "  },
-      { "index": 3, "name": "current", "type": "double", "description": "电流", "unit":"degree"  },
-      { "index": 4, "name": "voltage", "type": "double", "description": "电压", "unit":""  },
-      { "index": 5, "name": "stop", "type": "bool", "description": "停止", "unit":""  },
-      { "index": 6, "name": "err", "type": "bool", "description": "错误", "unit":""  },
-      { "index": 7, "name": "emc", "type": "bool", "description": "急停", "unit":""  },
-      { "index": 8, "name": "temperature", "type": "double", "description": "温度值", "unit":"degree"  },
-      { "index": 9, "name": "encodercnt", "type": "int64", "description": "编码器", "unit":""  },
+      { "index": 10, "name": "motorName", "type":"str"},
       { "index": 11, "name": "errcode", "type": "int64", "description": "错误码", "unit":""  },
       { "index": 12, "name": "raw_position", "type": "double", "description": "原始位置", "unit":""  }
     ]

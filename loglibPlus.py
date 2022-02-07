@@ -6,6 +6,7 @@ import chardet
 import logging
 import gzip
 from multiprocessing import Pool, Manager
+import json
 def rbktimetodate(rbktime):
     """ 将rbk的时间戳转化为datatime """
     if len(rbktime) == 17:
@@ -204,8 +205,8 @@ class ReadLog:
 
 
 class Data:
-    def __init__(self, info):
-        self.type = info['type']
+    def __init__(self, info, key_name:str):
+        self.type = key_name
         self.regex = re.compile("\[(.*?)\].*\["+self.type+"\]\[(.*?)\]")
         self.short_regx = "["+self.type
         self.info = info['content']
@@ -271,6 +272,14 @@ class Data:
                     self.data[tmp['name']].append(0.0)
             except:
                 self.data[tmp['name']].append(0.0)  
+        elif tmp['type'] == 'json':
+            try:
+                self.data[tmp['name']].append(json.loads(values[ind]))
+            except:
+                self.data[tmp['name']].append(values[ind])   
+        elif tmp['type'] == 'str':
+            self.data[tmp['name']].append(values[ind])
+
     def parse(self, line, num):
         if self.short_regx in line:
             out = self.regex.match(line)

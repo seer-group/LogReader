@@ -2,17 +2,20 @@
 
 import sys
 
-from PyQt5.QtCore import QAbstractItemModel, QModelIndex, Qt, QAbstractListModel, QMimeData, \
+from PyQt5.QtCore import QAbstractItemModel, QModelIndex, Qt , QItemSelectionModel, \
     QDataStream, QByteArray, QJsonDocument, QVariant, QJsonValue, QJsonParseError, \
-        pyqtSignal
-from PyQt5.QtWidgets import QApplication, QFileDialog, QTreeView
+        pyqtSignal 
+from PyQt5.QtWidgets import QApplication, QFileDialog, QTreeView, QStyledItemDelegate, QLineEdit
 import json
+from PyQt5 import QtCore, QtWidgets,QtGui
+from ExtendedComboBox import ExtendedComboBox
 class QJsonTreeItem(object):
     def __init__(self, parent=None):
 
         self.mParent = parent
         self.mChilds = []
-        self.mValue =None
+        self.mValue = None
+        self.mKey = None
 
     def appendChild(self, item):
         self.mChilds.append(item)
@@ -35,7 +38,7 @@ class QJsonTreeItem(object):
         self.mKey = key
 
     def setValue(self, value:str):
-       self. mValue = value
+       self.mValue = value
 
     def key(self):
         return self.mKey
@@ -47,16 +50,6 @@ class QJsonTreeItem(object):
 
         rootItem = QJsonTreeItem(parent)
         rootItem.setKey("root")
-
-        try:
-            value = value.toVariant()
-        except AttributeError:
-            pass
-
-        try:
-            value = value.toObject()
-        except AttributeError:
-            pass
 
         if isinstance(value, dict):
             # process the key/value pairs
@@ -73,12 +66,13 @@ class QJsonTreeItem(object):
             for i, v in enumerate(value):
                 child = self.load(v, rootItem)
                 child.setKey(str(i))
+                if child.value() == "" or child.value() == None:
+                    child.setValue(str(v))
                 rootItem.appendChild(child)
 
         else:
             # value is processed
             rootItem.setValue(value)
-
         return rootItem
 
 
@@ -91,22 +85,23 @@ class QJsonModel(QAbstractItemModel):
     def load(self,fileName):
         if fileName is None or fileName is False:
             return False
-
-        with open(fileName,"rb",) as file:
-            if file is None:
-                return False
-            self.loadJson(file.read())
+        with open(fileName, 'r',encoding= 'UTF-8') as fid:
+            try:
+                j = json.load(fid)
+                self.loadJson(j)
+            except:
+                print("load json file {} error".format(fileName))
 
     def loadJson(self, json):
         error = QJsonParseError()
-        self.mDocument = QJsonDocument.fromJson(json,error)
+        self.mDocument = json
 
         if self.mDocument is not None:
             self.beginResetModel()
-            if self.mDocument.isArray():
-                self.mRootItem.load( list( self.mDocument.array()))
+            if isinstance(self.mDocument, list):
+                self.mRootItem.load(self.mDocument)
             else:
-                self.mRootItem = self.mRootItem.load( self.mDocument.object())
+                self.mRootItem = self.mRootItem.load(self.mDocument)
             self.endResetModel()
 
             return True
@@ -184,7 +179,11 @@ class JsonView(QTreeView):
         self.model = QJsonModel()
         self.setModel(self.model)  
         self.resize(520, 435)
-        self.setWindowTitle("AGV Status")
+        self.setWindowTitle("Status")
+        # self.delegate = JsonDelegate(self)
+        # self.setSelectionMode(QTreeView.SingleSelection)
+        # delegate = self.itemDelegate()
+        # self.setItemDelegate(self.delegate)
     def loadJson(self, bytes_json):
         self.model.loadJson(bytes_json)
     def loadJsonFile(self, fileName):
@@ -193,11 +192,67 @@ class JsonView(QTreeView):
         self.hide()
         self.hiddened.emit(True)
 
+
+class DataSelection:
+    def __init__(self):
+        self.y_label = QtWidgets.QLabel('Data')
+        self.y_combo = ExtendedComboBox()
+        y_form = QtWidgets.QFormLayout()
+        y_form.addRow(self.y_label,self.y_combo)
+        self.vbox = QtWidgets.QVBoxLayout()
+        self.vbox.addLayout(y_form)
+
+class DataView(QtWidgets.QMainWindow):
+    closeMsg = pyqtSignal('PyQt_PyObject')
+    newOneMsg = pyqtSignal('PyQt_PyObject')
+    dataViewMsg = pyqtSignal('PyQt_PyObject')
+    def __init__(self, parent =None):
+        self.parent = parent
+        super().__init__(parent)
+        self.setWindowTitle("DataView")
+        self._main = QtWidgets.QWidget()
+        self.setCentralWidget(self._main)
+        self.layout = QtWidgets.QVBoxLayout(self._main)
+        self.newbtn = QtWidgets.QPushButton("new",self._main)
+        self.newbtn.clicked.connect(self.newOne)
+        self.layout.addWidget(self.newbtn)
+        self.selection = DataSelection()
+        self.layout.addLayout(self.selection.vbox)
+        self.jsonView = JsonView()
+        self.layout.addWidget(self.jsonView)
+        self.selection.y_combo.activated.connect(self.dataViewUpdate)
+
+    def loadJson(self, data):
+        self.jsonView.loadJson(data)
+        self.jsonView.expandToDepth(1)
+
+    def loadJsonFile(self, fileName):
+        self.jsonView.loadJsonFile(fileName)
+        self.jsonView.expandToDepth(1)    
+
+    def setSelectionItems(self, data):
+        self.selection.y_combo.addItems(data)
+        first_k = self.selection.y_combo.currentText()
+        if first_k is not "":
+            self.setWindowTitle(first_k)  
+
+    def newOne(self):
+        self.newOneMsg.emit(self)
+
+    def dataViewUpdate(self):
+        first_k = self.selection.y_combo.currentText()
+        if first_k is not "":
+            self.setWindowTitle(first_k)
+        self.dataViewMsg.emit(self)
+
+    def closeEvent(self, a0: QtGui.QCloseEvent) -> None:
+        self.closeMsg.emit(self)
+        return super().closeEvent(a0)
+
 if __name__ == '__main__':
     app = QApplication(sys.argv)
 
-    view = JsonView()
-
-    view.loadJsonFile("test_version.json")
+    view = DataView()
+    view.loadJsonFile("log_config.json")
     view.show()
     sys.exit(app.exec_())
