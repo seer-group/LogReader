@@ -494,12 +494,13 @@ class MapWidget(QtWidgets.QWidget):
         self.model_name = None
         self.cp_name = None
         self.draw_size = [] #xmin xmax ymin ymax
-        self.map_data = lines.Line2D([],[], marker = '.', linestyle = '', markersize = 1.0)
+        self.map_data = lines.Line2D([],[], marker = '.', linestyle = '', markersize = 1.0,color="gray")
+        self.map_data.set_zorder(12)
         self.laser_data = LineCollection([], linewidths=3, linestyle='solid')
         self.laser_data_points = PatchCollection([])
-        self.laser_org_color = np.array([1,0,0,0.5])
+        self.laser_org_color = np.array([1,0,0,0.2])
         self.laser_color = self.laser_org_color[:]
-        self.laser_point_org_color = np.array([1,0,0,1.0])
+        self.laser_point_org_color = np.array([1,0,0,0.5])
         self.laser_point_color = self.laser_point_org_color[:]
         self.laser_data.set_color(self.laser_org_color)
         self.laser_data.set_zorder(11)
@@ -509,21 +510,23 @@ class MapWidget(QtWidgets.QWidget):
         self.laser_data_points.set_linewidth(2.0)
         self.laser_data_points.set_zorder(10)
         self.robot_data = lines.Line2D([],[], linestyle = '-', color='k')
-        self.robot_data.set_zorder(20)
+        self.robot_data.set_zorder(21)
         self.robot_data_c0 = lines.Line2D([],[], linestyle = '-', linewidth = 2, color='k')
-        self.robot_data_c0.set_zorder(20)
+        self.robot_data_c0.set_zorder(21)
         self.robot_loc_data = lines.Line2D([],[], linestyle = '--', color='gray')
-        self.robot_loc_data.set_zorder(20)
+        self.robot_loc_data.set_zorder(21)
         self.robot_loc_data_c0 = lines.Line2D([],[], linestyle = '--', linewidth = 2, color='gray')
-        self.robot_loc_data_c0.set_zorder(20)
+        self.robot_loc_data_c0.set_zorder(21)
         self.obs_points = lines.Line2D([],[], linestyle = '', marker = '*', markersize = 8.0, color='k')
         self.obs_points.set_zorder(40)
         self.depthCamera_hole_points = lines.Line2D([],[], linestyle = '', marker = 'o', markersize = 4.0, color='black')
         self.depthCamera_obs_points = lines.Line2D([],[], linestyle = '', marker = 'o', markersize = 4.0, color='gray')
         self.particle_points = lines.Line2D([],[], linestyle = '', marker = 'o', markersize = 4.0, color='b')
-        self.particle_points.set_zorder(30)
+        self.particle_points.set_zorder(20)
         self.trajectory = lines.Line2D([],[], linestyle = '', marker = 'o', markersize = 2.0, color='m')
+        self.trajectory.set_zorder(20)
         self.trajectory_next = lines.Line2D([],[], linestyle = '', marker = 'o', markersize = 2.0, color='mediumpurple')
+        self.trajectory_next.set_zorder(20)
         self.cur_arrow = patches.FancyArrow(0, 0, 0.5, 0,
                                             length_includes_head=True,# 增加的长度包含箭头部分
                                             width=0.05,
@@ -1189,6 +1192,7 @@ class MapWidget(QtWidgets.QWidget):
         if len(laser_rssi) == len(laser_org_data.T) and len(laser_rssi) > 0:
             color = self.cm(laser_rssi/255.) # 将透过率变成颜色变化
             self.laser_point_color = self.cm(laser_rssi/255.)
+            self.laser_point_color[:,3] = self.laser_point_color[:,3]*0.5
             color[:,3] = color[:,3] * 0.2 # 改变透明度
             self.laser_color = color
         else:

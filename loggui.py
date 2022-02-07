@@ -873,7 +873,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         options = QtWidgets.QFileDialog.Options()
         options |= QtWidgets.QFileDialog.DontUseNativeDialog
         options |= QtCore.Qt.WindowStaysOnTopHint
-        self.filenames, _ = QtWidgets.QFileDialog.getOpenFileNames(self,"选取log文件", "","Log Files (*.log);;All Files (*)", options=options)
+        self.filenames, _ = QtWidgets.QFileDialog.getOpenFileNames(self,"选取log文件", "","Log Files (*.log, *.gz);;All Files (*)", options=options)
         if self.filenames:
             self.finishReadFlag = False
             self.read_thread.filenames = self.filenames
