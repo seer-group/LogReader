@@ -298,11 +298,13 @@ class Data:
                                     description = tmp['description']
                                     has_description = True
                                 elif tmp_type is int:
-                                    if tmp['description'] < len(values):
+                                    if tmp['description'] < len(values) and tmp['index'] < len(values):
                                         description = values[tmp['description']]
                                         has_description = True
                                 if has_description:
-                                    self.description[tmp['name']] = self.type + '.' + description + " " + self.unit[tmp['name']]
+                                    self.description[tmp['name']] = description + " " + self.unit[tmp['name']]
+                                else:
+                                    self.description[tmp['name']] = tmp['name']
 
                         if tmp['index'] < len(values):
                             self._storeData(tmp, int(tmp['index']), values)

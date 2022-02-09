@@ -863,7 +863,7 @@
       { "index": 7, "name": "emc", "type": "bool", "description": "急停", "unit":""  },
       { "index": 8, "name": "temperature", "type": "double", "description": "温度值", "unit":"degree"  },
       { "index": 9, "name": "encodercnt", "type": "int64", "description": "编码器", "unit":""  },
-      { "index": 10, "name": "motorName", "type":"str"},
+      { "index": 10, "name": "motorName", "type":"str", "description": "电机名称"},
       { "index": 11, "name": "errcode", "type": "int64", "description": "错误码", "unit":""  },
       { "index": 12, "name": "raw_position", "type": "double", "description": "原始位置", "unit":""  }
     ]

@@ -1543,7 +1543,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                     t = self.read_thread.getData(k)[1]
                     break
         if t is None or len(t) < 1:
-            print(t, self.mid_line_t)
+            # print(t, self.mid_line_t)
             j = dict()
             j[first_k] = "No Valid Data"
             d.loadJson(j)
@@ -1554,7 +1554,11 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         for k in self.read_thread.content[first_k].data.keys():
             if k[0] == '_':
                 continue
-            j[k] = self.read_thread.content[first_k].data[k][idx]
+            data_name = k
+            tmp_k = first_k+'.'+k
+            if tmp_k in self.read_thread.ylabel:
+                data_name = self.read_thread.ylabel[tmp_k]
+            j[data_name] = self.read_thread.content[first_k].data[k][idx]
         d.loadJson(j)
 
     def updateDataViews(self):
