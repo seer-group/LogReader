@@ -1,7 +1,7 @@
 import matplotlib
 matplotlib.use('Qt5Agg')
 from matplotlib.backends.backend_qt5agg import (
-    FigureCanvas, NavigationToolbar2QT as NavigationToolbar)
+    FigureCanvasQTAgg as FigureCanvas, NavigationToolbar2QT as NavigationToolbar)
 from matplotlib.figure import Figure
 import matplotlib.lines as lines
 from matplotlib.patches import Circle, Polygon
@@ -18,6 +18,7 @@ import math
 import logging
 import copy
 import time
+import datetime
 from matplotlib.collections import LineCollection
 from matplotlib.patches import Circle
 from matplotlib.collections import PatchCollection
@@ -51,6 +52,47 @@ def normalize_theta(theta):
         theta = theta + 2 * math.pi
     return theta
 
+# 增加滑动条界面
+class Slider(QtWidgets.QWidget):
+    def __init__(self, parent=None):
+        super(Slider, self).__init__(parent)
+        self.setWindowTitle("请选择时间")
+        self.setWindowIcon(QtGui.QIcon('rbk.ico'))
+        self.resize(300, 100)
+
+        layout = QtWidgets.QVBoxLayout()
+        self.label = QtWidgets.QLabel("里程计数据外推时间为：")
+        self.label.setAlignment(QtCore.Qt.AlignCenter)
+        layout.addWidget(self.label)
+        self.setLayout(layout)
+
+        # 水平方向
+        self.s1 = QtWidgets.QSlider(QtCore.Qt.Horizontal)
+        # 设置最小值
+        self.s1.setMinimum(0)
+        # 设置最大值
+        self.s1.setMaximum(60)
+        # 设置步长
+        self.s1.setSingleStep(1)
+        # 设置当前值
+        self.s1.setValue(0)
+        # 刻度位置在下方
+        # self.s1.setTickPosition(QtWidgets.QSlider.TicksBelow)
+        # 设置刻度间隔
+        # self.s1.setTickInterval(5)
+        layout.addWidget(self.s1)
+        # 连接信号槽
+        self.s1.valueChanged.connect(self.value_changed)
+
+    def value_changed(self):
+        # print("current slider value=%s" % self.s1.value())
+        size = self.s1.value()
+        self.label.setText('里程计数据外推时间为：' +str(size)+' '+'s')
+        return size
+    # def GetSetSliderdata(self):
+    #     self.s1.setMaximum(self.)
+
+#
 
 class Readcp (QThread):
     signal = pyqtSignal('PyQt_PyObject')
@@ -170,7 +212,7 @@ class Readmap(QThread):
         self.js = dict()
         self.map_x = []
         self.map_y = []
-        self.lines = []
+        self.verts = []
         self.circles = []
         self.points = []
         self.straights = []
@@ -191,7 +233,7 @@ class Readmap(QThread):
         fid.close()
         self.map_x = []
         self.map_y = []
-        self.lines = []
+        self.verts = []
         self.circles = []
         self.straights = []
         self.points = []
@@ -220,38 +262,9 @@ class Readmap(QThread):
                 self.map_y.append(float(pos['y']))
             else:
                 self.map_y.append(0.0)
-        def f3order(p0, p1, p2, p3):
-            dt = 0.001
-            t = 0
-            v = []
-            while(t < 1.0):
-                s = 1 - t
-                x = (p0 * s * s * s
-                        + 3.0 * p1 * s * s * t
-                        + 3.0 * p2 * s * t * t
-                        + p3 * t * t * t)
-                v.append(x)
-                t = t + dt
-            return v 
-        def f5order(p0, p1, p2, p3, p4, p5):
-            dt = 0.001
-            t = 0
-            v = []
-            while(t < 1.0):
-                s = 1 - t
-                x = (p0 * s * s * s * s * s 
-                        + 5.0 * p1 * s * s * s * s * t
-                        + 10.0 * p2 * s * s * s * t * t
-                        + 10.0 * p3 * s * s * t * t * t
-                        + 5.0 * p4 * s * t *t * t * t
-                        + p5 * t * t * t * t * t)
-                v.append(x)
-                t = t + dt
-            return v 
         if 'advancedCurveList' in self.js:
             for line in self.js['advancedCurveList']:
-                if line['className'] == 'BezierPath' \
-                    or line['className'] == 'DegenerateBezier':
+                if line['className'] == 'BezierPath':
                     x0 = 0
                     y0 = 0
                     x1 = 0
@@ -276,16 +289,7 @@ class Readmap(QThread):
                         x3 = line['endPos']['pos']['x']
                     if 'y' in line['endPos']['pos']:
                         y3 = line['endPos']['pos']['y']
-                    xs = np.array([])
-                    ys = np.array([])
-                    if line['className'] == 'BezierPath':
-                        xs = np.array(f3order(x0, x1, x2, x3))
-                        ys = np.array(f3order(y0, y1, y2, y3))
-                    elif line['className'] == 'DegenerateBezier':
-                        xs = np.array(f5order(x0, x1, x1, x2, x2, x3))
-                        ys = np.array(f5order(y0, y1, y1, y2, y2, y3))
-                    points = np.vstack((xs,ys))  
-                    self.lines.append(points.T)
+                    self.verts.append([(x0,y0),(x1,y1),(x2,y2),(x3,y3)])
                 elif line['className'] == 'ArcPath':
                     x1 = 0
                     y1 = 0
@@ -494,14 +498,11 @@ class MapWidget(QtWidgets.QWidget):
         self.model_name = None
         self.cp_name = None
         self.draw_size = [] #xmin xmax ymin ymax
-        self.map_data = lines.Line2D([],[], marker = '.', linestyle = '', markersize = 1.0,color="gray")
-        self.map_data.set_zorder(12)
-        self.laser_data = LineCollection([], linewidths=3, linestyle='solid')
+        self.map_data = lines.Line2D([],[], marker = '.', linestyle = '', markersize = 1.0)
+        self.laser_data = LineCollection([], linewidths=0.5, linestyle='solid')
         self.laser_data_points = PatchCollection([])
-        self.laser_org_color = np.array([1,0,0,0.2])
-        self.laser_color = self.laser_org_color[:]
-        self.laser_point_org_color = np.array([1,0,0,0.5])
-        self.laser_point_color = self.laser_point_org_color[:]
+        self.laser_org_color = np.array([1,0,0,0.5])
+        self.laser_color = self.laser_org_color
         self.laser_data.set_color(self.laser_org_color)
         self.laser_data.set_zorder(11)
         self.laser_data_points.set_color(self.laser_org_color)
@@ -510,28 +511,23 @@ class MapWidget(QtWidgets.QWidget):
         self.laser_data_points.set_linewidth(2.0)
         self.laser_data_points.set_zorder(10)
         self.robot_data = lines.Line2D([],[], linestyle = '-', color='k')
-        self.robot_data.set_zorder(21)
         self.robot_data_c0 = lines.Line2D([],[], linestyle = '-', linewidth = 2, color='k')
-        self.robot_data_c0.set_zorder(21)
         self.robot_loc_data = lines.Line2D([],[], linestyle = '--', color='gray')
-        self.robot_loc_data.set_zorder(21)
         self.robot_loc_data_c0 = lines.Line2D([],[], linestyle = '--', linewidth = 2, color='gray')
-        self.robot_loc_data_c0.set_zorder(21)
         self.obs_points = lines.Line2D([],[], linestyle = '', marker = '*', markersize = 8.0, color='k')
-        self.obs_points.set_zorder(40)
         self.depthCamera_hole_points = lines.Line2D([],[], linestyle = '', marker = 'o', markersize = 4.0, color='black')
         self.depthCamera_obs_points = lines.Line2D([],[], linestyle = '', marker = 'o', markersize = 4.0, color='gray')
         self.particle_points = lines.Line2D([],[], linestyle = '', marker = 'o', markersize = 4.0, color='b')
-        self.particle_points.set_zorder(20)
+        self.particle_points.set_zorder(101)
         self.trajectory = lines.Line2D([],[], linestyle = '', marker = 'o', markersize = 2.0, color='m')
-        self.trajectory.set_zorder(20)
+        self.trajectory_True = lines.Line2D([], [], linestyle='', marker='*', markersize=2.0, color='y')
         self.trajectory_next = lines.Line2D([],[], linestyle = '', marker = 'o', markersize = 2.0, color='mediumpurple')
-        self.trajectory_next.set_zorder(20)
+        self.trajectory_GoodPos = lines.Line2D([],[], linestyle = '', marker = 'o', markersize = 2.0, color='gray')
         self.cur_arrow = patches.FancyArrow(0, 0, 0.5, 0,
                                             length_includes_head=True,# 增加的长度包含箭头部分
                                             width=0.05,
                                             head_width=0.1, head_length=0.16, fc='r', ec='b')
-        self.cur_arrow.set_zorder(20)
+        self.cur_arrow.set_zorder(100)
         self.org_arrow_xy = self.cur_arrow.get_xy().copy()
 
         self.robot_pos = [0., 0., 0.]
@@ -552,6 +548,9 @@ class MapWidget(QtWidgets.QWidget):
         self.setupUI()
         self.pointLists = dict()
         self.lineLists = dict()
+        # self.ischecke_odomTraj=False
+        # self.ischecke_odomTraj_count = 0
+        # self.check_odomTraj_time = None
 
     def setupUI(self):
         self.static_canvas = FigureCanvas(Figure(figsize=(5,5)))
@@ -577,7 +576,10 @@ class MapWidget(QtWidgets.QWidget):
         self.ax.add_line(self.depthCamera_obs_points)
         self.ax.add_line(self.particle_points)
         self.ax.add_line(self.trajectory)
+        self.ax.add_line(self.trajectory_True)
         self.ax.add_line(self.trajectory_next)
+        self.ax.add_line(self.trajectory_GoodPos)
+
         self.ruler = RulerShape()
         self.ruler.add_ruler(self.ax)
         MyToolBar.home = self.toolbarHome
@@ -658,6 +660,14 @@ class MapWidget(QtWidgets.QWidget):
         self.check_3dObs.setFocusPolicy(QtCore.Qt.NoFocus)
         self.check_traj = QtWidgets.QCheckBox('TRAJ',self)
         self.check_traj.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.check_odomTraj = QtWidgets.QCheckBox('Odom_TRAJ',self)
+        self.ischecke_odomTraj=False
+        self.ischecke_odomTraj_count = 0
+        self.check_odomTraj_time = None
+        self.odomTraj_x = []
+        self.odomTraj_y = []
+        self.odomTraj_theta = []
+        self.check_odomTraj.setFocusPolicy(QtCore.Qt.NoFocus)
         self.hbox.addWidget(self.check_all)
         self.hbox.addWidget(self.check_map)
         self.hbox.addWidget(self.check_robot)
@@ -665,6 +675,7 @@ class MapWidget(QtWidgets.QWidget):
         self.hbox.addWidget(self.check_3dHole)
         self.hbox.addWidget(self.check_3dObs)
         self.hbox.addWidget(self.check_traj)
+        self.hbox.addWidget(self.check_odomTraj)
         self.check_all.stateChanged.connect(self.changeCheckBoxAll)
         self.check_map.stateChanged.connect(self.changeCheckBox)
         self.check_robot.stateChanged.connect(self.changeCheckBox)
@@ -672,10 +683,14 @@ class MapWidget(QtWidgets.QWidget):
         self.check_3dHole.stateChanged.connect(self.changeCheckBox)
         self.check_3dObs.stateChanged.connect(self.changeCheckBox)
         self.check_traj.stateChanged.connect(self.changeCheckBox)
+        self.check_odomTraj.stateChanged.connect(self.changeCheckBox)
         self.check_lasers = dict()
         self.hbox.setAlignment(QtCore.Qt.AlignLeft)
         self.fig_layout.addLayout(self.hbox)
         self.check_all.setChecked(True)
+
+        self.Slider =Slider()
+        self.Slider_value=0
         
     def changeAutoMap(self):
         flag =  not self.autoMap.isChecked()
@@ -789,6 +804,7 @@ class MapWidget(QtWidgets.QWidget):
             self.check_3dHole.setChecked(True)
             self.check_3dObs.setChecked(True)
             self.check_traj.setChecked(True)
+            self.check_odomTraj.setChecked(False)
             for k in self.check_lasers.keys():
                 self.check_lasers[k].setChecked(True)
         elif self.check_all.checkState() == QtCore.Qt.Unchecked:
@@ -798,6 +814,7 @@ class MapWidget(QtWidgets.QWidget):
             self.check_3dHole.setChecked(False)
             self.check_3dObs.setChecked(False)
             self.check_traj.setChecked(False)
+            self.check_odomTraj.setChecked(False)
             for k in self.check_lasers.keys():
                 self.check_lasers[k].setChecked(False)
 
@@ -841,13 +858,42 @@ class MapWidget(QtWidgets.QWidget):
             self.depthCamera_hole_points.set_visible(cur_check.isChecked())
         elif cur_check is self.check_traj:
             self.trajectory.set_visible(cur_check.isChecked())
+            # self.trajectory_True.set_visible(cur_check.isChecked())
             self.trajectory_next.set_visible(cur_check.isChecked())
+            self.trajectory_GoodPos.set_visible(False)
+        elif cur_check is self.check_odomTraj:
+            if self.ischecke_odomTraj==True:
+                self.ischecke_odomTraj = False
+                self.ischecke_odomTraj_count = 1
+                self.odomTraj_x = []
+                self.odomTraj_y = []
+                self.trajectory_True.set_visible(False)
+                # 要把数据重画一下
+                # self.trajectory_True([],[])
+                # Slider
+                self.Slider.close()
+                # win = Slider()
+                # win.show()
+            else:
+                self.ischecke_odomTraj = True
+                self.ischecke_odomTraj_count = 0
+                self.check_odomTraj_time = None
+                # 传入参数
+                self.Slider.show()
+                # self.trajectory_True= lines.Line2D([], [], linestyle='', marker='o', markersize=2.0, color='b')
+                self.trajectory_True.set_visible(cur_check.isChecked())
+
+                # self.Slider_value=self.Slider.value_changed()
+                # print(self.Slider_value)
+        # elif cur_check is self.check_traj:
+        #     self.trajectory.set_visible(cur_check.isChecked())
+        #     self.trajectory_True.set_visible(cur_check.isChecked())
+        #     self.trajectory_next.set_visible(cur_check.isChecked())
         else:
             for k in self.check_lasers.keys():
                 if cur_check is self.check_lasers[k]:
                     if self.laser_index is k:
                         self.laser_data.set_visible(cur_check.isChecked())
-                        self.laser_data_points.set_visible(cur_check.isChecked())
                        
         self.static_canvas.figure.canvas.draw() 
 
@@ -988,32 +1034,27 @@ class MapWidget(QtWidgets.QWidget):
             [p.remove() for p in reversed(self.ax.patches)]
             [p.remove() for p in reversed(self.ax.texts)]
             self.ax.add_patch(self.cur_arrow) #add robot arrow again
-            for line in self.read_map.lines:
-                path = Polygon(line, closed=False, facecolor='none', edgecolor='orange', lw=1)
-                path.set_zorder(19)
-                self.ax.add_patch(path)
+            for vert in self.read_map.verts:
+                path = Path(vert, self.read_map.bezier_codes)
+                patch = patches.PathPatch(path, facecolor='none', edgecolor='orange', lw=1)
+                self.ax.add_patch(patch)
             for circle in self.read_map.circles:
                 wedge = patches.Arc([circle[0], circle[1]], circle[2]*2, circle[2]*2, 0, circle[3], circle[4], facecolor = 'none', ec="orange", lw = 1)
-                wedge.set_zorder(19)
                 self.ax.add_patch(wedge)
             for vert in self.read_map.straights:
                 path = Path(vert, self.read_map.straight_codes)
                 patch = patches.PathPatch(path, facecolor='none', edgecolor='orange', lw=2)
-                patch.set_zorder(19)
                 self.ax.add_patch(patch)
             pr = 0.25
             for (pt,name) in zip(self.read_map.points, self.read_map.p_names):
                 circle = patches.Circle((pt[0], pt[1]), pr, facecolor='orange',
                 edgecolor=(0, 0.8, 0.8), linewidth=3, alpha=0.5)
-                circle.set_zorder(19)
                 self.ax.add_patch(circle)
                 text_path = TextPath((pt[0],pt[1]), name[0], size = 0.2)
                 text_path = patches.PathPatch(text_path, ec="none", lw=3, fc="k")
-                text_path.set_zorder(19)
                 self.ax.add_patch(text_path)
                 if pt[2] != None:
                     arrow = patches.Arrow(pt[0],pt[1], pr * np.cos(pt[2]), pr*np.sin(pt[2]), pr)
-                    arrow.set_zorder(19)
                     self.ax.add_patch(arrow)
             self.setWindowTitle("{} : {}".format('MapViewer', os.path.split(self.map_name)[1]))
             font = QtGui.QFont()
@@ -1043,6 +1084,8 @@ class MapWidget(QtWidgets.QWidget):
                 self.check_3dObs.setFocusPolicy(QtCore.Qt.NoFocus)
                 self.check_traj = QtWidgets.QCheckBox('TRAJ',self)
                 self.check_traj.setFocusPolicy(QtCore.Qt.NoFocus)
+                self.check_odomTraj = QtWidgets.QCheckBox('Odom_TRAJ', self)
+                self.check_odomTraj.setFocusPolicy(QtCore.Qt.NoFocus)
                 self.hbox.addWidget(self.check_all)
                 self.hbox.addWidget(self.check_map)
                 self.hbox.addWidget(self.check_robot)
@@ -1050,6 +1093,8 @@ class MapWidget(QtWidgets.QWidget):
                 self.hbox.addWidget(self.check_3dHole)
                 self.hbox.addWidget(self.check_3dObs)
                 self.hbox.addWidget(self.check_traj)
+                self.hbox.addWidget(self.check_odomTraj)
+
                 self.check_all.stateChanged.connect(self.changeCheckBoxAll)
                 self.check_map.stateChanged.connect(self.changeCheckBox)
                 self.check_robot.stateChanged.connect(self.changeCheckBox)
@@ -1057,6 +1102,8 @@ class MapWidget(QtWidgets.QWidget):
                 self.check_3dHole.stateChanged.connect(self.changeCheckBox)
                 self.check_3dObs.stateChanged.connect(self.changeCheckBox)
                 self.check_traj.stateChanged.connect(self.changeCheckBox)
+                self.check_odomTraj.stateChanged.connect(self.changeCheckBox)
+
                 self.check_lasers = dict()
                 for k in self.read_model.laser.keys():
                     self.add_laser_check(k)
@@ -1094,7 +1141,6 @@ class MapWidget(QtWidgets.QWidget):
                         circle = Circle((c[0], c[1]), 0.01)
                         patches.append(circle)
                     self.laser_data_points.set_paths(patches)
-                    self.laser_data_points.set_color(self.laser_point_color)
                 # laser_data = GetGlobalPos(laser_data, self.robot_pos)
 
                 cross_shape = np.array([xxdata,xydata])
@@ -1155,8 +1201,13 @@ class MapWidget(QtWidgets.QWidget):
                             circle = Circle((c[0], c[1]), 0.01)
                             patches.append(circle)
                         self.laser_data_points.set_paths(patches)
-                        self.laser_data_points.set_color(self.laser_point_color)
                         self.static_canvas.figure.canvas.draw()
+    def readtrajectory_True(self, x, y):
+        self.trajectory_True.set_xdata(x)
+        self.trajectory_True.set_ydata(y)
+    def readtrajectoryGoodPos(self, x, y):
+        self.trajectory_GoodPos.set_xdata(x)
+        self.trajectory_GoodPos.set_ydata(y)
 
     def readtrajectory(self, x, y, xn, yn, x0, y0, r0):
         self.trajectory.set_xdata(x)
@@ -1179,8 +1230,12 @@ class MapWidget(QtWidgets.QWidget):
                 self.ax.set_ylim(ymin, ymax)
 
     def updateRobotLaser(self, laser_org_data, laser_rssi, laser_index, robot_pos, robot_loc_pos, laser_info, loc_info, obs_pos, obs_info, depthcamera_pos, particle_pos):
-        self.timestamp_lable.setText('当前激光时刻定位（实框）: '+ laser_info)
-        self.logt_lable.setText('当前时刻定位(虚框): '+ loc_info)
+        if self.ischecke_odomTraj == True:
+            self.timestamp_lable.setText('当前里程计估计定位（实框）: '+ laser_info)
+            self.logt_lable.setText('当前时刻定位(虚框): '+ loc_info)
+        else:
+            self.timestamp_lable.setText('当前激光时刻定位（实框）: '+ laser_info)
+            self.logt_lable.setText('当前时刻定位(虚框): '+ loc_info)
         if obs_info != '':
             self.obs_lable.setText('障碍物信息: ' + obs_info)
             self.obs_lable.show()
@@ -1191,13 +1246,10 @@ class MapWidget(QtWidgets.QWidget):
         self.laser_org_data = laser_org_data
         if len(laser_rssi) == len(laser_org_data.T) and len(laser_rssi) > 0:
             color = self.cm(laser_rssi/255.) # 将透过率变成颜色变化
-            self.laser_point_color = self.cm(laser_rssi/255.)
-            self.laser_point_color[:,3] = self.laser_point_color[:,3]*0.5
             color[:,3] = color[:,3] * 0.2 # 改变透明度
             self.laser_color = color
         else:
-            self.laser_color = self.laser_org_color[:]
-            self.laser_point_color = self.laser_point_org_color[:]
+            self.laser_color = self.laser_org_color
         self.laser_index = laser_index
         if obs_pos:
             self.obs_points.set_xdata([obs_pos[0]])
@@ -1231,6 +1283,8 @@ class MapWidget(QtWidgets.QWidget):
                 points[1].append(particle_pos[1][ind])
             self.particle_points.set_xdata([points[0]])
             self.particle_points.set_ydata([points[1]])
+            # self.particle_points.set_xdata([0])
+            # self.particle_points.set_ydata([0])
         else:
             self.particle_points.set_xdata([])
             self.particle_points.set_ydata([])
@@ -1249,21 +1303,22 @@ class MapWidget(QtWidgets.QWidget):
             cross_shape = GetGlobalPos(cross_shape,self.robot_pos)
             self.robot_data_c0.set_xdata(cross_shape[0])
             self.robot_data_c0.set_ydata(cross_shape[1])
+
             if self.laser_index in self.check_lasers:
                 self.laser_data.set_visible(self.check_lasers[self.laser_index].isChecked())
-                self.laser_data_points.set_visible(self.check_lasers[self.laser_index].isChecked())
-
             lines, cs = convert2LaserPoints(self.laser_org_data, self.laser_pos[self.laser_index], self.robot_pos)
+            # if self.ischecke_odomTraj == True:
+            #     lines, cs = convert2LaserPoints(self.laser_org_data, self.laser_pos[self.laser_index], self.robot_loc_pos)
+            # else:
+            #     lines, cs = convert2LaserPoints(self.laser_org_data, self.laser_pos[self.laser_index], self.robot_pos)
             self.laser_data.set_segments(lines)
-            self.laser_data.set_color(self.laser_color)
             patches = []
             for c in cs:
                 circle = Circle((c[0], c[1]), 0.01)
                 patches.append(circle)
             self.laser_data_points.set_paths(patches)
-            self.laser_data_points.set_color(self.laser_point_color)
-            self.laser_data_points.set_edgecolor('r')
-
+            self.laser_data.set_color(self.laser_color)
+        #------------------------------------ 以上为实体框框
             cross_shape = np.array([xxdata,xydata])
             cross_shape = GetGlobalPos(cross_shape,robot_loc_pos)
             self.robot_loc_data_c0.set_xdata(cross_shape[0])
