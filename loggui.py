@@ -133,6 +133,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.log_widget = None
         self.sts_widget = None
         self.motor_view_widget = None
+        self.SetTimeStart_time=None
+        self.SetTimeEnd_time = None
 
 
     def setupUI(self):
@@ -431,6 +433,25 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         # theta_Odo_Tmp,theta_Fram_Tmp=np.array(theta_Odo)+180 ,
         return xnext_Roation,ynext_Roation
 
+    def UsingTime_ChooseData(self,Start_time,End_time):
+        GNSS_idx_Start,GNSS_idx_End,RTK_idx_Start,RTK_idx_End=None,None,None,None
+
+        if self.chooseDrawData.DrawGoodPos == 16384:
+            GNSS_ts_Start = np.array(self.read_thread.content['GNSS']['t'])
+            GNSS_idx_Start = (np.abs(GNSS_ts_Start - Start_time)).argmin()
+            GNSS_ts_End = np.array(self.read_thread.content['GNSS']['t'])
+            GNSS_idx_End = (np.abs(GNSS_ts_End - End_time)).argmin()
+
+        if self.chooseDrawData.DrawRTK == 16384:
+            RTK_ts_Start = np.array(self.read_thread.content['RTK_Localization']['t'])
+            RTK_idx_Start = (np.abs(RTK_ts_Start - Start_time)).argmin()
+            RTK_ts_End = np.array(self.read_thread.content['RTK_Localization']['t'])
+            RTK_idx_End = (np.abs(RTK_ts_End - End_time)).argmin()
+
+        return GNSS_idx_Start,GNSS_idx_End,RTK_idx_Start,RTK_idx_End
+
+
+
     def updateMap(self, mouse_time, in_loc_idx, in_laser_idx, in_laser_channel):
         loc_idx = in_loc_idx
         laser_idx = in_laser_idx
@@ -452,20 +473,43 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                     loc_ts_odo = np.array(self.read_thread.content['Odometer']['t'])
                     loc_idx_odo = (np.abs(loc_ts_odo - mouse_time)).argmin()
                 if self.map_widget:
-                    # 绘制不同轨迹 Ex1 GoodPos
-                    if self.chooseDrawData.DrawGoodPos == 16384:
-                        self.map_widget.trajectory_GoodPos.set_visible(True)
-                        self.map_widget.readtrajectoryGoodPos(self.read_thread.content['GNSS']['x'],
-                                                              self.read_thread.content['GNSS']['y'])
+                    # 规定时间范围内
+                    # self.SetTimeEnd_time
+                    # GNSS_idx_Start, GNSS_idx_End, RTK_idx_Start, RTK_idx_End = self.UsingTime_ChooseData(
+                    #     self.SetTimeStart_time, self.SetTimeEnd_time)
+                    if self.SetTimeEnd_time != None and self.SetTimeStart_time != None:
+                        if self.SetTimeStart_time < self.SetTimeEnd_time:
+                            # 选定了时间
+                            GNSS_idx_Start,GNSS_idx_End,RTK_idx_Start,RTK_idx_End=self.UsingTime_ChooseData(self.SetTimeStart_time, self.SetTimeEnd_time)
+                            if self.chooseDrawData.DrawGoodPos == 16384:
+                                self.map_widget.trajectory_GoodPos.set_visible(True)
+                                self.map_widget.readtrajectoryGoodPos(self.read_thread.content['GNSS']['x'][GNSS_idx_Start:GNSS_idx_End+1],
+                                                                      self.read_thread.content['GNSS']['y'][GNSS_idx_Start:GNSS_idx_End+1])
+                            else:
+                                self.map_widget.trajectory_GoodPos.set_visible(False)
+                            # 绘制不同轨迹 Ex2 RTK
+                            if self.chooseDrawData.DrawRTK == 16384:
+                                self.map_widget.trajectory_RTK.set_visible(True)
+                                self.map_widget.readtrajectoryRTK(self.read_thread.content['RTK_Localization']['x'][RTK_idx_Start:RTK_idx_End+1],
+                                                                      self.read_thread.content['RTK_Localization']['y'][RTK_idx_Start:RTK_idx_End+1])
+                            else:
+                                self.map_widget.trajectory_RTK.set_visible(False)
+                    #
                     else:
-                        self.map_widget.trajectory_GoodPos.set_visible(False)
-                    # 绘制不同轨迹 Ex2 RTK
-                    if self.chooseDrawData.DrawRTK == 16384:
-                        self.map_widget.trajectory_RTK.set_visible(True)
-                        self.map_widget.readtrajectoryRTK(self.read_thread.content['RTK_Localization']['x'],
-                                                              self.read_thread.content['RTK_Localization']['y'])
-                    else:
-                        self.map_widget.trajectory_RTK.set_visible(False)
+                        # 绘制不同轨迹 Ex1 GoodPos
+                        if self.chooseDrawData.DrawGoodPos == 16384:
+                            self.map_widget.trajectory_GoodPos.set_visible(True)
+                            self.map_widget.readtrajectoryGoodPos(self.read_thread.content['GNSS']['x'],
+                                                                  self.read_thread.content['GNSS']['y'])
+                        else:
+                            self.map_widget.trajectory_GoodPos.set_visible(False)
+                        # 绘制不同轨迹 Ex2 RTK
+                        if self.chooseDrawData.DrawRTK == 16384:
+                            self.map_widget.trajectory_RTK.set_visible(True)
+                            self.map_widget.readtrajectoryRTK(self.read_thread.content['RTK_Localization']['x'],
+                                                                  self.read_thread.content['RTK_Localization']['y'])
+                        else:
+                            self.map_widget.trajectory_RTK.set_visible(False)
 
                     #Test 6
                     # self.map_widget.check_odomTraj.isChecked()
@@ -503,13 +547,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                         self.map_widget.ischecke_odomTraj_count = 2
                         self.map_widget.check_odomTraj_time = mouse_time
 
-
-                #
-                    #
-                    # self.map_widget.readtrajectory(self.read_thread.content['LocationEachFrame']['x'][0:loc_idx], self.read_thread.content['LocationEachFrame']['y'][0:loc_idx],
-                    #                             self.read_thread.content['LocationEachFrame']['x'][loc_idx::], self.read_thread.content['LocationEachFrame']['y'][loc_idx::],
-                    #                             self.read_thread.content['LocationEachFrame']['x'][loc_idx], self.read_thread.content['LocationEachFrame']['y'][loc_idx],
-                    #                             np.deg2rad(self.read_thread.content['LocationEachFrame']['theta'][loc_idx]))
         else :
             if 'Location' in self.read_thread.content:
                 loc_ts = np.array(self.read_thread.content['Location']['t'])
@@ -798,12 +835,17 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 elif event.button == 3:
                     if not self.toolBar.isActive():
                         self.popMenu = QtWidgets.QMenu(self)
+                        # 添加时间范围选择
+                        self.popMenu.addAction('&Set Time Start', lambda: self.SetTimeStart(event.xdata))
+                        self.popMenu.addAction('&Set Time End', lambda: self.SetTimeEnd(event.xdata))
+                        #
                         self.popMenu.addAction('&Save Data',lambda:self.savePlotData(event.inaxes))
                         self.popMenu.addAction('&Move Here',lambda:self.moveHere(event.xdata))
                         self.popMenu.addAction('&reset Data', lambda:self.resetData(event.inaxes))
                         self.popMenu.addAction('&Diff Time', lambda:self.diffData(event.inaxes))
                         self.popMenu.addAction('&- Data', lambda:self.negData(event.inaxes))
                         self.popMenu.addAction('&Add Data', lambda:self.addData(event.inaxes))
+
                         cursor = QtGui.QCursor()
                         self.popMenu.exec_(cursor.pos())
                     # show info
@@ -831,6 +873,24 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.mouse_pressed = False
         self.map_select_flag = False
 
+    # 指定时间范围
+    def SetTimeStart(self, mtime):
+        mouse_time = mtime
+        if type(mouse_time) is not datetime:
+            mouse_time = mtime * 86400 - 62135712000
+            mouse_time = datetime.fromtimestamp(mouse_time)
+        self.updateMap(mouse_time, -1, -1, -1)
+        self.SetTimeStart_time=mouse_time
+        print(self.SetTimeStart_time)
+
+    def SetTimeEnd(self, mtime):
+        mouse_time = mtime
+        if type(mouse_time) is not datetime:
+            mouse_time = mtime * 86400 - 62135712000
+            mouse_time = datetime.fromtimestamp(mouse_time)
+        self.updateMap(mouse_time, -1, -1, -1)
+        self.SetTimeEnd_time=mouse_time
+    #
     def moveHere(self, mtime):
         mouse_time = mtime
         if type(mouse_time) is not datetime:
