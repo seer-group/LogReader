@@ -59,7 +59,7 @@ class ChooseDrawData(QtWidgets.QWidget):
         self.setWindowIcon(QtGui.QIcon('rbk.ico'))
 
         self.btn1 = QtWidgets.QPushButton(self)
-        self.btn1.setText('绘制GoodPos轨迹')
+        self.btn1.setText('绘制天线坐标轨迹')
         self.btn1.clicked.connect(self.show1)
         self.btn2 = QtWidgets.QPushButton(self)
         self.btn2.setText('绘制RTK轨迹')
@@ -455,15 +455,15 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                     # 绘制不同轨迹 Ex1 GoodPos
                     if self.chooseDrawData.DrawGoodPos == 16384:
                         self.map_widget.trajectory_GoodPos.set_visible(True)
-                        self.map_widget.readtrajectoryGoodPos(self.read_thread.content['GoodsPos']['x'],
-                                                              self.read_thread.content['GoodsPos']['y'])
+                        self.map_widget.readtrajectoryGoodPos(self.read_thread.content['GNSS']['x'],
+                                                              self.read_thread.content['GNSS']['y'])
                     else:
                         self.map_widget.trajectory_GoodPos.set_visible(False)
                     # 绘制不同轨迹 Ex2 RTK
                     if self.chooseDrawData.DrawRTK == 16384:
                         self.map_widget.trajectory_RTK.set_visible(True)
-                        self.map_widget.readtrajectoryRTK(self.read_thread.content['GoodsPos']['x'],
-                                                              self.read_thread.content['GoodsPos']['y'])
+                        self.map_widget.readtrajectoryRTK(self.read_thread.content['RTK_Localization']['x'],
+                                                              self.read_thread.content['RTK_Localization']['y'])
                     else:
                         self.map_widget.trajectory_RTK.set_visible(False)
 

@@ -88,7 +88,7 @@ class ReadThread(QThread):
         self.content = dict()
         content_delay = dict()
         for k in list(self.js):
-            if k == "LocationEachFrame" or k == "StopPoints" or k == "Odometer" or k == "GoodsPos":
+            if k == "LocationEachFrame" or k == "GNSS" or k == "Odometer" or k == "RTK_Localization":
                 self.content[k] = Data(self.js[k])
             else:
                 content_delay[k] = Data(self.js[k])

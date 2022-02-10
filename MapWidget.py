@@ -523,8 +523,8 @@ class MapWidget(QtWidgets.QWidget):
         self.trajectory_True = lines.Line2D([], [], linestyle='', marker='*', markersize=2.0, color='y')
         self.trajectory_next = lines.Line2D([],[], linestyle = '', marker = 'o', markersize = 2.0, color='mediumpurple')
         # 绘制指定数据轨迹
-        self.trajectory_GoodPos = lines.Line2D([],[], linestyle = '', marker = 'o', markersize = 2.0, color='gray')
-        self.trajectory_RTK = lines.Line2D([], [], linestyle='', marker='o', markersize=2.0, color='gray')
+        self.trajectory_GoodPos = lines.Line2D([],[], linestyle = '', marker = 'o', markersize = 2.0, color='red')
+        self.trajectory_RTK = lines.Line2D([], [], linestyle='', marker='o', markersize=2.0, color='blue')
         self.cur_arrow = patches.FancyArrow(0, 0, 0.5, 0,
                                             length_includes_head=True,# 增加的长度包含箭头部分
                                             width=0.05,
