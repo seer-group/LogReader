@@ -1417,17 +1417,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
 
     def changeCheckBox(self):
-        # ---这里的判定可能会有一点问题
-        self.check_ChooseDraw_ischeck = False
-        if self.check_ChooseDraw.isChecked(): #勾选取消的时候并不会到该界面
-            if self.check_ChooseDraw_ischeck==False:
-                self.check_ChooseDraw_ischeck=True
-                self.chooseDrawData.show()
-            else:
-                self.check_ChooseDraw_ischeck = False
-        self.chooseDrawData.DrawGoodPos=None
-        self.chooseDrawData.DrawRTK = None
-        # 这里的判定不知道为什么不成立 需要这样奇怪的形式可行
 
         if self.check_err.isChecked() and self.check_fatal.isChecked() and self.check_notice.isChecked() and \
         self.check_war.isChecked() and self.check_tstart.isChecked() and self.check_tfinish.isChecked() and \
@@ -1441,6 +1430,15 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         else:
             self.check_all.setTristate(False)
             self.check_all.setCheckState(QtCore.Qt.Unchecked)
+
+        if self.check_ChooseDraw.isChecked():
+            self.check_ChooseDraw_ischeck = True
+            self.chooseDrawData.show()
+        else:
+            self.chooseDrawData.close()
+            self.check_ChooseDraw_ischeck = False
+        self.chooseDrawData.DrawGoodPos=None
+        self.chooseDrawData.DrawRTK = None
 
         cur_check = self.sender()
         if cur_check is self.check_fatal:
