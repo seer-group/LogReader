@@ -522,7 +522,9 @@ class MapWidget(QtWidgets.QWidget):
         self.trajectory = lines.Line2D([],[], linestyle = '', marker = 'o', markersize = 2.0, color='m')
         self.trajectory_True = lines.Line2D([], [], linestyle='', marker='*', markersize=2.0, color='y')
         self.trajectory_next = lines.Line2D([],[], linestyle = '', marker = 'o', markersize = 2.0, color='mediumpurple')
+        # 绘制指定数据轨迹
         self.trajectory_GoodPos = lines.Line2D([],[], linestyle = '', marker = 'o', markersize = 2.0, color='gray')
+        self.trajectory_RTK = lines.Line2D([], [], linestyle='', marker='o', markersize=2.0, color='gray')
         self.cur_arrow = patches.FancyArrow(0, 0, 0.5, 0,
                                             length_includes_head=True,# 增加的长度包含箭头部分
                                             width=0.05,
@@ -579,6 +581,7 @@ class MapWidget(QtWidgets.QWidget):
         self.ax.add_line(self.trajectory_True)
         self.ax.add_line(self.trajectory_next)
         self.ax.add_line(self.trajectory_GoodPos)
+        self.ax.add_line(self.trajectory_RTK)
 
         self.ruler = RulerShape()
         self.ruler.add_ruler(self.ax)
@@ -861,6 +864,7 @@ class MapWidget(QtWidgets.QWidget):
             # self.trajectory_True.set_visible(cur_check.isChecked())
             self.trajectory_next.set_visible(cur_check.isChecked())
             self.trajectory_GoodPos.set_visible(False)
+            self.trajectory_RTK.set_visible(False)
         elif cur_check is self.check_odomTraj:
             if self.ischecke_odomTraj==True:
                 self.ischecke_odomTraj = False
@@ -1208,6 +1212,9 @@ class MapWidget(QtWidgets.QWidget):
     def readtrajectoryGoodPos(self, x, y):
         self.trajectory_GoodPos.set_xdata(x)
         self.trajectory_GoodPos.set_ydata(y)
+    def readtrajectoryRTK(self, x, y):
+        self.trajectory_RTK.set_xdata(x)
+        self.trajectory_RTK.set_ydata(y)
 
     def readtrajectory(self, x, y, xn, yn, x0, y0, r0):
         self.trajectory.set_xdata(x)

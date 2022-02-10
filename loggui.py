@@ -52,6 +52,7 @@ class ChooseDrawData(QtWidgets.QWidget):
         super().__init__()
 
         self.DrawGoodPos=None
+        self.DrawRTK = None
 
         self.setGeometry(200, 200, 400, 400)
         self.setWindowTitle('选择绘制目标：')
@@ -61,7 +62,7 @@ class ChooseDrawData(QtWidgets.QWidget):
         self.btn1.setText('绘制GoodPos轨迹')
         self.btn1.clicked.connect(self.show1)
         self.btn2 = QtWidgets.QPushButton(self)
-        self.btn2.setText('绘制xxx轨迹')
+        self.btn2.setText('绘制RTK轨迹')
         self.btn2.clicked.connect(self.show2)
         self.btn3 = QtWidgets.QPushButton(self)
         self.btn3.setText('绘制xxx轨迹')
@@ -78,7 +79,7 @@ class ChooseDrawData(QtWidgets.QWidget):
         self.DrawGoodPos=reply
     def show2(self):
         reply = QtWidgets.QMessageBox.information(self,"请确认：","是否绘制？",QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,QtWidgets.QMessageBox.Yes)
-        print(2)
+        self.DrawRTK =reply
     def show3(self):
         reply = QtWidgets.QMessageBox.information(self,"请确认：","是否绘制？",QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,QtWidgets.QMessageBox.Yes)
         print(3)
@@ -132,12 +133,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.log_widget = None
         self.sts_widget = None
         self.motor_view_widget = None
-
-    # def testSaveData(self):
-    #     # self.JudgeFirstRead +=1
-    #     curcombo = self.sender()
-    #     if curcombo is not None:
-    #         text = curcombo.currentText()  # 给出目前的选项
 
 
     def setupUI(self):
@@ -306,8 +301,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.check_tfinish = QtWidgets.QCheckBox('TASK FINISHED',self)
         self.check_service = QtWidgets.QCheckBox('SERVICE',self)
         # 绘制轨迹选择窗口
-        self.check_canbeDraw = QtWidgets.QCheckBox('绘制轨迹', self)
-        self.check_canbeDraw_ischeck=False
+        self.check_ChooseDraw = QtWidgets.QCheckBox('绘制轨迹', self)
+        self.check_ChooseDraw_ischeck=False
         # self.SaveCheckDatakind=[]
         # self.SaveCheckDatakind_fignum=[]
         self.chooseDrawData=ChooseDrawData()
@@ -321,7 +316,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.hbox.addWidget(self.check_tfinish)
         self.hbox.addWidget(self.check_service)
         # ---绘制选项添加
-        self.hbox.addWidget(self.check_canbeDraw)
+        self.hbox.addWidget(self.check_ChooseDraw)
 
         self.hbox.setAlignment(QtCore.Qt.AlignLeft)
 
@@ -334,7 +329,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.check_tfinish.stateChanged.connect(self.changeCheckBox)
         self.check_service.stateChanged.connect(self.changeCheckBox)
 
-        self.check_canbeDraw.stateChanged.connect(self.changeCheckBox)
+        self.check_ChooseDraw.stateChanged.connect(self.changeCheckBox)
 
         self.check_all.stateChanged.connect(self.changeCheckBoxAll)
         self.check_all.setChecked(True)
@@ -464,11 +459,14 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                                                               self.read_thread.content['GoodsPos']['y'])
                     else:
                         self.map_widget.trajectory_GoodPos.set_visible(False)
-                        # self.map_widget.trajectory.set_visible(True)
-                        # self.map_widget.trajectory_next.set_visible(True)
+                    # 绘制不同轨迹 Ex2 RTK
+                    if self.chooseDrawData.DrawRTK == 16384:
+                        self.map_widget.trajectory_RTK.set_visible(True)
+                        self.map_widget.readtrajectoryRTK(self.read_thread.content['GoodsPos']['x'],
+                                                              self.read_thread.content['GoodsPos']['y'])
+                    else:
+                        self.map_widget.trajectory_RTK.set_visible(False)
 
-                        # self.trajectory_True.set_visible(False)
-                        # self.map_widget.readtrajectoryGoodPos([0],[0])
                     #Test 6
                     # self.map_widget.check_odomTraj.isChecked()
                     self.map_widget.readtrajectory(self.read_thread.content['LocationEachFrame']['x'][0:loc_idx],
@@ -1420,14 +1418,15 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
     def changeCheckBox(self):
         # ---这里的判定可能会有一点问题
-        self.check_canbeDraw_ischeck = False
-        if self.check_canbeDraw.isChecked(): #勾选取消的时候并不会到该界面
-            if self.check_canbeDraw_ischeck==False:
-                self.check_canbeDraw_ischeck=True
+        self.check_ChooseDraw_ischeck = False
+        if self.check_ChooseDraw.isChecked(): #勾选取消的时候并不会到该界面
+            if self.check_ChooseDraw_ischeck==False:
+                self.check_ChooseDraw_ischeck=True
                 self.chooseDrawData.show()
             else:
-                self.check_canbeDraw_ischeck = False
+                self.check_ChooseDraw_ischeck = False
         self.chooseDrawData.DrawGoodPos=None
+        self.chooseDrawData.DrawRTK = None
         # 这里的判定不知道为什么不成立 需要这样奇怪的形式可行
 
         if self.check_err.isChecked() and self.check_fatal.isChecked() and self.check_notice.isChecked() and \
