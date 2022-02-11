@@ -1559,8 +1559,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             tmp_k = first_k+'.'+k
             if tmp_k in self.read_thread.ylabel:
                 data_name = self.read_thread.ylabel[tmp_k]
-            else:
-                tmp_k = k
+                if tmp_k in data_name:
+                    data_name = k
             j[data_name] = self.read_thread.content[first_k].data[k][idx]
         d.loadJson(j)
 
