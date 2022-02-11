@@ -82,7 +82,7 @@ class ChooseDrawData(QtWidgets.QWidget):
         self.DrawRTK =reply
     def show3(self):
         reply = QtWidgets.QMessageBox.information(self,"请确认：","是否绘制？",QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,QtWidgets.QMessageBox.Yes)
-        print(3)
+        # print(3)
 
 #
 class DataSelection(QtWidgets.QWidget):
@@ -128,6 +128,10 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.setupUI()
         self.map_select_flag = False
         self.map_select_lines = []
+        #
+        self.map_select_lines_Start = []
+        self.map_select_lines_End = []
+        #
         self.mouse_pressed = False
         self.map_widget = None
         self.log_widget = None
@@ -458,6 +462,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         min_laser_channel = in_laser_channel
         for ln in self.map_select_lines:
             ln.set_xdata([mouse_time,mouse_time])
+
         self.static_canvas.figure.canvas.draw()
         if 'LocationEachFrame' in self.read_thread.content:
             if len(self.read_thread.content['LocationEachFrame']['x']) > 0 :
@@ -479,7 +484,12 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                     #     self.SetTimeStart_time, self.SetTimeEnd_time)
                     if self.SetTimeEnd_time != None and self.SetTimeStart_time != None:
                         if self.SetTimeStart_time < self.SetTimeEnd_time:
-                            # 选定了时间
+                            # 选定时间并显示
+                            for ln in self.map_select_lines_Start:
+                                ln.set_xdata([self.SetTimeStart_time, self.SetTimeStart_time])
+                            for ln in self.map_select_lines_End:
+                                ln.set_xdata([self.SetTimeEnd_time, self.SetTimeEnd_time])
+                            #
                             GNSS_idx_Start,GNSS_idx_End,RTK_idx_Start,RTK_idx_End=self.UsingTime_ChooseData(self.SetTimeStart_time, self.SetTimeEnd_time)
                             if self.chooseDrawData.DrawGoodPos == 16384:
                                 self.map_widget.trajectory_GoodPos.set_visible(True)
@@ -881,7 +891,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             mouse_time = datetime.fromtimestamp(mouse_time)
         self.updateMap(mouse_time, -1, -1, -1)
         self.SetTimeStart_time=mouse_time
-        print(self.SetTimeStart_time)
+
 
     def SetTimeEnd(self, mtime):
         mouse_time = mtime
@@ -1547,7 +1557,11 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             if len(self.map_select_lines) < 1:
                 for ax in self.axs:
                     wl = ax.axvline(tmid, color = 'c', linewidth = 10, alpha = 0.5, picker = 10)
-                    self.map_select_lines.append(wl) 
+                    self.map_select_lines.append(wl)
+                    wl_Start = ax.axvline(0, color = 'r', linewidth = 5, alpha = 0.5, picker = 10)
+                    self.map_select_lines_Start.append(wl_Start)
+                    wl_End = ax.axvline(0, color = 'y', linewidth = 5, alpha = 0.5, picker = 10)
+                    self.map_select_lines_End.append(wl_End)
                     mouse_time = tmid * 86400 - 62135712000
                     if mouse_time > 1e6:
                         mouse_time = datetime.fromtimestamp(mouse_time)
@@ -1566,6 +1580,10 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 if cur_t >= xmin and cur_t <= xmax:
                     for ln in self.map_select_lines:
                         ln.set_visible(True)
+                    for ln in self.map_select_lines_Start:
+                        ln.set_visible(True)
+                    for ln in self.map_select_lines_End:
+                        ln.set_visible(True)
                     self.updateMap(cur_t, self.key_loc_idx, self.key_laser_idx, self.key_laser_channel)
                 else:
                     for ln in self.map_select_lines:
@@ -1581,6 +1599,10 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             if self.map_widget:
                 self.map_widget.hide()
                 for ln in self.map_select_lines:
+                    ln.set_visible(False)
+                for ln in self.map_select_lines_Start:
+                    ln.set_visible(False)
+                for ln in self.map_select_lines_End:
                     ln.set_visible(False)
         self.static_canvas.figure.canvas.draw()
     
