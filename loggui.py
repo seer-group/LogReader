@@ -1007,7 +1007,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.close()
 
     def about(self):
-        QtWidgets.QMessageBox.about(self, "关于", """Log Viewer V2.3.1.b""")
+        QtWidgets.QMessageBox.about(self, "关于", """Log Viewer V2.4.1.a""")
 
     def ycombo_onActivated(self):
         curcombo = self.sender()
@@ -1132,11 +1132,12 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             self.drawFEWN(ax)
             if data[1] and data[0]:
                 ax.plot(data[1], data[0], '.', url = ylabel)
-                tmpd = np.array(data[0])
-                tmpd = tmpd[~np.isnan(tmpd)]
-                if len(tmpd) > 0:
-                    max_range = max(max(tmpd) - min(tmpd), 1.0)
-                    ax.set_ylim(min(tmpd) - 0.05 * max_range, max(tmpd) + 0.05 * max_range)
+                if isinstance(data[0][0], float):
+                    tmpd = np.array(data[0], dtype=np.float)
+                    tmpd = tmpd[~np.isnan(tmpd)]
+                    if len(tmpd) > 0:
+                        max_range = max(max(tmpd) - min(tmpd), 1.0)
+                        ax.set_ylim(min(tmpd) - 0.05 * max_range, max(tmpd) + 0.05 * max_range)
             if resize:
                 ax.set_xlim(self.read_thread.tlist[0], self.read_thread.tlist[-1])
             else:
@@ -1558,6 +1559,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             tmp_k = first_k+'.'+k
             if tmp_k in self.read_thread.ylabel:
                 data_name = self.read_thread.ylabel[tmp_k]
+            else:
+                tmp_k = k
             j[data_name] = self.read_thread.content[first_k].data[k][idx]
         d.loadJson(j)
 

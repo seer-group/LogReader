@@ -208,6 +208,7 @@ class Data:
     def __init__(self, info, key_name:str):
         self.type = key_name
         self.regex = re.compile("\[(.*?)\].*\["+self.type+"\]\[(.*?)\]")
+        self.regex2 = re.compile("\[(.*?)\].*\["+self.type+"\|(.*?)\]")
         self.short_regx = "["+self.type
         self.info = info['content']
         self.data = dict()
@@ -234,7 +235,7 @@ class Data:
                 self.description[tmp['name']] = self.type + '.' + tmp['name'] + " " + self.unit[tmp['name']]
 
     def _storeData(self, tmp, ind, values):
-        if tmp['type'] == 'double' or tmp['type'] == 'int64':
+        if tmp['type'] == 'double' or tmp['type'] == 'int64' or tmp['type'] == 'int':
             try:
                 self.data[tmp['name']].append(float(values[ind]))
             except:
@@ -279,10 +280,14 @@ class Data:
                 self.data[tmp['name']].append(values[ind])   
         elif tmp['type'] == 'str':
             self.data[tmp['name']].append(values[ind])
+        else:
+            self.data[tmp['name']].append(values[ind])
 
     def parse(self, line, num):
         if self.short_regx in line:
             out = self.regex.match(line)
+            if not out:
+                out = self.regex2.match(line)
             if out:
                 datas = out.groups()
                 values = datas[1].split('|')

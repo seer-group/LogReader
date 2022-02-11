@@ -179,7 +179,14 @@
       { "index": 6, "name": "task_status", "type": "int64", "description": "任务状态", "unit":""   },
       { "index": 7, "name": "stopSound", "type": "int64", "description": "停止播放音频", "unit":""   },
       { "index": 8, "name": "soundLoop", "type": "int64", "description": "循环播放音频", "unit":""   },
-      { "index": 12, "name": "scriptSound", "type": "int64", "description": "是否脚本播放音频", "unit":""   }
+      { "index": 9, "name":"finishNavFile", "type":"str"},
+      {"index":  10, "name":"soundName","type":"str", "description": "即将播放音频的名称"},
+      {"index":  11, "name":"cur_soundName","type":"str", "description": "上次或者当前音频的名称"},
+      { "index": 12, "name": "scriptSound", "type": "int64", "description": "是否脚本播放音频", "unit":""   },
+      { "index": 13, "name": "manual_sound", "type": "int64", "description": "手动音频状态", "unit":""   },
+      { "index": 14, "name": "autoSound", "type": "int64", "description": "是否在自动播放音频", "unit":""   },
+      { "index": 15, "name": "warnFile", "type": "str", "description": "是否在自动播放音频", "unit":""   },
+      { "index": 16, "name": "warnSize", "type": "int", "description": "警告个数", "unit":""}
     ]
   },
   "Battery": {
@@ -1040,6 +1047,20 @@
       {"index":2, "name":"in_runScript", "type":"bool"},
       {"index":3, "name":"in_manual", "type":"bool"},
       {"index":4, "name":"script_status", "type":"double"}      
+    ]
+  },
+  "MoveStatus":{
+    "type":"MoveStatus",
+    "content":[
+      {"index":0, "name":"task_id", "type":"str"},
+      {"index":1, "name":"task_status", "type":"int"},
+      {"index":2, "name":"target_name", "type":"str"},
+      {"index":3, "name":"block_reason", "type":"int"},
+      {"index":4, "name":"block_id", "type":"int"},
+      {"index":5, "name":"cur_save_ind", "type":"int"},
+      {"index":6, "name":"cur_save_status", "type":"int"},
+      {"index":7, "name":"closest_target", "type":"str"},
+      {"index":8, "name":"unfinished_path_name_size", "type":"int"}
     ]
   }
 }

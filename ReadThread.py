@@ -1,3 +1,4 @@
+from tokenize import Double
 from PyQt5.QtCore import QThread, pyqtSignal
 from loglibPlus import Data, Laser, ErrorLine, WarningLine, ReadLog, FatalLine, NoticeLine, TaskStart, TaskFinish, Service, ParticleState
 from loglibPlus import Memory, DepthCamera, RobotStatus
@@ -177,7 +178,6 @@ class ReadThread(QThread):
                     self.data[k+'.'+name] = (self.content[k][name], self.content[k]['t'])
                     self.ylabel[k+'.'+name] = self.content[k].description[name]
                     self.data_org_key[k+'.'+name] = k
-
         if 'IMU' in self.js:
             self.data["IMU.org_gx"] = ([i+j for (i,j) in zip(self.content['IMU']['gx'],self.content['IMU']['offx'])], self.content['IMU']['t'])
             self.data["IMU.org_gy"] = ([i+j for (i,j) in zip(self.content['IMU']['gy'],self.content['IMU']['offy'])], self.content['IMU']['t'])
