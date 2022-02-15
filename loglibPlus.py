@@ -823,24 +823,27 @@ class Memory:
                     re.compile("\[(.*?)\].*\[Text\]\[Robokit virtual memory usage *: *(.*?) *([GM])B\]"),
                     re.compile("\[(.*?)\].*\[Text\]\[Robokit Max physical memory usage *: *(.*?) *([GM])B\]"),
                     re.compile("\[(.*?)\].*\[Text\]\[Robokit Max virtual memory usage *: *(.*?) *([GM])B\]"),
-                    re.compile("\[(.*?)\].*\[Text\]\[Robokit CPU usage *: *(.*?)%\]")]
+                    re.compile("\[(.*?)\].*\[Text\]\[Robokit CPU usage *: *(.*?)%\]"),
+                    re.compile("\[(.*?)\].*\[Text\]\[System CPU usage *: *(.*?)%\]")]
         self.short_regx =  ["Used system",
                             "Free system",
                             "Robokit physical memory",
                             "Robokit physical memory",
                             "Max physical memory",
                             "Max virtual memory",
-                            "CPU usage"]
-        self.time = [[] for _ in range(7)]
-        self.data = [[] for _ in range(7)]
+                            "Robokit CPU usage",
+                            "System CPU usage"]
+        self.time = [[] for _ in range(8)]
+        self.data = [[] for _ in range(8)]
 
     def parse(self, line):
-        for iter in range(0,7):
+        for iter in range(0,8):
             if self.short_regx[iter] in line:
                 out = self.regex[iter].match(line)
                 if out:
                     self.time[iter].append(rbktimetodate(out.group(1)))
-                    if iter == 6:
+                    if iter == 6 or iter == 7:
+                        print("iter %d" % iter)
                         self.data[iter].append(float(out.group(2)))
                     else:
                         if out.group(3) == "G":
@@ -867,6 +870,8 @@ class Memory:
         return self.data[5], self.time[5]
     def rbk_cpu(self):
         return self.data[6], self.time[6]
+    def sys_cpu(self):
+        return self.data[7], self.time[7]
     def insert_data(self, other):
         for i in range(len(self.data)):
             self.data[i].extend(other.data[i])
