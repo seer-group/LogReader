@@ -191,10 +191,10 @@ class ReadThread(QThread):
 
         self.data.update({"memory.used_sys":self.memory.used_sys(), "memory.free_sys":self.memory.free_sys(), "memory.rbk_phy": self.memory.rbk_phy(),
                      "memory.rbk_vir":self.memory.rbk_vir(),"memory.rbk_max_phy":self.memory.rbk_max_phy(),"memory.rbk_max_vir":self.memory.rbk_max_vir(),
-                     "memory.cpu":self.memory.rbk_cpu()})
+                     "memory.cpu":self.memory.rbk_cpu(),"memory.sys_cpu":self.memory.sys_cpu()})
         self.ylabel.update({"memory.used_sys": "used_sys MB", "memory.free_sys":"free_sys MB", "memory.rbk_phy": "rbk_phy MB",
                      "memory.rbk_vir":"rbk_vir MB","memory.rbk_max_phy":"rbk_max_phy MB","memory.rbk_max_vir":"rbk_max_vir MB",
-                     "memory.cpu":"cpu %"})
+                     "memory.cpu":"cpu %", "memory.sys_cpu":"sys_cpu %"})
 
         for k in self.laser.datas.keys():
             self.data["laser"+str(k)+'.'+"ts"] = self.laser.ts(k)

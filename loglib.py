@@ -601,14 +601,15 @@ class Memory:
                     re.compile("\[(.*?)\].*\[Text\]\[Robokit virtual memory usage *: *(.*?) *([GM])B\]"),
                     re.compile("\[(.*?)\].*\[Text\]\[Robokit Max physical memory usage *: *(.*?) *([GM])B\]"),
                     re.compile("\[(.*?)\].*\[Text\]\[Robokit Max virtual memory usage *: *(.*?) *([GM])B\]"),
-                    re.compile("\[(.*?)\].*\[Text\]\[Robokit CPU usage *: *(.*?)%\]")]
+                    re.compile("\[(.*?)\].*\[Text\]\[Robokit CPU usage *: *(.*?)%\]"),
+                    re.compile("\[(.*?)\].*\[Text\]\[System CPU usage *: *(.*?)%\]"),]
         self.short_regx =  re.compile("memory|CPU")
-        self.time = [[] for _ in range(7)]
-        self.data = [[] for _ in range(7)]
+        self.time = [[] for _ in range(8)]
+        self.data = [[] for _ in range(8)]
     def parse(self, line):
         short_out = self.short_regx.search(line)
         if short_out:          
-            for iter in range(0,7):
+            for iter in range(0,8):
                 out = self.regex[iter].match(line)
                 if out:
                     self.time[iter].append(rbktimetodate(out.group(1)))
@@ -638,3 +639,6 @@ class Memory:
         return self.data[5], self.time[5]
     def rbk_cpu(self):
         return self.data[6], self.time[6]
+    def sys_cpu(self):
+        return self.data[7], self.time[7]
+    
