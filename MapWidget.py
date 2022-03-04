@@ -720,6 +720,7 @@ class MapWidget(QtWidgets.QWidget):
         point = lines.Line2D([],[], linestyle = '', marker = 'x', markersize = 8.0, color='r')
         point.set_xdata(event[0])
         point.set_ydata(event[1])
+        point.set_zorder(30)
         id = str(int(round(time.time()*1000)))
         if id not in self.pointLists or self.pointLists[id] is None:
             self.pointLists[id] = point
@@ -736,6 +737,7 @@ class MapWidget(QtWidgets.QWidget):
         l = lines.Line2D([],[], linestyle = '--', marker = '.', markersize = 6.0, color='r')
         l.set_xdata([event[0][0],event[1][0]])
         l.set_ydata([event[0][1],event[1][1]])
+        l.set_zorder(30)
         id = str(int(round(time.time()*1000)))
         if id not in self.lineLists or self.lineLists[id] is None:
             self.lineLists[id] = l
@@ -746,6 +748,7 @@ class MapWidget(QtWidgets.QWidget):
         l = lines.Line2D([],[], linestyle = event[2], marker = event[3], markersize = event[4], color=event[5])
         l.set_xdata(event[0])
         l.set_ydata(event[1])     
+        l.set_zorder(30)
         id = str(int(round(time.time()*1000)))
         if id not in self.lineLists or self.lineLists[id] is None:
             self.lineLists[id] = l

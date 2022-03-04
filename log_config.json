@@ -1049,6 +1049,43 @@
       {"index":4, "name":"script_status", "type":"double"}      
     ]
   },
+  "rec_list":{
+    "type":"rec_list",
+    "content":[
+      {"index":0, "name":"x", "type":"double", "description": "识别x", "unit":"" },
+      {"index":1, "name":"y", "type":"double", "description": "识别y", "unit":"" },
+      {"index":2, "name":"z", "type":"double", "description": "识别z", "unit":"" },
+      {"index":3, "name":"yaw", "type":"rad", "description": "识别yaw", "unit":""}
+    ]
+  },
+  "RecPathPlan":{
+    "type":"RecPathPlan",
+    "content":[
+      {"index":0, "name":"robot2goal_dir", "type":"double"},
+      {"index":1, "name":"dtheta", "type":"double"},
+      {"index":2, "name":"rec_goAngle", "type":"double"},
+      {"index":3, "name":"is_pallet", "type":"double"},
+      {"index":4, "name":"lateral_err", "type":"double"},
+      {"index":5, "name":"angle_err", "type":"double"},
+      {"index":6, "name":"max_lateral_err", "type":"double"},
+      {"index":7, "name":"max_anlge_err", "type":"double"},
+      {"index":8, "name":"min_head_dist", "type":"double"},
+      {"index":9, "name":"m_back_dist", "type":"double"}
+    ]
+  },
+  "OptiBz":{
+    "type":"OptiBz",
+    "content":[
+      {"index":0, "name":"dt", "type":"double"},
+      {"index":1, "name":"opti_num", "type":"double", "description": "最多优化迭代次数", "unit":"" },
+      {"index":2, "name":"max_curve_", "type":"double", "description": "优化最大曲率", "unit":"" },
+      {"index":3, "name":"best_dl1", "type":"double"},
+      {"index":4, "name":"best_dl2", "type":"double"},
+      {"index":5, "name":"dist2goal", "type":"double", "description": "起点到终点距离", "unit":"" },
+      {"index":6, "name":"best_step", "type":"double", "description": "最优前置距离", "unit":"" },
+      {"index":7, "name":"cur_num", "type":"double", "description": "当前迭代次数", "unit":"" }
+    ]
+  },
   "MoveStatus":{
     "type":"MoveStatus",
     "content":[
@@ -1061,6 +1098,12 @@
       {"index":6, "name":"cur_save_status", "type":"int"},
       {"index":7, "name":"closest_target", "type":"str"},
       {"index":8, "name":"unfinished_path_name_size", "type":"int"}
+    ]
+  },
+  "manualMode":{
+    "type":"manualMode",
+    "content":[
+      {"index":0, "name":"msg", "type":"str"}
     ]
   }
 }

@@ -473,6 +473,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 laser_points = np.array([])
                 robot_pos = []
                 laser_info = ""
+                rssi = []
                 if self.read_thread.laser.datas:
                     #最近的激光时间
                     if laser_idx < 0 or min_laser_channel < 0:
@@ -1007,7 +1008,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.close()
 
     def about(self):
-        QtWidgets.QMessageBox.about(self, "关于", """Log Viewer V2.4.1.a""")
+        QtWidgets.QMessageBox.about(self, "关于", """Log Viewer V2.4.1.b""")
 
     def ycombo_onActivated(self):
         curcombo = self.sender()
