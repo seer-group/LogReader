@@ -333,7 +333,8 @@
       { "index": 9, "name": "aheadDist", "type": "double" },
       { "index": 10, "name": "Q", "type": "double" },
       { "index": 11, "name": "delay_dist", "type": "double" },
-      { "index": 12, "name": "f_ind", "type": "double" }
+      { "index": 12, "name": "f_ind", "type": "double" },
+      { "index": 13, "name": "curve", "type": "double" }
     ]
   },
   "DPID": {
@@ -952,7 +953,7 @@
   "ForkMotors": {
     "type": "ForkMotors",
     "content": [
-      { "index": 0, "name": "name", "type": "double"},
+      { "index": 0, "name": "name", "type": "str"},
       { "index": 1, "name": "speed", "type": "double"},
       { "index": 2, "name": "position", "type": "double"},
       { "index": 3, "name": "value", "type": "double"},
@@ -1104,6 +1105,48 @@
     "type":"manualMode",
     "content":[
       {"index":0, "name":"msg", "type":"str"}
+    ]
+  },
+  "SFLR16":{
+    "type":"SFLR16",
+    "content":[
+      {"index":0, "name":"lift_pos", "type":"double"},
+      {"index":1, "name":"stretch_pos", "type":"double"},
+      {"index":2, "name":"rotate_pos", "type":"double"},
+      {"index":3, "name":"vy_motor_pos", "type":"double"},
+      {"index":4, "name":"status", "type":"double"},
+      {"index":5, "name":"task_id", "type":"double"},
+      {"index":6, "name":"task_list_size", "type":"double"},
+      {"index":7, "name":"operation_status", "type":"double"}
+    ]
+  },
+  "SFLState":{
+    "type":"SFLState",
+    "content":[
+      {"index":0, "name":"state", "type":"json"}
+    ]
+  },
+  "SimLocation":{
+    "type":"SimLocation",
+    "content":[
+      {"index":0, "name":"x", "type":"double"},
+      {"index":1, "name":"y", "type":"double"},
+      {"index":2, "name":"theta", "type":"rad"}
+    ]
+  },
+  "Diff":{
+    "type":"Diff",
+    "content":[
+      {"index":0, "name":"last_vx", "type":"double"},
+      {"index":1, "name":"last_vy", "type":"double"},
+      {"index":2, "name":"last_vw", "type":"rad"},
+      {"index":3, "name":"last_vL", "type":"double"},
+      {"index":4, "name":"last_vR", "type":"double"},
+      {"index":5, "name":"cur_vx", "type":"double"},
+      {"index":6, "name":"cur_vy", "type":"double"},
+      {"index":7, "name":"cur_vw", "type":"rad"},
+      {"index":8, "name":"cur_vL", "type":"double"},
+      {"index":9, "name":"cur_vR", "type":"double"}
     ]
   }
 }

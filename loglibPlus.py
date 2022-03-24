@@ -146,7 +146,6 @@ class ReadLog:
             pool = Pool(self.thread_num)
             self.argv = argv
             pool.map(self._do, line_caches)
-            print(len(self.sum_argv))
             for s in self.sum_argv:
                 for (a,b) in zip(argv,s):
                     if type(a) is dict:

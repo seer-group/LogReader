@@ -682,28 +682,56 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.resetMidLineProperty(mouse_time)
         self.updateMap()
 
+    def x2time(self, d):
+        t = d * 86400 - 62135712000
+        return datetime.fromtimestamp(t)
     def savePlotData(self, cur_ax):
         indx = self.axs.tolist().index(cur_ax)
+        xmin,xmax = cur_ax.get_xlim()
+        time0 = self.x2time(xmin)
+        time1 = self.x2time(xmax)
+        # print(xmin, xmax, time0, time1)
         xy = self.xys[indx]
+        fname, _ = QtWidgets.QFileDialog.getSaveFileName(self,"选取log文件", "","CSV Files (*.csv);;PY Files (*.py)")
+        subffix = os.path.splitext(fname)[1]
+        isPy = subffix == ".py"
+        logging.debug('Save ' + xy.y_combo.currentText() + ' and ' + xy.x_combo.currentText() + ' in ' + fname)
         group_name = xy.y_combo.currentText().split('.')[0]
-        outdata = []
+        tmpdata = []
+
+        # 获取数据
         if xy.x_combo.currentText() == 't':
             tmpdata = self.read_thread.getData(xy.y_combo.currentText())
-            list_tmpdata = [(t,d) for t,d in zip(tmpdata[1], tmpdata[0])]
-            list_tmpdata.sort(key=lambda d: d[0])
-            for data in list_tmpdata:
-                outdata.append("{},{}".format(data[0].strftime('%Y-%m-%d %H:%M:%S.%f'), data[1]))
         elif xy.x_combo.currentText() == 'timestamp':
             org_t = self.read_thread.getData(group_name + '.timestamp')[0]
             dt = [timedelta(seconds = (tmp_t/1e9 - org_t[0]/1e9)) for tmp_t in org_t]
             t = [self.read_thread.getData(xy.y_combo.currentText())[1][0] + tmp for tmp in dt]
-            tmpdata = (self.read_thread.getData(xy.y_combo.currentText())[0], t)
+            tmpdata = (self.read_thread.getData(xy.y_combo.currentText())[0], t)        
+
+        outdata = []
+        # 对数据存之前进行处理
+        if isPy:
+            ind1 = (np.abs(np.array(tmpdata[1])-time0)).argmin()
+            ind2 = (np.abs(np.array(tmpdata[1])-time1)).argmin()
+            x,y = [],[]
+            for i in range(len(tmpdata[1])):
+                if i >= ind1 and i < ind2:
+                    x.append(datetime.timestamp(tmpdata[1][i]))
+                    y.append(tmpdata[0][i])
+            xdata = 't='+str(x)
+            ydata = 'x='+str(y)
+            outdata.append(xdata)
+            outdata.append(ydata)
+        else:
             list_tmpdata = [(t,d) for t,d in zip(tmpdata[1], tmpdata[0])]
+            tmpdata[1].sort()
+            ind1 = (np.abs(np.array(tmpdata[1])-time0)).argmin()
+            ind2 = (np.abs(np.array(tmpdata[1])-time1)).argmin()
             list_tmpdata.sort(key=lambda d: d[0])
-            for data in list_tmpdata:
-                outdata.append("{},{}".format(data[0], data[1]))
-        fname, _ = QtWidgets.QFileDialog.getSaveFileName(self,"选取log文件", "","CSV Files (*.csv);;All Files (*)")
-        logging.debug('Save ' + xy.y_combo.currentText() + ' and ' + xy.x_combo.currentText() + ' in ' + fname)
+            for (ind, data) in enumerate(list_tmpdata):
+                if ind >= ind1 and ind <= ind2:
+                    outdata.append("{},{}".format(data[0].strftime('%Y-%m-%d %H:%M:%S.%f'), data[1]))
+        # 写数据
         if fname:
             try:
                 with open(fname, 'w') as fn:
