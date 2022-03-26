@@ -842,7 +842,6 @@ class Memory:
                 if out:
                     self.time[iter].append(rbktimetodate(out.group(1)))
                     if iter == 6 or iter == 7:
-                        print("iter %d" % iter)
                         self.data[iter].append(float(out.group(2)))
                     else:
                         if out.group(3) == "G":

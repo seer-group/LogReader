@@ -1,5 +1,6 @@
-from typing import Text
 import matplotlib
+
+from TargetPrecision import TargetPrecision
 matplotlib.use('Qt5Agg')
 matplotlib.rcParams['font.sans-serif']=['FangSong']
 matplotlib.rcParams['axes.unicode_minus'] = False
@@ -27,7 +28,7 @@ from multiprocessing import freeze_support
 from PyQt5.QtCore import pyqtSignal
 import MotorRead as mr
 from getMotorErr import MotorErrViewer 
-
+from TargetPrecision import TargetPrecision
 class XYSelection:
     def __init__(self, num = 1):
         self.num = num 
@@ -171,6 +172,10 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.motor_follow_action.triggered.connect(self.drawMotorFollow)
         self.tools_menu.addAction(self.motor_follow_action)
 
+        self.precision = QtWidgets.QAction('&TargetPrecision', self.tools_menu, checkable = True)
+        self.precision.triggered.connect(self.openPrecision)
+        self.tools_menu.addAction(self.precision)
+
         self.help_menu = QtWidgets.QMenu('&Help', self)
         self.help_menu.addAction('&About', self.about)
         self.menuBar().addMenu(self.help_menu)
@@ -297,6 +302,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.map_widget.hiddened.connect(self.mapClosed)
         self.map_widget.keyPressEvent = self.keyPressEvent
 
+        self.targetPrecision = TargetPrecision(self.read_thread)
+        self.targetPrecision.hide()
         # dataView相关的初始化
         self.dataViewNewOne(None)
 
@@ -1036,7 +1043,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.close()
 
     def about(self):
-        QtWidgets.QMessageBox.about(self, "关于", """Log Viewer V2.4.1.b""")
+        QtWidgets.QMessageBox.about(self, "关于", """Log Viewer V2.4.2.a""")
 
     def ycombo_onActivated(self):
         curcombo = self.sender()
@@ -1444,6 +1451,11 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             if self.sts_widget:
                 self.sts_widget.hide()           
 
+    def openPrecision(self, checked):
+        if checked:
+            self.targetPrecision.show()
+        else:
+            self.targetPrecision.hide()
     # 画电机跟随曲线
     def drawMotorFollow(self, checked):
         dir_name, _ = os.path.split(self.filenames[0])
