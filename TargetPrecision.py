@@ -54,10 +54,23 @@ class TargetPrecision(QtWidgets.QWidget):
             logging.debug("LocationEachFrame is not in the log")
             return
         data = self.log_data.taskfinish.content()
-        locx = self.log_data.content['LocationEachFrame']['x']
-        locy = self.log_data.content['LocationEachFrame']['y']
-        loca = self.log_data.content['LocationEachFrame']['theta']
-        loc_t = np.array(self.log_data.content['LocationEachFrame']['t'])
+        if self.choose.currentText() == 'Localization':
+            locx = self.log_data.content['LocationEachFrame']['x']
+            locy = self.log_data.content['LocationEachFrame']['y']
+            loca = self.log_data.content['LocationEachFrame']['theta']
+            loc_t = np.array(self.log_data.content['LocationEachFrame']['t'])
+        elif self.choose.currentText() == 'pgv0':
+            locx = self.log_data.getData('pgv0.tag_x')[0]
+            locy = self.log_data.content['pgv0']['tag_y']
+            loca = self.log_data.content['pgv0']['tag_angle']
+            loc_t = np.array(self.log_data.content['pgv0']['t'])
+        elif self.choose.currentText() == 'pgv1':
+            locx = self.log_data.getData('pgv1.tag_x')[0]
+            locy = self.log_data.content['pgv1']['tag_y']
+            loca = self.log_data.content['pgv1']['tag_angle']
+            loc_t = np.array(self.log_data.content['pgv1']['t'])
+        else:
+            logging.debug("source name is wrong! {}".format(self.choose.currentText()))
         last_ind = 0
         xdata = []
         ydata = []
@@ -96,12 +109,18 @@ class TargetPrecision(QtWidgets.QWidget):
             xmin = min(xdata)
             xmax = max(xdata)
             xrange = xmax - xmin
+            if xrange < 1e-6:
+                xrange = 1e-6
             ymin = min(ydata)
             ymax = max(ydata)
             yrange = ymax - ymin
+            if yrange < 1e-6:
+                yrange = 1e-6
             amin = min(adata)
             amax = max(adata)
             arange = amax - amin
+            if arange < 1e-6:
+                arange = 1e-6
             tmin = min(tdata)
             tmax = max(tdata)
             xmin = xmin - 0.05 * xrange
@@ -176,17 +195,26 @@ class TargetPrecision(QtWidgets.QWidget):
         self.find_edit.setValidator(valid)
         self.find_up = QtWidgets.QPushButton("Analysis")
         self.find_up.clicked.connect(self.analysis)
-
-        tab = QtWidgets.QTabWidget()
-        tab.addTab(w0, "xy chart")
-        tab.addTab(w1, "detail chart")
- 
         hbox = QtWidgets.QHBoxLayout()
         hbox.addWidget(self.find_label)
         hbox.addWidget(self.find_edit)
         hbox.addWidget(self.find_up)
+
+        self.choose_msg = QtWidgets.QLabel("Source:")
+        self.choose = QtWidgets.QComboBox()
+        self.choose.addItem("Localization")
+        self.choose.addItem("pgv0")
+        self.choose.addItem("pgv1")
+        tab = QtWidgets.QTabWidget()
+        tab.addTab(w0, "xy chart")
+        tab.addTab(w1, "detail chart")
+ 
+        hbox2 = QtWidgets.QFormLayout()
+        hbox2.addRow(self.choose_msg, self.choose)
+
         self.fig_layout = QtWidgets.QVBoxLayout(self)
         self.fig_layout.addLayout(hbox)
+        self.fig_layout.addLayout(hbox2)
         self.fig_layout.addWidget(tab)
 
 if __name__ == '__main__':
