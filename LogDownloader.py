@@ -153,11 +153,10 @@ class LogDownloader(QObject):
         self.downloadLabel:QLabel = statusBar.findChild(QLabel, "downloadLabel")
         self.statusLabel:QLabel = statusBar.findChild(QLabel, "statusLabel")
         self.downloadProgressBar.setValue(0)
-        self.downloadLabel.setText("ppp")
-        self.statusLabel.setText("down")
+        self.downloadLabel.setText("")
+        self.statusLabel.setText("")
         self.statusBar.show()
         self._connectToHost()
-        self.downloadProgressBar.setValue(75)
 
     def __del__(self):
         self.statusBar.close()
