@@ -29,6 +29,9 @@ from PyQt5.QtCore import pyqtSignal
 import MotorRead as mr
 from getMotorErr import MotorErrViewer 
 from TargetPrecision import TargetPrecision
+from CmdArgs import CmdArgs
+from LogDownloader import LogDownloader
+
 class XYSelection:
     def __init__(self, num = 1):
         self.num = num 
@@ -80,6 +83,7 @@ class DataSelection(QtWidgets.QWidget):
 class ApplicationWindow(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
+        self.cmdArgs = CmdArgs()
         self.finishReadFlag = False
         self.filenames = []
         self.lines_dict = {"fatal":[],"error":[],"warning":[],"notice":[], "taskstart":[], "taskfinish":[], "service":[]} 
@@ -97,6 +101,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.dataViews = [] #显示特定数据框
         self.in_close = False
         self.setupUI()
+        self.logDownloader = None
+        self.downloadLog()
 
     def setupUI(self):
         """初始化窗口结构""" 
@@ -179,6 +185,20 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.help_menu = QtWidgets.QMenu('&Help', self)
         self.help_menu.addAction('&About', self.about)
         self.menuBar().addMenu(self.help_menu)
+
+        # 状态栏显示log下载进度 和状态信息 默认不显示
+        pb = QtWidgets.QProgressBar(self)
+        pb.setObjectName("downloadProgressBar")
+        lb1 = QtWidgets.QLabel()
+        lb1.setObjectName("downloadLabel")
+        lb1.setAlignment(QtCore.Qt.AlignBottom)
+        lb2 = QtWidgets.QLabel()
+        lb2.setObjectName("statusLabel")
+        lb2.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignBottom)
+        self.statusBar().addWidget(pb,3)
+        self.statusBar().addWidget(lb1,5)
+        self.statusBar().addPermanentWidget(lb2,2)
+        self.statusBar().close()
 
         self._main = Widget()
         self._main.dropped.connect(self.dragFiles)
@@ -1628,8 +1648,16 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.updateDataView(dataView) 
 
     def initDataView(self, d:DataView):
-        d.setSelectionItems(list(self.read_thread.content.keys())) 
+        d.setSelectionItems(list(self.read_thread.content.keys()))
 
+    def downloadLog(self):
+        if not self.cmdArgs.ip:
+            return
+        def release():
+            self.logDownloader = None
+        self.logDownloader = LogDownloader(self.statusBar(),self.cmdArgs)
+        self.logDownloader.filesReady.connect(self.dragFiles)
+        self.logDownloader.downloadEnd.connect(release)
 
 if __name__ == "__main__":
     freeze_support()
