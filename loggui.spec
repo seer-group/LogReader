@@ -4,11 +4,9 @@ block_cipher = None
 
 
 a = Analysis(['loggui.py'],
-             pathex=['F:\\Github\\LogReader'],
+             pathex=['D:\\code\\python\\LogReader'],
              binaries=[],
-             datas=[('images/*','images'),
-                    ('log_config.json','.'),
-                    ('rbk.ico','.')],
+             datas=[],
              hiddenimports=[],
              hookspath=[],
              runtime_hooks=[],
@@ -28,8 +26,7 @@ exe = EXE(pyz,
           bootloader_ignore_signals=False,
           strip=False,
           upx=True,
-          console=False,
-          icon='rbk.ico')
+          console=False )
 coll = COLLECT(exe,
                a.binaries,
                a.zipfiles,
