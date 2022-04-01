@@ -1,4 +1,4 @@
-# from cv2 import log
+from cv2 import log
 import matplotlib
 matplotlib.use('Qt5Agg')
 from matplotlib.backends.backend_qt5agg import (

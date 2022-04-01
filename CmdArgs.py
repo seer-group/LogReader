@@ -1,6 +1,6 @@
 import argparse
 from datetime import datetime, timedelta
-import os
+from PyQt5.QtCore import QStandardPaths
 import re
 
 class CmdArgs():
@@ -16,7 +16,7 @@ class CmdArgs():
                             help="End time for downloading logs",
                             default=datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
         parser.add_argument("-d", "--dir", metavar="", dest="dirName",
-                            help="Download directory",default=os.path.join(os.path.expanduser("~"),"Desktop","robokit-Debug-%s"% datetime.now().strftime("%Y%m%d%H%M%S")))
+                            help="Download directory",default=QStandardPaths.standardLocations(QStandardPaths.DesktopLocation)[0]+"/robokit-Debug-%s"% datetime.now().strftime("%Y%m%d%H%M%S"))
         parser.add_argument("-o", "--only", dest="onlyLog",
                             help="Whether to download logs only", action="store_true")
         parser.add_argument("-i", "--ip", metavar="", dest="ip",

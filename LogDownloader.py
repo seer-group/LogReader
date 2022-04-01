@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import QProgressBar, QLabel, QStatusBar, QMessageBox
-from PyQt5.QtCore import QObject , QByteArray, pyqtSignal
+from PyQt5.QtCore import QObject , QByteArray, pyqtSignal, QDir
 from PyQt5.QtNetwork import QTcpSocket
 from typing import Union
 import os
@@ -184,7 +184,7 @@ class LogDownloader(QObject):
             self.downloadLabel.setText(f"Downloading:{self.currentReqFile[2]}")
         else:
             self.downloadLabel.setText("Get:DebugFileList")
-        self.recvByteArray +=  self.socket.readAll()
+        self.recvByteArray += self.socket.readAll()
         if not SeerObj.checkIfComplete(self.recvByteArray):
             return
         seerObj = SeerObj().fromBytearray(self.recvByteArray.data())
@@ -207,10 +207,11 @@ class LogDownloader(QObject):
         if seerObj.type - 10000 == ProtocolType.GetFile.value:
             self.downloadProgressBar.setValue(self.currentReqFile[3])
             self.statusBar.setToolTip(f"Type:{seerObj.type}\nPort:{self.PORT}\nNumber:{seerObj.number}\nHeader:{'0x'}{str(binascii.b2a_hex(seerObj.toBytearray()[0:17]))[2:-1]}\nDataLength:{seerObj.length}\nData:File")
-            dirPath = os.path.join(self.cmdArgs.dirName, self.currentReqFile[0])
-            if not os.path.exists(dirPath):
-                os.makedirs(dirPath)
-            filePath = os.path.join(dirPath, self.currentReqFile[2])
+            dirPath = self.cmdArgs.dirName + "/" + self.currentReqFile[0]
+
+            if not QDir().exists(dirPath):
+                QDir().mkpath(dirPath)
+            filePath = dirPath + "/" + self.currentReqFile[2]
             with open(filePath, "wb") as file:
                 file.write(seerObj.data)
             self.recvByteArray.clear()
@@ -241,9 +242,10 @@ class LogDownloader(QObject):
         try:
             self.currentReqFile: tuple = next(self.downladFileIte)
         except Exception as e:
-            dirPath = os.path.join(self.cmdArgs.dirName, "log")
-            files = os.listdir(dirPath)
-            files = [os.path.join(dirPath, x) for x in files]
+            dirPath = self.cmdArgs.dirName + "/log"
+            dir = QDir(dirPath)
+            dir.setNameFilters(["*.gz","*.log"])
+            files = [file.filePath() for file in dir.entryInfoList()]
             self.filesReady.emit(files)
             self.downloadEnd.emit()
             return
