@@ -34,6 +34,8 @@ def polar2xy(angle, dist):
         y.append(d * math.sin(a))
     return x,y
 
+def sortFunc(ds):
+    return ds[0]
 class ReadLog:
     """ 读取Log """
     def __init__(self, filenames):
@@ -109,7 +111,7 @@ class ReadLog:
                         break
                 elif data.parse(line):
                     break
-        self.sum_argv.append(self.argv)
+        self.sum_argv.append((l0,self.argv))
 
     def _work(self, argv):
         self.lines_num = len(self.lines)
@@ -146,14 +148,15 @@ class ReadLog:
             pool = Pool(self.thread_num)
             self.argv = argv
             pool.map(self._do, line_caches)
+            self.sum_argv.sort(key = sortFunc)
             for s in self.sum_argv:
-                for (a,b) in zip(argv,s):
+                for (a,b) in zip(argv,s[1]):
                     if type(a) is dict:
                         for k in a.keys():
                             a[k].insert_data(b[k])
                     else:
                         a.insert_data(b)
-            self.sum_argv = []
+            self.sum_argv = Manager().list()
 
     def parse(self,*argv):
         """依据输入的正则进行解析"""

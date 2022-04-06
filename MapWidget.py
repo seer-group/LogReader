@@ -1,3 +1,4 @@
+from turtle import right
 import matplotlib
 matplotlib.use('Qt5Agg')
 from matplotlib.backends.backend_qt5agg import (
@@ -21,6 +22,7 @@ import time
 from matplotlib.collections import LineCollection
 from matplotlib.patches import Circle
 from matplotlib.collections import PatchCollection
+import zipfile
 
 def GetGlobalPos(p2b, b2g):
     x = p2b[0] * np.cos(b2g[2]) - p2b[1] * np.sin(b2g[2])
@@ -28,6 +30,15 @@ def GetGlobalPos(p2b, b2g):
     x = x + b2g[0]
     y = y + b2g[1]
     return np.array([x, y])
+
+def Pos2Base(pos2world, base2world):
+    pos2base = [0,0,0]
+    x = pos2world[0] - base2world[0]
+    y = pos2world[1] - base2world[1]
+    pos2base[0] = x * np.cos(base2world[2]) + y * np.sin(base2world[2])
+    pos2base[1] = -x * np.sin(base2world[2]) + y * np.cos(base2world[2])
+    pos2base[2] = pos2world[2] - base2world[2]
+    return pos2base
 
 def convert2LaserPoints(org_laser_data, org_laser_pos, robot_pos):
     laser_data = GetGlobalPos(org_laser_data, org_laser_pos)
@@ -186,8 +197,21 @@ class Readmap(QThread):
         ]
     # run method gets called when we start the thread
     def run(self):
-        fid = open(self.map_name, encoding= 'UTF-8')
-        self.js = js.load(fid)
+        print("map_name: ", self.map_name)
+        try:
+            with open(self.map_name, encoding= 'UTF-8') as fid:
+                self.js = js.load(fid)
+        except UnicodeDecodeError:
+            fz = zipfile.ZipFile(self.map_name, 'r')
+            full_map_name = os.path.splitext(self.map_name)[0]
+            map_name = ""
+            for file in fz.namelist():
+                fz.extract(file, full_map_name)    
+                if os.path.splitext(file)[1] == ".smap":
+                    map_name = os.path.join(full_map_name, file)
+            logging.debug("mapWidget|readMap|{}|{}".format(full_map_name, map_name))
+            with open(map_name, encoding= 'UTF-8') as fid:
+                self.js = js.load(fid)
         fid.close()
         self.map_x = []
         self.map_y = []
@@ -483,16 +507,60 @@ class CurveWidget(QtWidgets.QWidget):
         except Exception as err:
             print(err.args)
             pass
+class DataWidget(QtWidgets.QWidget):
+    getdata = pyqtSignal('PyQt_PyObject')
+    def __init__(self) -> None:
+        super().__init__()
+        self.setWindowTitle("Data Input")
+        self.choose_msg = QtWidgets.QLabel("Data:")
+        self.choose = QtWidgets.QComboBox(self)
+        self.choose.addItems(["SimLocation", "LocationEachFrame", "LocalPos", "robot2world", "code2robot"])
+        hbox0 = QtWidgets.QFormLayout()
+        hbox0.addRow(self.choose_msg, self.choose)
 
+        self.ls_msg = QtWidgets.QLabel("linestyle:")
+        self.ls = QtWidgets.QComboBox(self)
+        self.ls.addItems(["solid", "dotted", "dashed", "dashdot"])
+        hbox1 = QtWidgets.QFormLayout()
+        hbox1.addRow(self.ls_msg, self.ls)
+
+        self.c_msg = QtWidgets.QLabel("color:")
+        self.c = QtWidgets.QComboBox(self)
+        self.c.addItems(["b", "g", "r", "c", "m", "y"])
+        hbox2 = QtWidgets.QFormLayout()
+        hbox2.addRow(self.c_msg, self.c)
+
+        self.m_msg = QtWidgets.QLabel("marker:")
+        self.m = QtWidgets.QComboBox(self)
+        self.m.addItems([".", ",", "o", "v", "^", "<", ">", "1", "2", "3", "4"])
+        hbox3 = QtWidgets.QFormLayout()
+        hbox3.addRow(self.m_msg, self.m)
+
+        self.btn = QtWidgets.QPushButton("Yes")
+        self.btn.clicked.connect(self.getData)
+        vbox = QtWidgets.QVBoxLayout(self)
+        vbox.addLayout(hbox0)
+        vbox.addLayout(hbox1)
+        vbox.addLayout(hbox2)
+        vbox.addLayout(hbox3)
+        vbox.addWidget(self.btn)
+
+    def getData(self):
+        self.getdata.emit([self.choose.currentText(),
+        self.ls.currentText(),
+        self.c.currentText(),
+        self.m.currentText()])
 class MapWidget(QtWidgets.QWidget):
     dropped = pyqtSignal('PyQt_PyObject')
     hiddened = pyqtSignal('PyQt_PyObject')
-    def __init__(self):
+    def __init__(self, loggui):
         super(QtWidgets.QWidget, self).__init__()
         self.setWindowTitle('MapViewer')
+        self.robot_log = loggui
         self.map_name = None
         self.model_name = None
         self.cp_name = None
+        self.readingModelFlag = False
         self.draw_size = [] #xmin xmax ymin ymax
         self.map_data = lines.Line2D([],[], marker = '.', linestyle = '', markersize = 1.0,color="gray")
         self.map_data.set_zorder(12)
@@ -527,6 +595,10 @@ class MapWidget(QtWidgets.QWidget):
         self.trajectory.set_zorder(20)
         self.trajectory_next = lines.Line2D([],[], linestyle = '', marker = 'o', markersize = 2.0, color='mediumpurple')
         self.trajectory_next.set_zorder(20)
+        self.odo = lines.Line2D([],[], linestyle = '', marker = 'o', markersize = 2.0, color='green')
+        self.odo.set_zorder(20)
+        self.odo_next = lines.Line2D([],[], linestyle = '', marker = 'o', markersize = 2.0, color='lightgreen')
+        self.odo_next.set_zorder(20)
         self.cur_arrow = patches.FancyArrow(0, 0, 0.5, 0,
                                             length_includes_head=True,# 增加的长度包含箭头部分
                                             width=0.05,
@@ -552,6 +624,14 @@ class MapWidget(QtWidgets.QWidget):
         self.setupUI()
         self.pointLists = dict()
         self.lineLists = dict()
+        self.timer = QtCore.QTimer()
+        self.timer.timeout.connect(self.updateRobotData)
+        self.timer.start(1000)
+        self.mid_line_t = None
+        self.left_line_t = None
+        self.right_line_t = None
+        self.left_idx = None
+        self.right_idx = None
 
     def setupUI(self):
         self.static_canvas = FigureCanvas(Figure(figsize=(5,5)))
@@ -578,6 +658,8 @@ class MapWidget(QtWidgets.QWidget):
         self.ax.add_line(self.particle_points)
         self.ax.add_line(self.trajectory)
         self.ax.add_line(self.trajectory_next)
+        self.ax.add_line(self.odo)
+        self.ax.add_line(self.odo_next)
         self.ruler = RulerShape()
         self.ruler.add_ruler(self.ax)
         MyToolBar.home = self.toolbarHome
@@ -599,6 +681,8 @@ class MapWidget(QtWidgets.QWidget):
         self.draw_line.triggered.connect(self.addLine)
         self.draw_curve = QtWidgets.QAction("CURVE", self.userToolbar)
         self.draw_curve.triggered.connect(self.addCurve)
+        self.draw_data = QtWidgets.QAction("DATA", self.userToolbar) # 依据selection参数的XY
+        self.draw_data.triggered.connect(self.addDATAXY)
         self.draw_clear = QtWidgets.QAction("CLEAR", self.userToolbar)
         self.draw_clear.triggered.connect(self.drawClear)
         self.draw_center = QtWidgets.QAction("CENTER", self.userToolbar)
@@ -607,7 +691,7 @@ class MapWidget(QtWidgets.QWidget):
         self.draw_center.setChecked(False)
         self.userToolbar.addActions([self.autoMap, self.smap_action, self.model_action, self.cp_action])
         self.userToolbar.addSeparator()
-        self.userToolbar.addActions([self.draw_point, self.draw_line, self.draw_curve, self.draw_clear])
+        self.userToolbar.addActions([self.draw_point, self.draw_line, self.draw_curve, self.draw_data, self.draw_clear])
         self.userToolbar.addSeparator()
         self.userToolbar.addActions([self.draw_center])
 
@@ -620,6 +704,8 @@ class MapWidget(QtWidgets.QWidget):
         self.getCurve = CurveWidget()
         self.getCurve.getdata.connect(self.getCurveData)
         self.getCurve.hide()
+        self.getDataXY = DataWidget()
+        self.getDataXY.getdata.connect(self.getDataXYData)
         self.autoMap.setChecked(True)
         self.fig_layout = QtWidgets.QVBoxLayout(self)
         self.timestamp_lable = QtWidgets.QLabel(self)
@@ -658,6 +744,8 @@ class MapWidget(QtWidgets.QWidget):
         self.check_3dObs.setFocusPolicy(QtCore.Qt.NoFocus)
         self.check_traj = QtWidgets.QCheckBox('TRAJ',self)
         self.check_traj.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.check_odo = QtWidgets.QCheckBox('ODO',self)
+        self.check_odo.setFocusPolicy(QtCore.Qt.NoFocus)
         self.hbox.addWidget(self.check_all)
         self.hbox.addWidget(self.check_map)
         self.hbox.addWidget(self.check_robot)
@@ -665,6 +753,7 @@ class MapWidget(QtWidgets.QWidget):
         self.hbox.addWidget(self.check_3dHole)
         self.hbox.addWidget(self.check_3dObs)
         self.hbox.addWidget(self.check_traj)
+        self.hbox.addWidget(self.check_odo)
         self.check_all.stateChanged.connect(self.changeCheckBoxAll)
         self.check_map.stateChanged.connect(self.changeCheckBox)
         self.check_robot.stateChanged.connect(self.changeCheckBox)
@@ -672,10 +761,13 @@ class MapWidget(QtWidgets.QWidget):
         self.check_3dHole.stateChanged.connect(self.changeCheckBox)
         self.check_3dObs.stateChanged.connect(self.changeCheckBox)
         self.check_traj.stateChanged.connect(self.changeCheckBox)
+        self.check_odo.stateChanged.connect(self.changeCheckBox)
         self.check_lasers = dict()
         self.hbox.setAlignment(QtCore.Qt.AlignLeft)
         self.fig_layout.addLayout(self.hbox)
         self.check_all.setChecked(True)
+        self.check_partical.setChecked(False)
+        self.check_odo.setChecked(False)
         
     def changeAutoMap(self):
         flag =  not self.autoMap.isChecked()
@@ -714,7 +806,20 @@ class MapWidget(QtWidgets.QWidget):
             self.read_cp.start()
 
     def addPoint(self):
+        self.getPoint.hide()
         self.getPoint.show()
+
+    def addLine(self):
+        self.getLine.hide()
+        self.getLine.show()
+    
+    def addCurve(self):
+        self.getCurve.hide()
+        self.getCurve.show()
+
+    def addDATAXY(self):
+        self.getDataXY.hide()
+        self.getDataXY.show()
 
     def getPointData(self, event):
         point = lines.Line2D([],[], linestyle = '', marker = 'x', markersize = 8.0, color='r')
@@ -726,12 +831,6 @@ class MapWidget(QtWidgets.QWidget):
             self.pointLists[id] = point
             self.ax.add_line(self.pointLists[id])
             self.static_canvas.figure.canvas.draw() 
-
-    def addLine(self):
-        self.getLine.show()
-    
-    def addCurve(self):
-        self.getCurve.show()
 
     def getLineData(self, event):
         l = lines.Line2D([],[], linestyle = '--', marker = '.', markersize = 6.0, color='r')
@@ -750,6 +849,28 @@ class MapWidget(QtWidgets.QWidget):
         l.set_ydata(event[1])     
         l.set_zorder(30)
         id = str(int(round(time.time()*1000)))
+        if id not in self.lineLists or self.lineLists[id] is None:
+            self.lineLists[id] = l
+            self.ax.add_line(self.lineLists[id])
+            self.static_canvas.figure.canvas.draw()
+
+    def getDataXYData(self, event):
+        datax = event[0] + ".x"
+        datay = event[0] + ".y"
+        print("getDataXYData", event, datax, datay)
+        datax = self.robot_log.read_thread.getData(datax)
+        datay = self.robot_log.read_thread.getData(datay)
+        ts = np.array(datax[1])
+        if len(ts) < 1:
+            return
+        left_idx = (np.abs(ts - self.left_line_t)).argmin()  
+        right_idx = (np.abs(ts - self.right_line_t)).argmin()  
+        if left_idx >= right_idx:
+            return
+        x = datax[0][left_idx:right_idx]
+        y = datay[0][left_idx:right_idx]
+        id = str(int(round(time.time()*1000)))
+        l = lines.Line2D(x, y, linestyle = event[1], marker =event[3], markersize = 6, color= event[2])
         if id not in self.lineLists or self.lineLists[id] is None:
             self.lineLists[id] = l
             self.ax.add_line(self.lineLists[id])
@@ -792,6 +913,7 @@ class MapWidget(QtWidgets.QWidget):
             self.check_3dHole.setChecked(True)
             self.check_3dObs.setChecked(True)
             self.check_traj.setChecked(True)
+            self.check_odo.setChecked(True)
             for k in self.check_lasers.keys():
                 self.check_lasers[k].setChecked(True)
         elif self.check_all.checkState() == QtCore.Qt.Unchecked:
@@ -801,6 +923,7 @@ class MapWidget(QtWidgets.QWidget):
             self.check_3dHole.setChecked(False)
             self.check_3dObs.setChecked(False)
             self.check_traj.setChecked(False)
+            self.check_odo.setChecked(False)
             for k in self.check_lasers.keys():
                 self.check_lasers[k].setChecked(False)
 
@@ -816,13 +939,15 @@ class MapWidget(QtWidgets.QWidget):
             and self.check_partical.isChecked()\
                 and self.check_3dHole.isChecked()\
                     and self.check_3dObs.isChecked()\
-                        and self.check_traj.isChecked():
+                        and self.check_traj.isChecked()\
+                            and self.check_odo.isChecked():
             self.check_all.setCheckState(QtCore.Qt.Checked)
         elif self.check_map.isChecked() or self.check_robot.isChecked() or part_laser_check\
             or self.check_partical.isChecked()\
                 or self.check_3dObs.isChecked()\
                     or self.check_3dHole.isChecked()\
-                        or self.check_traj.isChecked():
+                        or self.check_traj.isChecked()\
+                            or self.check_odo.isChecked():
             self.check_all.setTristate()
             self.check_all.setCheckState(QtCore.Qt.PartiallyChecked)
         else:
@@ -845,6 +970,13 @@ class MapWidget(QtWidgets.QWidget):
         elif cur_check is self.check_traj:
             self.trajectory.set_visible(cur_check.isChecked())
             self.trajectory_next.set_visible(cur_check.isChecked())
+        elif cur_check is self.check_odo:
+            print(self.odo.get_visible(), cur_check.isChecked(), self.readingModelFlag)
+            if self.odo.get_visible() == False and cur_check.isChecked() and self.readingModelFlag == False:
+                print("update odo")
+                self.readtrajectory()
+            self.odo.set_visible(cur_check.isChecked())
+            self.odo_next.set_visible(cur_check.isChecked())        
         else:
             for k in self.check_lasers.keys():
                 if cur_check is self.check_lasers[k]:
@@ -855,8 +987,18 @@ class MapWidget(QtWidgets.QWidget):
         self.static_canvas.figure.canvas.draw() 
 
     def closeEvent(self,event):
-        self.hide()
-        self.hiddened.emit(True)
+        if self.robot_log.in_close:
+            self.getLine.close()
+            self.getCurve.close()
+            self.getPoint.close()
+            self.getDataXY.close()
+        else:
+            self.getLine.hide()
+            self.getCurve.hide()
+            self.getPoint.hide()
+            self.getDataXY.hide()
+            self.hide()
+            self.hiddened.emit(True)
 
     def toolbarHome(self, *args, **kwargs):
         if len(self.draw_size) == 4:
@@ -1025,6 +1167,7 @@ class MapWidget(QtWidgets.QWidget):
             self.static_canvas.figure.canvas.draw()
 
     def readModelFinished(self, result):
+        self.readingModelFlag = True
         if self.read_model.head and self.read_model.tail and self.read_model.width:
             if self.laser_index is -1:
                 if len(self.read_model.laser) > 0:
@@ -1046,6 +1189,8 @@ class MapWidget(QtWidgets.QWidget):
                 self.check_3dObs.setFocusPolicy(QtCore.Qt.NoFocus)
                 self.check_traj = QtWidgets.QCheckBox('TRAJ',self)
                 self.check_traj.setFocusPolicy(QtCore.Qt.NoFocus)
+                self.check_odo = QtWidgets.QCheckBox('ODO',self)
+                self.check_odo.setFocusPolicy(QtCore.Qt.NoFocus)
                 self.hbox.addWidget(self.check_all)
                 self.hbox.addWidget(self.check_map)
                 self.hbox.addWidget(self.check_robot)
@@ -1053,6 +1198,8 @@ class MapWidget(QtWidgets.QWidget):
                 self.hbox.addWidget(self.check_3dHole)
                 self.hbox.addWidget(self.check_3dObs)
                 self.hbox.addWidget(self.check_traj)
+                self.hbox.addWidget(self.check_odo)
+                
                 self.check_all.stateChanged.connect(self.changeCheckBoxAll)
                 self.check_map.stateChanged.connect(self.changeCheckBox)
                 self.check_robot.stateChanged.connect(self.changeCheckBox)
@@ -1060,10 +1207,14 @@ class MapWidget(QtWidgets.QWidget):
                 self.check_3dHole.stateChanged.connect(self.changeCheckBox)
                 self.check_3dObs.stateChanged.connect(self.changeCheckBox)
                 self.check_traj.stateChanged.connect(self.changeCheckBox)
+                self.check_odo.stateChanged.connect(self.changeCheckBox)
                 self.check_lasers = dict()
                 for k in self.read_model.laser.keys():
                     self.add_laser_check(k)
                 self.check_all.setChecked(True)
+                self.check_partical.setChecked(False)
+                self.check_odo.setChecked(False)
+
 
                 xdata = [-self.read_model.tail, -self.read_model.tail, self.read_model.head, self.read_model.head, -self.read_model.tail]
                 ydata = [self.read_model.width/2, -self.read_model.width/2, -self.read_model.width/2, self.read_model.width/2, self.read_model.width/2]
@@ -1073,41 +1224,7 @@ class MapWidget(QtWidgets.QWidget):
                 cross_shape = np.array([xxdata,xydata])
                 self.laser_pos = copy.deepcopy(self.read_model.laser)
                 # laser_data = [[self.laser_pos[self.laser_index][0], self.laser_pos[self.laser_index][1]]]
-                if not self.robot_pos:
-                    if len(self.draw_size) == 4:
-                        xmid = (self.draw_size[0] + self.draw_size[1])/2
-                        ymid = (self.draw_size[2] + self.draw_size[3])/2
-                    else:
-                        xmid = 0.5
-                        ymid = 0.5
-                    self.robot_pos = [xmid, ymid, 0.0]
-                    self.robot_loc_pos = [xmid, ymid, 0.0]
-                robot_shape = GetGlobalPos(robot_shape,self.robot_pos)
-                self.robot_data.set_xdata(robot_shape[0])
-                self.robot_data.set_ydata(robot_shape[1])
-                cross_shape = GetGlobalPos(cross_shape,self.robot_pos)
-                self.robot_data_c0.set_xdata(cross_shape[0])
-                self.robot_data_c0.set_ydata(cross_shape[1])
-                if self.laser_org_data.any():
-                    lines, cs = convert2LaserPoints(self.laser_org_data, self.laser_pos[self.laser_index], self.robot_pos)
-                    self.laser_data.set_segments(lines)
-                    self.laser_data.set_color(self.laser_color)
-                    patches = []
-                    for c in cs:
-                        circle = Circle((c[0], c[1]), 0.01)
-                        patches.append(circle)
-                    self.laser_data_points.set_paths(patches)
-                    self.laser_data_points.set_color(self.laser_point_color)
-                # laser_data = GetGlobalPos(laser_data, self.robot_pos)
-
-                cross_shape = np.array([xxdata,xydata])
-                cross_shape = GetGlobalPos(cross_shape,self.robot_pos)
-                self.robot_loc_data_c0.set_xdata(cross_shape[0])
-                self.robot_loc_data_c0.set_ydata(cross_shape[1])
-                robot_shape = np.array([xdata, ydata])
-                robot_shape = GetGlobalPos(robot_shape,self.robot_loc_pos)
-                self.robot_loc_data_c0.set_xdata([self.robot_pos[0]])
-                self.robot_loc_data_c0.set_ydata([self.robot_pos[1]])
+                self.updateRobotData()
 
                 if len(self.draw_size) != 4:
                     xmax = self.robot_pos[0] + 10
@@ -1130,6 +1247,7 @@ class MapWidget(QtWidgets.QWidget):
         else:
             print("readModel error!")
             logging.debug("readModel error!")
+        self.readingModelFlag = False
 
     def readCPFinished(self, result):
         if self.read_model.laser:
@@ -1161,63 +1279,74 @@ class MapWidget(QtWidgets.QWidget):
                         self.laser_data_points.set_color(self.laser_point_color)
                         self.static_canvas.figure.canvas.draw()
 
-    def readtrajectory(self, x, y, xn, yn, x0, y0, r0):
-        self.trajectory.set_xdata(x)
-        self.trajectory.set_ydata(y)
-        self.trajectory_next.set_xdata(xn)
-        self.trajectory_next.set_ydata(yn)
-        data = self.org_arrow_xy.copy()
-        tmp_data = data.copy()
-        data[:,0]= tmp_data[:,0] * np.cos(r0) - tmp_data[:,1] * np.sin(r0)
-        data[:,1] = tmp_data[:,0] * np.sin(r0) + tmp_data[:,1] * np.cos(r0)
-        data = data + [x0, y0]
-        self.cur_arrow.set_xy(data)
-        if len(self.draw_size) != 4:
-                xmax = max(x) + 10 
-                xmin = min(x) - 10
-                ymax = max(y) + 10
-                ymin = min(y) - 10
-                self.draw_size = [xmin,xmax, ymin, ymax]
-                self.ax.set_xlim(xmin, xmax)
-                self.ax.set_ylim(ymin, ymax)
+    def updateObs(self):
+        if self.robot_log is None:
+            return
+        if self.robot_log.mid_line_t is None:
+            return
+        mid_line_t = self.robot_log.mid_line_t
+        content = self.robot_log.read_thread.content
+        obs_pos = []
+        obs_info = ''
+        if 'StopPoints' in content:
+            stoppts = content['StopPoints']
+            stop_ts = np.array(stoppts['t'])
+            if len(stop_ts) > 0:
+                stop_idx = (np.abs(stop_ts - mid_line_t)).argmin()
+                dt = (stop_ts[stop_idx] - mid_line_t).total_seconds()
+                if abs(dt) < 0.5:
+                    obs_pos = [stoppts['x'][stop_idx], stoppts['y'][stop_idx]]
+                    stop_type = ["Ultrasonic", "Laser", "Fallingdown", "CollisionBar" ,"Infrared",
+                    "VirtualPoint", "APIObstacle", "ReservedPoint", "DiUltrasonic", "DepthCamera", 
+                    "ReservedDepthCamera", "DistanceNode"]
+                    cur_type = "unknown"
+                    tmp_id = (int)(stoppts['category'][stop_idx])
+                    if tmp_id >= 0 and tmp_id < len(stop_type):
+                        cur_type = stop_type[(int)(stoppts['category'][stop_idx])]
+                    obs_info = "x: {} y: {} 类型: {} id:{} 距离: {}".format(stoppts['x'][stop_idx],
+                        stoppts['y'][stop_idx],cur_type,(int)(stoppts['ultra_id'][stop_idx]), stoppts['dist'][stop_idx])
 
-    def updateRobotLaser(self, laser_org_data, laser_rssi, laser_index, robot_pos, robot_loc_pos, laser_info, loc_info, obs_pos, obs_info, depthcamera_pos, particle_pos):
-        self.timestamp_lable.setText('当前激光时刻定位（实框）: '+ laser_info)
-        self.logt_lable.setText('当前时刻定位(虚框): '+ loc_info)
         if obs_info != '':
             self.obs_lable.setText('障碍物信息: ' + obs_info)
             self.obs_lable.show()
         else:
             self.obs_lable.setText('')
-        self.robot_pos = robot_pos
-        self.robot_loc_pos = robot_loc_pos
-        self.laser_org_data = laser_org_data
-        if len(laser_rssi) == len(laser_org_data.T) and len(laser_rssi) > 0:
-            color = self.cm(laser_rssi/255.) # 将透过率变成颜色变化
-            self.laser_point_color = self.cm(laser_rssi/255.)
-            self.laser_point_color[:,3] = self.laser_point_color[:,3]*0.5
-            color[:,3] = color[:,3] * 0.2 # 改变透明度
-            self.laser_color = color
-        else:
-            self.laser_color = self.laser_org_color[:]
-            self.laser_point_color = self.laser_point_org_color[:]
-        self.laser_index = laser_index
         if obs_pos:
             self.obs_points.set_xdata([obs_pos[0]])
             self.obs_points.set_ydata([obs_pos[1]])
         else:
             self.obs_points.set_xdata([])
             self.obs_points.set_ydata([])
-        if len(depthcamera_pos) > 0:
+    
+    def updateDepth(self):
+        if self.robot_log is None:
+            return
+        if self.robot_log.mid_line_t is None:
+            return
+        mid_line_t = self.robot_log.mid_line_t      
+        depthCamera_idx = 0
+        depth = self.robot_log.read_thread.depthcamera
+        depth_t = np.array(depth.t())
+        depth_pos = []
+        if len(depth_t) > 0:
+            depthCamera_idx = (np.abs(depth_t- mid_line_t)).argmin()
+            dt = (depth_t[depthCamera_idx] - mid_line_t).total_seconds()
+            if abs(dt) < 0.5:
+                pos_x = depth.x()[0][depthCamera_idx]
+                pos_y = depth.y()[0][depthCamera_idx]
+                pos_z = depth.z()[0][depthCamera_idx]
+                depth_pos = np.array([pos_x, pos_y, pos_z])
+
+        if len(depth_pos) > 0:
             hole_points = [[],[]]
             obs_points = [[],[]]
-            for ind, val in enumerate(depthcamera_pos[2]):
+            for ind, val in enumerate(depth_pos[2]):
                 if val < 0:
-                    hole_points[0].append(depthcamera_pos[0][ind])
-                    hole_points[1].append(depthcamera_pos[1][ind])
+                    hole_points[0].append(depth_pos[0][ind])
+                    hole_points[1].append(depth_pos[1][ind])
                 else:
-                    obs_points[0].append(depthcamera_pos[0][ind])
-                    obs_points[1].append(depthcamera_pos[1][ind])
+                    obs_points[0].append(depth_pos[0][ind])
+                    obs_points[1].append(depth_pos[1][ind])
             self.depthCamera_hole_points.set_xdata([hole_points[0]])
             self.depthCamera_hole_points.set_ydata([hole_points[1]])
             self.depthCamera_obs_points.set_xdata([obs_points[0]])
@@ -1227,6 +1356,25 @@ class MapWidget(QtWidgets.QWidget):
             self.depthCamera_hole_points.set_ydata([])
             self.depthCamera_obs_points.set_xdata([])
             self.depthCamera_obs_points.set_ydata([])
+
+    def updateParticle(self):
+        if self.robot_log is None:
+            return
+        if self.robot_log.mid_line_t is None:
+            return
+        mid_line_t = self.robot_log.mid_line_t
+        particle = self.robot_log.read_thread.particle
+        particle_idx = 0
+        pt = np.array(particle.t())
+        particle_pos = []
+        if len(pt) > 0:
+            particle_idx = (np.abs(pt- mid_line_t)).argmin()
+            dt = (pt[particle_idx] - mid_line_t).total_seconds()
+            if abs(dt) < 0.5:
+                pos_x = particle.x()[0][particle_idx]
+                pos_y = particle.y()[0][particle_idx]
+                theta = particle.theta()[0][particle_idx]
+                particle_pos = np.array([pos_x, pos_y, theta])
         if len(particle_pos) > 0:
             points = [[],[]]
             for ind, val in enumerate(particle_pos[2]):
@@ -1237,6 +1385,33 @@ class MapWidget(QtWidgets.QWidget):
         else:
             self.particle_points.set_xdata([])
             self.particle_points.set_ydata([])
+    
+    def updateLoc(self):
+        if self.robot_log is None:
+            return
+        if self.robot_log.mid_line_t is None:
+            return
+        mid_line_t = self.robot_log.mid_line_t
+        content = self.robot_log.read_thread.content
+        if 'LocationEachFrame' not in content:
+            return
+        loc = content['LocationEachFrame']  
+        if len(loc['x']) < 1:
+            return
+        if len(loc['timestamp']) < 1:
+            return
+        loc_idx = self.robot_log.key_loc_idx
+        if loc_idx < 0:
+            loc_ts = np.array(loc['t'])
+            loc_idx = (np.abs(loc_ts - mid_line_t)).argmin()
+        if loc_idx < 1:
+            loc_idx = 1
+        self.robot_log.key_loc_idx = loc_idx
+
+        self.robot_loc_pos = [loc['x'][loc_idx],loc['y'][loc_idx],np.deg2rad(loc['theta'][loc_idx])]
+        loc_info = "{},{},{},{},{}".format(loc['t'][loc_idx], (int)(loc['timestamp'][loc_idx]), 
+            loc['x'][loc_idx], loc['y'][loc_idx], loc['theta'][loc_idx])
+        self.logt_lable.setText('当前时刻定位(虚框): '+ loc_info)
 
         if self.laser_index in self.laser_pos.keys() \
          and self.read_model.tail and self.read_model.head and self.read_model.width:
@@ -1246,7 +1421,102 @@ class MapWidget(QtWidgets.QWidget):
             xxdata = [-0.05, 0.05, 0.0, 0.0, 0.0]
             xydata = [0.0, 0.0, 0.0, 0.05, -0.05]
             cross_shape = np.array([xxdata,xydata])
-            robot_shape = GetGlobalPos(robot_shape,robot_pos)
+
+
+            cross_shape = GetGlobalPos(cross_shape,self.robot_loc_pos)
+            robot_shape = GetGlobalPos(robot_shape,self.robot_loc_pos)
+            self.robot_loc_data_c0.set_xdata(cross_shape[0])
+            self.robot_loc_data_c0.set_ydata(cross_shape[1])
+            self.robot_loc_data.set_xdata(robot_shape[0])
+            self.robot_loc_data.set_ydata(robot_shape[1])
+        
+        self.updateLaser()
+
+    def updateLaser(self):
+        if self.robot_log is None:
+            return
+        if self.robot_log.mid_line_t is None:
+            return
+        mid_line_t = self.robot_log.mid_line_t
+        content = self.robot_log.read_thread.content
+        if 'LocationEachFrame' not in content:
+            return
+        loc = content['LocationEachFrame']      
+        if len(loc['x']) < 1:
+            return
+        if len(loc['timestamp']) < 1:
+            return
+        laser_data = self.robot_log.read_thread.laser
+        if len(laser_data.datas) < 1:
+            return
+        loc_idx = self.robot_log.key_loc_idx
+        if loc_idx < 0:
+            return
+        laser_idx = self.robot_log.key_laser_idx
+        min_laser_channel = self.robot_log.key_laser_channel
+        if laser_idx < 0 or min_laser_channel < 0:
+            min_laser_channel = 0
+            laser_idx = 0
+            min_dt = None
+            for index in laser_data.datas.keys():
+                t = np.array(laser_data.t(index))
+                if len(t) < 1:
+                    continue
+                tmp_laser_idx = (np.abs(t - mid_line_t)).argmin()
+                tmp_dt = np.min(np.abs(t - mid_line_t))
+                if min_dt == None or tmp_dt < min_dt:
+                    min_laser_channel = index
+                    laser_idx = tmp_laser_idx
+                    min_dt = tmp_dt
+        self.robot_log.key_laser_idx = laser_idx
+        self.key_laser_channel = min_laser_channel
+
+        laser_x = laser_data.x(min_laser_channel)[0][laser_idx]
+        laser_y = laser_data.y(min_laser_channel)[0][laser_idx]
+        laser_points = np.array([laser_x, laser_y])
+        rssi = np.array(laser_data.rssi(min_laser_channel)[0][laser_idx])
+        #在一个区间内差找最小值
+        ts = laser_data.ts(min_laser_channel)[0][laser_idx]
+
+        loc_min_ind = loc_idx - 200
+        loc_max_ind = loc_idx + 200
+        if loc_min_ind < 0:
+            loc_min_ind = 0
+        if loc_max_ind >= len(loc['timestamp']):
+            loc_max_ind = len(loc['timestamp']) - 1
+            if loc_max_ind < 0:
+                loc_max_ind = 0
+        pos_ts = np.array(loc['timestamp'][loc_min_ind:loc_max_ind])
+        pos_idx = (np.abs(pos_ts - ts)).argmin()
+        pos_idx = loc_min_ind + pos_idx
+        self.robot_pos = [loc['x'][pos_idx], loc['y'][pos_idx], np.deg2rad(loc['theta'][pos_idx])]
+        laser_info = "{},{},{},{},{}".format(loc['t'][laser_idx], (int)(loc['timestamp'][laser_idx]), 
+            loc['x'][laser_idx], loc['y'][laser_idx], loc['theta'][laser_idx])
+        self.timestamp_lable.setText('当前激光时刻定位（实框）: '+ laser_info)
+
+        self.laser_org_data = laser_points
+        laser_rssi = rssi
+        if len(laser_rssi) == len(self.laser_org_data.T) and len(laser_rssi) > 0:
+            color = self.cm(laser_rssi/255.) # 将透过率变成颜色变化
+            self.laser_point_color = self.cm(laser_rssi/255.)
+            self.laser_point_color[:,3] = self.laser_point_color[:,3]*0.5
+            color[:,3] = color[:,3] * 0.2 # 改变透明度
+            self.laser_color = color
+        else:
+            self.laser_color = self.laser_org_color[:]
+            self.laser_point_color = self.laser_point_org_color[:]
+        self.laser_index = min_laser_channel
+
+        if self.laser_index in self.laser_pos.keys() \
+         and self.read_model.tail and self.read_model.head and self.read_model.width:
+            xdata = [-self.read_model.tail, -self.read_model.tail, self.read_model.head, self.read_model.head, -self.read_model.tail]
+            ydata = [self.read_model.width/2, -self.read_model.width/2, -self.read_model.width/2, self.read_model.width/2, self.read_model.width/2]
+            robot_shape = np.array([xdata, ydata])
+            xxdata = [-0.05, 0.05, 0.0, 0.0, 0.0]
+            xydata = [0.0, 0.0, 0.0, 0.05, -0.05]
+            cross_shape = np.array([xxdata,xydata])
+
+            robot_shape = GetGlobalPos(robot_shape,self.robot_pos)
             self.robot_data.set_xdata(robot_shape[0])
             self.robot_data.set_ydata(robot_shape[1])
             cross_shape = GetGlobalPos(cross_shape,self.robot_pos)
@@ -1255,7 +1525,12 @@ class MapWidget(QtWidgets.QWidget):
             if self.laser_index in self.check_lasers:
                 self.laser_data.set_visible(self.check_lasers[self.laser_index].isChecked())
                 self.laser_data_points.set_visible(self.check_lasers[self.laser_index].isChecked())
-
+            if self.laser_index not in self.laser_pos:
+                print(" no laser_index", self.laser_index, self.laser_pos)
+                return
+            if len(self.laser_org_data) < 1:
+                print(" len(self.laser_org_data)", len(self.laser_org_data))
+                return
             lines, cs = convert2LaserPoints(self.laser_org_data, self.laser_pos[self.laser_index], self.robot_pos)
             self.laser_data.set_segments(lines)
             self.laser_data.set_color(self.laser_color)
@@ -1267,23 +1542,198 @@ class MapWidget(QtWidgets.QWidget):
             self.laser_data_points.set_color(self.laser_point_color)
             self.laser_data_points.set_edgecolor('r')
 
-            cross_shape = np.array([xxdata,xydata])
-            cross_shape = GetGlobalPos(cross_shape,robot_loc_pos)
-            self.robot_loc_data_c0.set_xdata(cross_shape[0])
-            self.robot_loc_data_c0.set_ydata(cross_shape[1])
-            robot_shape = np.array([xdata, ydata])
-            robot_shape = GetGlobalPos(robot_shape,robot_loc_pos)
-            self.robot_loc_data.set_xdata(robot_shape[0])
-            self.robot_loc_data.set_ydata(robot_shape[1])
-        if self.draw_center.isChecked():
-            (xmin, xmax) = self.ax.get_xlim()
-            (ymin, ymax) = self.ax.get_ylim()
-            x0 = (xmin + xmax)/2.0
-            y0 = (ymin + ymax)/2.0
-            dx = self.robot_pos[0] - x0
-            dy = self.robot_pos[1] - y0
-            self.ax.set_xlim(xmin + dx, xmax + dx)
-            self.ax.set_ylim(ymin + dy, ymax + dy)
+    def updateMapAndShape(self):
+        map_name = None
+        rstatus = self.robot_log.read_thread.rstatus
+        if len(rstatus.chassis()[1]) > 0:
+            ts = np.array(rstatus.chassis()[1])
+            idx = (np.abs(ts - self.mid_line_t)).argmin()
+            j = js.loads(rstatus.chassis()[0][idx])   
+            map_name = j.get("CURRENT_MAP",None)
+            if map_name:
+                map_name = map_name + ".smap"
+        fs = self.robot_log.filenames
+        if fs:
+            full_map_name = None
+            dir_name, _ = os.path.split(fs[0])
+            pdir_name, _ = os.path.split(dir_name)
+            if map_name:
+                map_dir = os.path.join(pdir_name,"maps")
+                full_map_name = os.path.join(map_dir,map_name)
+                if not os.path.exists(full_map_name):
+                    map_dir = dir_name
+                    full_map_name = os.path.join(map_dir,map_name)
+                    if not os.path.exists(full_map_name):
+                        map_dir = os.path.join(dir_name,"maps")
+                        full_map_name = os.path.join(map_dir,map_name)
+                        if not os.path.exists(full_map_name):
+                            full_map_name = None
+                if full_map_name == self.map_name:
+                    full_map_name = None
+
+            model_dir = os.path.join(pdir_name,"models")
+            model_name = os.path.join(model_dir,"robot.model")
+            cp_name = os.path.join(model_dir,"robot.cp")
+            if not os.path.exists(model_name):
+                model_dir = dir_name
+                model_name = os.path.join(model_dir,"robot.model")
+                cp_name = os.path.join(model_dir,"robot.cp")
+                if not os.path.exists(model_name):
+                    model_dir = os.path.join(dir_name,"models")
+                    model_name = os.path.join(model_dir,"robot.model")
+                    cp_name = os.path.join(model_dir,"robot.cp")
+                    if not os.path.exists(model_name):
+                        model_name = None      
+            if model_name == self.model_name:
+                model_name = None
+            if cp_name == self.cp_name:
+                cp_name = None
+            self.readFiles([full_map_name, model_name, cp_name]) 
+        else:
+            self.readFiles([None, None, None])     
+
+    def readtrajectory(self):
+        if self.robot_log is None:
+            return
+        if self.robot_log.mid_line_t is None:
+            return
+        mid_line_t = self.robot_log.mid_line_t
+        content = self.robot_log.read_thread.content
+        if 'LocationEachFrame' not in content:
+            return
+        loc = content['LocationEachFrame']  
+        if len(loc['x']) < 1:
+            return
+        if len(loc['timestamp']) < 1:
+            return
+        loc_idx = self.robot_log.key_loc_idx
+        if loc_idx < 0:
+            return
+        if loc_idx < 1:
+            loc_idx = 1
+        if self.left_line_t != self.robot_log.left_line_t:
+            self.left_line_t = self.robot_log.left_line_t
+            loc_ts = np.array(loc['t'])
+            self.left_idx = (np.abs(loc_ts - self.left_line_t)).argmin()
+        if self.right_line_t != self.robot_log.right_line_t:
+            self.right_line_t = self.robot_log.right_line_t
+            loc_ts = np.array(loc['t'])
+            self.right_idx = (np.abs(loc_ts - self.right_line_t)).argmin()            
+        x,y,xn,yn = [],[],[],[]
+        print("idx: ", loc_idx, self.left_idx, self.right_idx)
+        if loc_idx <= self.left_idx:
+            xn = loc['x'][self.left_idx:self.right_idx]
+            yn = loc['y'][self.left_idx:self.right_idx]
+        elif loc_idx > self.left_idx and loc_idx <= self.right_idx:
+            x = loc['x'][self.left_idx:loc_idx]
+            y = loc['y'][self.left_idx:loc_idx]
+            xn = loc['x'][loc_idx:self.right_idx]
+            yn = loc['y'][loc_idx:self.right_idx]
+        elif loc_idx >= self.right_idx:
+                x = loc['x'][self.left_idx:self.right_idx]
+                y = loc['y'][self.left_idx:self.right_idx]      
+
+        x0 = loc['x'][loc_idx]
+        y0 = loc['y'][loc_idx]
+        r0 = np.deg2rad(loc['theta'][loc_idx])
+
+        self.trajectory.set_xdata(x)
+        self.trajectory.set_ydata(y)
+        self.trajectory_next.set_xdata(xn)
+        self.trajectory_next.set_ydata(yn)
+
+        data = self.org_arrow_xy.copy()
+        tmp_data = data.copy()
+        data[:,0]= tmp_data[:,0] * np.cos(r0) - tmp_data[:,1] * np.sin(r0)
+        data[:,1] = tmp_data[:,0] * np.sin(r0) + tmp_data[:,1] * np.cos(r0)
+        data = data + [x0, y0]
+        self.cur_arrow.set_xy(data)
+
+        if len(self.draw_size) != 4:
+                xmax = max(x) + 10 
+                xmin = min(x) - 10
+                ymax = max(y) + 10
+                ymin = min(y) - 10
+                self.draw_size = [xmin,xmax, ymin, ymax]
+                self.ax.set_xlim(xmin, xmax)
+                self.ax.set_ylim(ymin, ymax)
+
+        if not self.check_odo.isChecked():
+            return
+        if 'Odometer' not in content:
+            return
+        odox = self.robot_log.read_thread.getData('Odometer.x')[0]
+        if len(odox) < 1:
+            print("odox is less than 1")
+            x,y,xn,yn = [],[],[],[]
+            self.odo.set_xdata(x)
+            self.odo.set_ydata(y)
+            self.odo_next.set_xdata(xn)
+            self.odo_next.set_ydata(yn)
+            return
+        odo = content["Odometer"]
+        odo_ts = np.array(odo['t'])
+        odo_mid_idx = (np.abs(odo_ts - self.mid_line_t)).argmin()  
+        odo_left_idx = (np.abs(odo_ts - self.left_line_t)).argmin()  
+        odo_right_idx = (np.abs(odo_ts - self.right_line_t)).argmin()  
+        if odo_left_idx >= odo_right_idx:
+            return
+        ox = np.array(odo['x'][odo_left_idx:odo_right_idx])
+        oy = np.array(odo['y'][odo_left_idx:odo_right_idx])
+        otheta = np.deg2rad(odo['theta'][odo_left_idx:odo_right_idx])
+        x0 = loc['x'][self.left_idx]
+        y0 = loc['y'][self.left_idx]
+        theta0 = np.deg2rad(loc['theta'][self.left_idx])
+        o0 = [ox[0],oy[0],otheta[0]]
+        l0 = [x0,y0,theta0]
+        oPos2o0 = Pos2Base([ox, oy, otheta], o0) # coordinator transform
+        oPos = GetGlobalPos(oPos2o0, l0)
+        print("oPos", oPos[0][0], oPos[1][0], l0[0], l0[1])
+        odo_mid_idx = odo_mid_idx - odo_left_idx
+        odo_right_idx = odo_right_idx - odo_left_idx
+        odo_left_idx = 0
+        x,y,xn,yn = [],[],[],[]
+        # print("idx: ", odo_mid_idx, odo_left_idx, odo_right_idx)
+        if odo_mid_idx <= odo_left_idx:
+            xn = oPos[0][odo_left_idx:odo_right_idx]
+            yn = oPos[1][odo_left_idx:odo_right_idx]
+        elif odo_mid_idx > odo_left_idx and odo_mid_idx <= odo_right_idx:
+            x = oPos[0][odo_left_idx:odo_mid_idx]
+            y = oPos[1][odo_left_idx:odo_mid_idx]
+            xn = oPos[0][odo_mid_idx:odo_right_idx]
+            yn = oPos[1][odo_mid_idx:odo_right_idx]
+        elif odo_mid_idx >= odo_right_idx:
+            x = oPos[0][odo_left_idx:odo_right_idx]
+            y = oPos[1][odo_left_idx:odo_right_idx] 
+        self.odo.set_xdata(x)
+        self.odo.set_ydata(y)
+        self.odo_next.set_xdata(xn)
+        self.odo_next.set_ydata(yn)
+
+    def updateRobotData(self):
+        if self.robot_log is not None:
+            if self.mid_line_t != self.robot_log.mid_line_t:
+                self.mid_line_t = self.robot_log.mid_line_t
+                self.updateMapAndShape()
+                self.updateObs()
+                self.updateDepth()
+                self.updateParticle()
+                self.updateLoc()
+                self.readtrajectory()
+                if self.draw_center.isChecked():
+                    (xmin, xmax) = self.ax.get_xlim()
+                    (ymin, ymax) = self.ax.get_ylim()
+                    x0 = (xmin + xmax)/2.0
+                    y0 = (ymin + ymax)/2.0
+                    dx = self.robot_loc_pos[0] - x0
+                    dy = self.robot_loc_pos[1] - y0
+                    self.ax.set_xlim(xmin + dx, xmax + dx)
+                    self.ax.set_ylim(ymin + dy, ymax + dy)
+                self.redraw()
+            elif self.left_line_t != self.robot_log.left_line_t \
+                or self.right_line_t != self.robot_log.right_line_t:
+                self.readtrajectory()
+                self.redraw()
 
     def redraw(self):
         self.static_canvas.figure.canvas.draw()
@@ -1293,6 +1743,6 @@ if __name__ == '__main__':
     import sys
     import os
     app = QtWidgets.QApplication(sys.argv)
-    form = MapWidget()
+    form = MapWidget(None)
     form.show()
     app.exec_()

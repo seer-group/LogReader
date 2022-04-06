@@ -1,3 +1,4 @@
+from datetime import datetime
 from cv2 import log
 import matplotlib
 matplotlib.use('Qt5Agg')
@@ -24,6 +25,7 @@ from matplotlib.patches import Circle
 from matplotlib.collections import PatchCollection
 from ReadThread import ReadThread
 import logging
+from datetime import timedelta
 
 class TargetPrecision(QtWidgets.QWidget):
     dropped = pyqtSignal('PyQt_PyObject')
@@ -46,7 +48,9 @@ class TargetPrecision(QtWidgets.QWidget):
 
     def analysis(self):
         self.targetName = "Task finished : "+ self.find_edit.text()
-        logging.debug("analysis target: {}".format(self.targetName))
+        sleepTime = float(self.st_edit.text())
+        logging.debug("Analysis target: {}. Sleep Time {}".format(self.targetName, sleepTime))
+        sleepTime = timedelta(seconds=sleepTime)
         if not isinstance(self.log_data, ReadThread):
             logging.debug("log_data type is error. {}".format(type(self.log_data)))
             return 
@@ -54,21 +58,25 @@ class TargetPrecision(QtWidgets.QWidget):
             logging.debug("LocationEachFrame is not in the log")
             return
         data = self.log_data.taskfinish.content()
+        valid = []
         if self.choose.currentText() == 'Localization':
             locx = self.log_data.content['LocationEachFrame']['x']
             locy = self.log_data.content['LocationEachFrame']['y']
             loca = self.log_data.content['LocationEachFrame']['theta']
             loc_t = np.array(self.log_data.content['LocationEachFrame']['t'])
+            valid = [1.0 for _ in loc_t]
         elif self.choose.currentText() == 'pgv0':
             locx = self.log_data.getData('pgv0.tag_x')[0]
             locy = self.log_data.content['pgv0']['tag_y']
             loca = self.log_data.content['pgv0']['tag_angle']
             loc_t = np.array(self.log_data.content['pgv0']['t'])
+            valid = self.log_data.content['pgv0']['is_DMT_detected']
         elif self.choose.currentText() == 'pgv1':
             locx = self.log_data.getData('pgv1.tag_x')[0]
             locy = self.log_data.content['pgv1']['tag_y']
             loca = self.log_data.content['pgv1']['tag_angle']
             loc_t = np.array(self.log_data.content['pgv1']['t'])
+            valid = self.log_data.content['pgv1']['is_DMT_detected']
         else:
             logging.debug("source name is wrong! {}".format(self.choose.currentText()))
         last_ind = 0
@@ -78,13 +86,15 @@ class TargetPrecision(QtWidgets.QWidget):
         tdata = []
         for ind, t in enumerate(data[1]):
             if self.targetName in data[0][ind]:
+                t = t + sleepTime
                 loc_idx = (np.abs(loc_t - t)).argmin()
                 if loc_idx < len(loc_t):
                     loc_idx += 1
-                xdata.append(locx[loc_idx])
-                ydata.append(locy[loc_idx])
-                adata.append(loca[loc_idx])
-                tdata.append(loc_t[loc_idx])
+                if valid[loc_idx] > 0.1:
+                    xdata.append(locx[loc_idx])
+                    ydata.append(locy[loc_idx])
+                    adata.append(loca[loc_idx])
+                    tdata.append(loc_t[loc_idx])
         self.xdata = xdata
         self.ydata = ydata
         self.adata = adata
@@ -193,12 +203,22 @@ class TargetPrecision(QtWidgets.QWidget):
         valid = QtGui.QIntValidator()
         self.find_edit = QtWidgets.QLineEdit()
         self.find_edit.setValidator(valid)
+
+
         self.find_up = QtWidgets.QPushButton("Analysis")
         self.find_up.clicked.connect(self.analysis)
         hbox = QtWidgets.QHBoxLayout()
         hbox.addWidget(self.find_label)
         hbox.addWidget(self.find_edit)
         hbox.addWidget(self.find_up)
+
+        self.stime_msg = QtWidgets.QLabel("SleepTime:")
+        valid = QtGui.QDoubleValidator()
+        self.st_edit = QtWidgets.QLineEdit("0.5")
+        self.st_edit.setValidator(valid)
+        hbox_st = QtWidgets.QHBoxLayout()
+        hbox_st.addWidget(self.stime_msg)
+        hbox_st.addWidget(self.st_edit)
 
         self.choose_msg = QtWidgets.QLabel("Source:")
         self.choose = QtWidgets.QComboBox()
@@ -214,6 +234,7 @@ class TargetPrecision(QtWidgets.QWidget):
 
         self.fig_layout = QtWidgets.QVBoxLayout(self)
         self.fig_layout.addLayout(hbox)
+        self.fig_layout.addLayout(hbox_st)
         self.fig_layout.addLayout(hbox2)
         self.fig_layout.addWidget(tab)
 
