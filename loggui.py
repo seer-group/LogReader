@@ -673,7 +673,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         # 对数据存之前进行处理
         if isPy:
             ind1 = (np.abs(np.array(tmpdata[1])-time0)).argmin()
-            ind2 = (np.abs(np.array(tmpdata[1][ind1::])-time1)).argmin()
+            ind2 = (np.abs(np.array(tmpdata[1][ind1::])-time1)).argmin() + ind1
             x,y = [],[]
             for i in range(len(tmpdata[1])):
                 if i >= ind1 and i < ind2:
@@ -687,7 +687,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             list_tmpdata = [(t,d) for t,d in zip(tmpdata[1], tmpdata[0])]
             tmpdata[1].sort()
             ind1 = (np.abs(np.array(tmpdata[1])-time0)).argmin()
-            ind2 = (np.abs(np.array(tmpdata[1])-time1)).argmin()
+            ind2 = (np.abs(np.array(tmpdata[1][ind1::])-time1)).argmin() + ind1
             list_tmpdata.sort(key=lambda d: d[0])
             for (ind, data) in enumerate(list_tmpdata):
                 if ind >= ind1 and ind <= ind2:

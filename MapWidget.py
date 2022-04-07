@@ -864,7 +864,7 @@ class MapWidget(QtWidgets.QWidget):
         if len(ts) < 1:
             return
         left_idx = (np.abs(ts - self.left_line_t)).argmin()  
-        right_idx = (np.abs(ts[left_idx::] - self.right_line_t)).argmin()  
+        right_idx = (np.abs(ts[left_idx::] - self.right_line_t)).argmin()   + left_idx
         if left_idx >= right_idx:
             return
         x = datax[0][left_idx:right_idx]
@@ -1619,7 +1619,7 @@ class MapWidget(QtWidgets.QWidget):
         if self.right_line_t != self.robot_log.right_line_t:
             self.right_line_t = self.robot_log.right_line_t
             loc_ts = np.array(loc['t'][self.left_idx::])
-            self.right_idx = (np.abs(loc_ts - self.right_line_t)).argmin()            
+            self.right_idx = (np.abs(loc_ts - self.right_line_t)).argmin() + self.left_idx            
         x,y,xn,yn = [],[],[],[]
         print("idx: ", loc_idx, self.left_idx, self.right_idx)
         if self.left_idx >= self.right_idx:
@@ -1680,7 +1680,7 @@ class MapWidget(QtWidgets.QWidget):
         odo_ts = np.array(odo['t'])
         odo_mid_idx = (np.abs(odo_ts - self.mid_line_t)).argmin()  
         odo_left_idx = (np.abs(odo_ts - self.left_line_t)).argmin()  
-        odo_right_idx = (np.abs(odo_ts[odo_left_idx::] - self.right_line_t)).argmin()  
+        odo_right_idx = (np.abs(odo_ts[odo_left_idx::] - self.right_line_t)).argmin() + odo_left_idx
         if odo_left_idx >= odo_right_idx:
             return
         ox = np.array(odo['x'][odo_left_idx:odo_right_idx])
