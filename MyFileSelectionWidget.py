@@ -280,8 +280,8 @@ class MyFileSelectionWidget(QWidget):
 
         self.filesView.itemSelectionChanged.connect(lambda :self.setWindowTitle(f"{len(self.filesView.selectedItems())} Log Files selected "))
         self.filesView.customContextMenuRequested.connect(lambda :self.contextMenu.exec(QCursor.pos()))
-        self.expandAction.triggered.connect(lambda :self.filesView.expandAll())
-        self.collapseAction.triggered.connect(lambda :self.filesView.collapseAll())
+        self.expandAction.triggered.connect(self.filesView.expandAll)
+        self.collapseAction.triggered.connect(self.filesView.collapseAll)
         self.openButton.clicked.connect(self._slotOpenClicked)
         self.filterButton.clicked.connect(self._slotFilterClicked)
         self.getReportButton.clicked.connect(self._slotGetReportClicked)
