@@ -26,14 +26,17 @@ from matplotlib.collections import PatchCollection
 from ReadThread import ReadThread
 import logging
 from datetime import timedelta
-
+from loglibPlus import num2date, date2num
 class TargetPrecision(QtWidgets.QWidget):
     dropped = pyqtSignal('PyQt_PyObject')
     hiddened = pyqtSignal('PyQt_PyObject')
-    def __init__(self, data:ReadThread):
+    def __init__(self, loggui = None):
         super(QtWidgets.QWidget, self).__init__()
         self.setWindowTitle('TargetPrecision')
-        self.log_data = data
+        self.robot_log = loggui
+        self.log_data = None
+        if self.robot_log is not None:
+            self.log_data = self.robot_log.read_thread
         self.targetName = ""
         self.xdata = []
         self.ydata = []
@@ -84,9 +87,25 @@ class TargetPrecision(QtWidgets.QWidget):
         ydata = []
         adata = []
         tdata = []
+        tl, tr = None, None
+        drange = self.r.currentText()
+        if drange == "View":
+            xmin, xmax = self.robot_log.axs[0].get_xlim()
+            tl = num2date(xmin)
+            tr = num2date(xmax)
+        elif drange == "Selection":
+            tl = self.robot_log.left_line_t
+            tr = self.robot_log.right_line_t
+        if tl is not None and tr is not None and tl >= tr:
+            # 如果左边大于右边则忽略
+            tl = None
+            tr = None
         for ind, t in enumerate(data[1]):
             if self.targetName in data[0][ind]:
                 t = t + sleepTime
+                if tl is not None and tr is not None:
+                    if t < tl or t > tr:
+                        continue
                 loc_idx = (np.abs(loc_t - t)).argmin()
                 if loc_idx < len(loc_t):
                     loc_idx += 1
@@ -133,6 +152,9 @@ class TargetPrecision(QtWidgets.QWidget):
                 arange = 1e-6
             tmin = min(tdata)
             tmax = max(tdata)
+            if tmin == tmax:
+                tmax = num2date(date2num(tmin) + 0.0001)
+                tmin = num2date(date2num(tmin) - 0.0001)
             xmin = xmin - 0.05 * xrange
             xmax = xmax + 0.05 * xrange
             ymin = ymin - 0.05 * yrange
@@ -216,21 +238,36 @@ class TargetPrecision(QtWidgets.QWidget):
         valid = QtGui.QDoubleValidator()
         self.st_edit = QtWidgets.QLineEdit("0.5")
         self.st_edit.setValidator(valid)
+        hbox_s = QtWidgets.QFormLayout()
+        hbox_s.addRow(self.stime_msg, self.st_edit)
+
+        self.r_msg = QtWidgets.QLabel("Range:")
+        self.r = QtWidgets.QComboBox()
+        self.r.addItem("All")
+        self.r.addItem("Selection")
+        self.r.addItem("View")
+        hbox_r = QtWidgets.QFormLayout()
+        hbox_r.addRow(self.r_msg, self.r)
+
         hbox_st = QtWidgets.QHBoxLayout()
-        hbox_st.addWidget(self.stime_msg)
-        hbox_st.addWidget(self.st_edit)
+        hbox_st.addLayout(hbox_s)
+        hbox_st.addLayout(hbox_r)
+
 
         self.choose_msg = QtWidgets.QLabel("Source:")
         self.choose = QtWidgets.QComboBox()
         self.choose.addItem("Localization")
         self.choose.addItem("pgv0")
         self.choose.addItem("pgv1")
+        hbox2 = QtWidgets.QFormLayout()
+        hbox2.addRow(self.choose_msg, self.choose)
+
         tab = QtWidgets.QTabWidget()
         tab.addTab(w0, "xy chart")
         tab.addTab(w1, "detail chart")
+
  
-        hbox2 = QtWidgets.QFormLayout()
-        hbox2.addRow(self.choose_msg, self.choose)
+
 
         self.fig_layout = QtWidgets.QVBoxLayout(self)
         self.fig_layout.addLayout(hbox)

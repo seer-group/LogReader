@@ -7,6 +7,16 @@ import logging
 import gzip
 from multiprocessing import Pool, Manager
 import json
+
+def date2num(d):
+    s = d.timestamp()
+    n = (s + 62135712000.0)/86400.0
+    return n
+
+def num2date(n):
+    t = n * 86400 - 62135712000
+    return datetime.fromtimestamp(t)
+
 def rbktimetodate(rbktime):
     """ 将rbk的时间戳转化为datatime """
     if len(rbktime) == 17:

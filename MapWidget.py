@@ -864,7 +864,7 @@ class MapWidget(QtWidgets.QWidget):
         if len(ts) < 1:
             return
         left_idx = (np.abs(ts - self.left_line_t)).argmin()  
-        right_idx = (np.abs(ts - self.right_line_t)).argmin()  
+        right_idx = (np.abs(ts[left_idx::] - self.right_line_t)).argmin()  
         if left_idx >= right_idx:
             return
         x = datax[0][left_idx:right_idx]
@@ -1164,7 +1164,7 @@ class MapWidget(QtWidgets.QWidget):
             font = QtGui.QFont()
             font.setBold(True)
             self.smap_action.setFont(font)
-            self.static_canvas.figure.canvas.draw()
+            self.mid_line_t = None
 
     def readModelFinished(self, result):
         self.readingModelFlag = True
@@ -1248,6 +1248,7 @@ class MapWidget(QtWidgets.QWidget):
             print("readModel error!")
             logging.debug("readModel error!")
         self.readingModelFlag = False
+        self.mid_line_t = None
 
     def readCPFinished(self, result):
         if self.read_model.laser:
@@ -1277,7 +1278,7 @@ class MapWidget(QtWidgets.QWidget):
                             patches.append(circle)
                         self.laser_data_points.set_paths(patches)
                         self.laser_data_points.set_color(self.laser_point_color)
-                        self.static_canvas.figure.canvas.draw()
+                        self.mid_line_t = None
 
     def updateObs(self):
         if self.robot_log is None:
@@ -1617,10 +1618,14 @@ class MapWidget(QtWidgets.QWidget):
             self.left_idx = (np.abs(loc_ts - self.left_line_t)).argmin()
         if self.right_line_t != self.robot_log.right_line_t:
             self.right_line_t = self.robot_log.right_line_t
-            loc_ts = np.array(loc['t'])
+            loc_ts = np.array(loc['t'][self.left_idx::])
             self.right_idx = (np.abs(loc_ts - self.right_line_t)).argmin()            
         x,y,xn,yn = [],[],[],[]
         print("idx: ", loc_idx, self.left_idx, self.right_idx)
+        if self.left_idx >= self.right_idx:
+            logging.debug("readtrajectory left_idx larger than right_idx{} {}".format(self.left_idx, self.right_idx))
+            self.left_idx = 0
+            self.right_idx = len(loc['x'])
         if loc_idx <= self.left_idx:
             xn = loc['x'][self.left_idx:self.right_idx]
             yn = loc['y'][self.left_idx:self.right_idx]
@@ -1649,7 +1654,7 @@ class MapWidget(QtWidgets.QWidget):
         data = data + [x0, y0]
         self.cur_arrow.set_xy(data)
 
-        if len(self.draw_size) != 4:
+        if len(self.draw_size) != 4 and len(x) > 0 and len(y) > 0:
                 xmax = max(x) + 10 
                 xmin = min(x) - 10
                 ymax = max(y) + 10
@@ -1675,7 +1680,7 @@ class MapWidget(QtWidgets.QWidget):
         odo_ts = np.array(odo['t'])
         odo_mid_idx = (np.abs(odo_ts - self.mid_line_t)).argmin()  
         odo_left_idx = (np.abs(odo_ts - self.left_line_t)).argmin()  
-        odo_right_idx = (np.abs(odo_ts - self.right_line_t)).argmin()  
+        odo_right_idx = (np.abs(odo_ts[odo_left_idx::] - self.right_line_t)).argmin()  
         if odo_left_idx >= odo_right_idx:
             return
         ox = np.array(odo['x'][odo_left_idx:odo_right_idx])

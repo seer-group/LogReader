@@ -15,7 +15,8 @@ from numpy import searchsorted
 from ExtendedComboBox import ExtendedComboBox
 from Widget import Widget
 from ReadThread import ReadThread, Fdir2Flink
-from loglib import ErrorLine, WarningLine, ReadLog, FatalLine, NoticeLine, TaskStart, TaskFinish, Service
+from loglibPlus import ErrorLine, WarningLine, FatalLine, NoticeLine, TaskStart, TaskFinish, Service
+from loglibPlus import date2num, num2date
 from MapWidget import MapWidget, Readmap
 from LogViewer import LogViewer
 from JsonView import JsonView, DataView
@@ -30,14 +31,7 @@ import MotorRead as mr
 from getMotorErr import MotorErrViewer 
 from TargetPrecision import TargetPrecision
 
-def date2num(d):
-    s = d.timestamp()
-    n = (s + 62135712000.0)/86400.0
-    return n
 
-def num2date(n):
-    t = n * 86400 - 62135712000
-    return datetime.fromtimestamp(t)
 
 class XYSelection:
     def __init__(self, num = 1):
@@ -176,10 +170,10 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.setWindowTitle('Log分析器')
         self.read_thread = ReadThread()
         self.read_thread.signal.connect(self.readFinished)
-        self.mid_line_t = None #中间蓝线对应的时间
+        self.mid_line_t = None #中间蓝线对应的时间 datetime
         self.select_type = SelectEnum.NoSelect #中间蓝线是否被选择上
-        self.left_line_t = None
-        self.right_line_t = None
+        self.left_line_t = None #datetime
+        self.right_line_t = None #datetime
         self.select_regions = []
         self.mouse_pressed = False
         self.log_widget = None
@@ -393,7 +387,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.map_widget.hiddened.connect(self.mapClosed)
         self.map_widget.keyPressEvent = self.keyPressEvent
 
-        self.targetPrecision = TargetPrecision(self.read_thread)
+        self.targetPrecision = TargetPrecision(self)
         self.targetPrecision.hide()
         # dataView相关的初始化
         self.dataViewNewOne(None)
@@ -679,7 +673,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         # 对数据存之前进行处理
         if isPy:
             ind1 = (np.abs(np.array(tmpdata[1])-time0)).argmin()
-            ind2 = (np.abs(np.array(tmpdata[1])-time1)).argmin()
+            ind2 = (np.abs(np.array(tmpdata[1][ind1::])-time1)).argmin()
             x,y = [],[]
             for i in range(len(tmpdata[1])):
                 if i >= ind1 and i < ind2:
@@ -993,7 +987,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.close()
 
     def about(self):
-        QtWidgets.QMessageBox.about(self, "关于", """Log Viewer V2.4.2.a""")
+        QtWidgets.QMessageBox.about(self, "关于", """Log Viewer V2.4.3.b""")
 
     def ycombo_onActivated(self):
         curcombo = self.sender()
@@ -1501,6 +1495,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             self.motor_view_widget.close()
         for d in self.dataViews:
             d.close()
+        self.targetPrecision.close()
         self.close()
 
     def updateDataView(self, d:DataView):
