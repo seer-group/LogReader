@@ -52,6 +52,7 @@ class FilterLogThread(QThread):
                     for r in self.regex:
                         if r in line:
                             newLogFile.write(line)
+                            break
                 num += 1
                 self.progressChanged.emit(num / total * 100)
 
