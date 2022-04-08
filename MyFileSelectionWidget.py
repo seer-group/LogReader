@@ -1,13 +1,13 @@
-import threading
 from datetime import datetime
 import sys
 import gzip
+import json
 from enum import Enum
 from PyQt5.QtWidgets import QProgressBar,QWidget, QTreeWidget, QTreeWidgetItem, \
     QApplication, QPushButton, QVBoxLayout, QAbstractItemView, QCheckBox, QLabel, \
     QGroupBox, QSizePolicy, QLayout, QHBoxLayout, QMenu, QAction
 from PyQt5.QtCore import QDir, QFileInfo, pyqtSignal, Qt, QPoint, QRect, QSize, QThread
-from PyQt5.QtGui import QBrush, QColor, QCursor
+from PyQt5.QtGui import QCursor
 from loglibPlus import ErrorLine, WarningLine, ReadLog, FatalLine, NoticeLine
 
 class ReportLevel(Enum):
@@ -254,17 +254,11 @@ class MyFileSelectionWidget(QWidget):
         self.contextMenu.addAction(self.expandAction)
         self.contextMenu.addAction(self.collapseAction)
 
-        self.diCheckBox = QCheckBox("DI")
-        self.doCheckBox = QCheckBox("DO")
-        self.batteryCheckBox = QCheckBox("baterry")
+        self.checkBoxes = []
 
         self.getReportButton = QPushButton(text="GetReport")
         self.filterButton = QPushButton(text="Filter")
         self.openButton = QPushButton(text="Open")
-
-        self.groupBox.layout().addWidget(self.diCheckBox)
-        self.groupBox.layout().addWidget(self.doCheckBox)
-        self.groupBox.layout().addWidget(self.batteryCheckBox)
 
         self.buttonLayout.addWidget(self.getReportButton)
         self.buttonLayout.addWidget(self.filterButton)
@@ -286,6 +280,13 @@ class MyFileSelectionWidget(QWidget):
         self.filterButton.clicked.connect(self._slotFilterClicked)
         self.getReportButton.clicked.connect(self._slotGetReportClicked)
 
+        with open("filterCheckBox.json","r") as f:
+            for k,v in json.load(f).items():
+                cb = QCheckBox(k)
+                cb.data = v
+                self.checkBoxes.append(cb)
+        [self.groupBox.layout().addWidget(i) for i in self.checkBoxes]
+
     def _slotOpenClicked(self):
         selectedFiles = self._getSelectedFiles()
         if not selectedFiles:
@@ -296,13 +297,7 @@ class MyFileSelectionWidget(QWidget):
         selectedFiles = self._getSelectedFiles()
         if not selectedFiles:
             return
-        regex = []
-        if self.diCheckBox.isChecked():
-            regex.append("[DI]")
-        if self.doCheckBox.isChecked():
-            regex.append("[DO]")
-        if self.batteryCheckBox.isChecked():
-            regex.append("[Battery]")
+        regex = [i.data for i in self.checkBoxes if i.isChecked()]
         if regex:
             thread = FilterLogThread(regex, self.dirPath, selectedFiles, self)
             thread.started.connect(self._initStatusProgress)
