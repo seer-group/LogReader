@@ -6,6 +6,7 @@ import re
 class CmdArgs():
     def __init__(self):
         self.startTime, self.endTime, self.dirName, self.onlyLog, self.ip = self.__GetCmdArgs()
+        # self.dirName = self.dirName.replace("\\","/")
 
     def __GetCmdArgs(self):
         parser = argparse.ArgumentParser()

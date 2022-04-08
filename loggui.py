@@ -1,5 +1,4 @@
 import matplotlib
-
 from TargetPrecision import TargetPrecision
 matplotlib.use('Qt5Agg')
 matplotlib.rcParams['font.sans-serif']=['FangSong']
@@ -31,6 +30,7 @@ from getMotorErr import MotorErrViewer
 from TargetPrecision import TargetPrecision
 from CmdArgs import CmdArgs
 from LogDownloader import LogDownloader
+from MyFileSelectionWidget import MyFileSelectionWidget
 
 class XYSelection:
     def __init__(self, num = 1):
@@ -102,6 +102,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.in_close = False
         self.setupUI()
         self.logDownloader = None
+        self.fs_widget = None
         self.downloadLog()
 
     def setupUI(self):
@@ -1645,7 +1646,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         dataView.show()
         self.initDataView(dataView)
         self.dataViews.append(dataView)  
-        self.updateDataView(dataView) 
+        self.updateDataView(dataView)
 
     def initDataView(self, d:DataView):
         d.setSelectionItems(list(self.read_thread.content.keys()))
@@ -1655,8 +1656,13 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             return
         def release():
             self.logDownloader = None
+        def fileSelection(dirPath):
+            self.fs_widget = MyFileSelectionWidget(dirPath)
+            self.fs_widget.setWindowIcon(QtGui.QIcon('rbk.ico'))
+            self.fs_widget.submit.connect(self.dragFiles)
+            self.fs_widget.show()
         self.logDownloader = LogDownloader(self.statusBar(),self.cmdArgs)
-        self.logDownloader.filesReady.connect(self.dragFiles)
+        self.logDownloader.filesReady.connect(fileSelection)
         self.logDownloader.downloadEnd.connect(release)
 
 if __name__ == "__main__":

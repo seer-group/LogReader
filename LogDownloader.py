@@ -134,7 +134,7 @@ class SeerObj():
 
 class LogDownloader(QObject):
 
-    filesReady = pyqtSignal('PyQt_PyObject')
+    filesReady = pyqtSignal(str)
     downloadEnd = pyqtSignal()
     def __init__(self,statusBar:QStatusBar,cmdArgs:CmdArgs):
         super(LogDownloader, self).__init__()
@@ -145,7 +145,7 @@ class LogDownloader(QObject):
         self.currentReqFile = None
         self.reqFilesTotal = 0
         self.socket = QTcpSocket(self)
-        self.statusBar =  statusBar
+        self.statusBar = statusBar
         self.cmdArgs = cmdArgs
         self.downloadProgressBar:QProgressBar = statusBar.findChild(QProgressBar, "downloadProgressBar")
         self.downloadLabel:QLabel = statusBar.findChild(QLabel, "downloadLabel")
@@ -188,8 +188,9 @@ class LogDownloader(QObject):
         if not SeerObj.checkIfComplete(self.recvByteArray):
             return
         seerObj = SeerObj().fromBytearray(self.recvByteArray.data())
+        info = self._statusInfofmt(seerObj)
+        self.statusBar.setToolTip(info)
         if seerObj.type - 10000 == ProtocolType.GetDebugFileList.value:
-            self.statusBar.setToolTip(f"Type:{seerObj.type}\nPort:{self.PORT}\nNUmber:{seerObj.number}\nHeader:{'0x'}{str(binascii.b2a_hex(seerObj.toBytearray()[0:17]))[2:-1]}\nDataLength:{seerObj.length}\nData:{seerObj.data}")
             fileDict:dict = json.loads(seerObj.data)
             if not "fileList" in fileDict.keys():
                 self._slotError(fileDict)
@@ -199,14 +200,9 @@ class LogDownloader(QObject):
                     if isinstance(v, list):
                         self.reqFilesTotal += len(v)
             self.downladFileIte = self._debugFileGenerator(fileDict)
-            self.recvByteArray.clear()
 
-            self._sendRequestFile()
-
-            return
-        if seerObj.type - 10000 == ProtocolType.GetFile.value:
+        elif seerObj.type - 10000 == ProtocolType.GetFile.value:
             self.downloadProgressBar.setValue(self.currentReqFile[3])
-            self.statusBar.setToolTip(f"Type:{seerObj.type}\nPort:{self.PORT}\nNumber:{seerObj.number}\nHeader:{'0x'}{str(binascii.b2a_hex(seerObj.toBytearray()[0:17]))[2:-1]}\nDataLength:{seerObj.length}\nData:File")
             dirPath = self.cmdArgs.dirName + "/" + self.currentReqFile[0]
 
             if not QDir().exists(dirPath):
@@ -214,13 +210,12 @@ class LogDownloader(QObject):
             filePath = dirPath + "/" + self.currentReqFile[2]
             with open(filePath, "wb") as file:
                 file.write(seerObj.data)
-            self.recvByteArray.clear()
-
-            self._sendRequestFile()
-
-            return
         else:
             self._slotError(str(seerObj))
+            return
+        self.recvByteArray.clear()
+        self._sendRequestFile()
+        return
 
     def _slotError(self,e:Union[str, int]):
         if isinstance(e, str):
@@ -230,23 +225,29 @@ class LogDownloader(QObject):
         QMessageBox.critical(None, 'Error', text)
         self.downloadEnd.emit()
 
+    def _statusInfofmt(self,seerObj:SeerObj):
+        info = f"Type:{seerObj.type}\nPort:{self.PORT}\nNumber:{seerObj.number}\nHeader:{'0x'}{str(binascii.b2a_hex(seerObj.toBytearray()[0:17]))[2:-1]}\nDataLength:{seerObj.length}\nData:"
+        if seerObj.type - 10000 == ProtocolType.GetFile.value:
+            info += "File"
+        else:
+            info += seerObj.data.__str__()
+        return info
+
     def _sendRequest(self, seerObj:SeerObj):
         self.socket.write(seerObj.toBytearray())
         if seerObj.type == ProtocolType.GetDebugFileList.value:
             self.downloadLabel.setText(f"Req:DebugFileList")
         else:
             self.downloadLabel.setText(f"Req:{self.currentReqFile[2]}")
-        self.statusBar.setToolTip(f"Type:{seerObj.type}\nPort:{self.PORT}\nNumber:{seerObj.number}\nHeader:{'0x'}{str(binascii.b2a_hex(seerObj.toBytearray()[0:17]))[2:-1]}\nDataLength:{seerObj.length}\nData:{seerObj.data}")
+        info = self._statusInfofmt(seerObj)
+        self.statusBar.setToolTip(info)
 
     def _sendRequestFile(self):
         try:
             self.currentReqFile: tuple = next(self.downladFileIte)
         except Exception as e:
             dirPath = self.cmdArgs.dirName + "/log"
-            dir = QDir(dirPath)
-            dir.setNameFilters(["*.gz","*.log"])
-            files = [file.filePath() for file in dir.entryInfoList()]
-            self.filesReady.emit(files)
+            self.filesReady.emit(dirPath)
             self.downloadEnd.emit()
             return
         reqDict = {"path": self.currentReqFile[1], "file_name": self.currentReqFile[2]}
