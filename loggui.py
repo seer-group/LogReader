@@ -987,7 +987,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.close()
 
     def about(self):
-        QtWidgets.QMessageBox.about(self, "关于", """Log Viewer V2.4.3.b""")
+        QtWidgets.QMessageBox.about(self, "关于", """Log Viewer V2.4.3.c""")
 
     def ycombo_onActivated(self):
         curcombo = self.sender()
@@ -1355,8 +1355,10 @@ class ApplicationWindow(QtWidgets.QMainWindow):
     def updateLogView(self):
         if self.log_widget is not None \
             and self.mid_line_t is not None \
-                and self.read_thread.reader is not None \
-                    and self.key_loc_idx >= 0:
+                and self.read_thread.reader is not None:
+            if self.key_loc_idx < 0:
+                t = np.array(self.read_thread.content['LocationEachFrame']['t'])
+                self.key_loc_idx = (np.abs(t-self.mid_line_t)).argmin()
             label = ''
             if 'LocationEachFrame' in self.read_thread.content:
                 label = 'LocationEachFrame'
