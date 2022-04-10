@@ -1516,6 +1516,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             self.sts_widget.close()
         if self.motor_view_widget:
             self.motor_view_widget.close()
+        if self.fs_widget:
+            self.fs_widget.close()
         for d in self.dataViews:
             d.close()
         self.targetPrecision.close()
