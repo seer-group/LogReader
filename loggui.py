@@ -1,4 +1,5 @@
 import matplotlib
+from enum import Enum
 from TargetPrecision import TargetPrecision
 matplotlib.use('Qt5Agg')
 matplotlib.rcParams['font.sans-serif']=['FangSong']
@@ -14,7 +15,8 @@ from numpy import searchsorted
 from ExtendedComboBox import ExtendedComboBox
 from Widget import Widget
 from ReadThread import ReadThread, Fdir2Flink
-from loglib import ErrorLine, WarningLine, ReadLog, FatalLine, NoticeLine, TaskStart, TaskFinish, Service
+from loglibPlus import ErrorLine, WarningLine, FatalLine, NoticeLine, TaskStart, TaskFinish, Service
+from loglibPlus import date2num, num2date
 from MapWidget import MapWidget, Readmap
 from LogViewer import LogViewer
 from JsonView import JsonView, DataView
@@ -80,6 +82,86 @@ class DataSelection(QtWidgets.QWidget):
         except:
             pass
 
+class SelectEnum(Enum):
+    NoSelect = 0
+    Left = 1
+    Right = 2
+    Region = 3
+    Mid = 4
+
+class SelectRegion:
+    def __init__(self, ax, t0, t1, tmid) -> None:
+        self.ax = ax
+        self.select_region = ax.axvspan(t0, t1, facecolor='r', alpha = 0.3, picker = self.pickfunc)
+        self.select_region.set_zorder(0)
+        self.left_line = ax.axvline(t0, linestyle = '--', color = 'y', linewidth = 1, picker = self.pickfunc)
+        self.left_line.set_zorder(0)
+        self.right_line = ax.axvline(t1, linestyle = '--', color = 'y', linewidth = 1, picker = self.pickfunc)
+        self.right_line.set_zorder(0)
+        self.mid_line = ax.axvline(tmid, color = 'c', linewidth = 10, alpha = 0.5, picker = self.pickfunc)
+        self.mid_line.set_zorder(10)
+        self.t0 = t0
+        self.t1 = t1
+        self.tmid = tmid
+        self.select_type = SelectEnum.NoSelect
+        print("init", type(self.tmid), type(self.t0), type(self.t1))
+
+    def getRightT(self, t):
+        if isinstance(t, float):
+            return t
+        elif isinstance(t, datetime):
+            return date2num(t)
+        else:
+            print("getRightT t type error: ", type(t), t)
+            return t
+    def setRegion(self, t0, t1):
+        self.t0 = self.getRightT(t0)
+        self.t1 = self.getRightT(t1)
+        self.left_line.set_xdata(self.t0)
+        self.right_line.set_xdata(self.t1)
+        data = self.select_region.get_xy()
+        data[0][0] = data[1][0] = data[4][0] = self.t0
+        data[2][0] = data[3][0] = self.t1
+
+    def setMidLine(self, tmid):
+        self.tmid = self.getRightT(tmid)
+        self.mid_line.set_xdata(self.tmid)
+
+    def addAgain(self, ax):
+        if ax is self.ax:
+            self.ax.add_artist(self.left_line)
+            self.ax.add_artist(self.right_line)
+            self.ax.add_artist(self.select_region)
+            self.ax.add_artist(self.mid_line)
+
+    def getMidLineX(self):
+        return self.mid_line.get_xdata()[0]
+
+    def pickfunc(self, artist, mouseevent):
+        if artist is self.select_region or\
+            artist is self.left_line or\
+                artist is self.right_line or\
+                    artist is self.mid_line:
+            cur_t = mouseevent.xdata
+            if not isinstance(cur_t, float):
+                return False, dict()
+            dt0 = abs(self.t0 - cur_t)
+            dt1 = abs(self.t1 - cur_t)
+            dtmid = abs(self.tmid -cur_t)
+            ax = mouseevent.inaxes
+            xmin,xmax = ax.get_xlim()
+            min_step = (xmax - xmin)/40.0
+            # print("pickfunc", self.t0, self.t1, self.tmid, cur_t, dt0, dt1, dtmid)
+            if dtmid < min_step:
+                self.select_type = SelectEnum.Mid
+            elif dt0 < min_step:
+                self.select_type = SelectEnum.Left
+            elif dt1 < min_step:
+                self.select_type = SelectEnum.Right
+            elif cur_t > self.t0 and cur_t < self.t1:
+                self.select_type = SelectEnum.Region
+        return False, dict()
+
 class ApplicationWindow(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
@@ -90,11 +172,12 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.setWindowTitle('Log分析器')
         self.read_thread = ReadThread()
         self.read_thread.signal.connect(self.readFinished)
-        self.mid_line_t = None #中间蓝线对应的时间
-        self.mid_line_select = False #中间蓝线是否被选择上
-        self.mid_select_lines = []
+        self.mid_line_t = None #中间蓝线对应的时间 datetime
+        self.select_type = SelectEnum.NoSelect #中间蓝线是否被选择上
+        self.left_line_t = None #datetime
+        self.right_line_t = None #datetime
+        self.select_regions = []
         self.mouse_pressed = False
-        self.map_widget = None
         self.log_widget = None
         self.sts_widget = None
         self.motor_view_widget = None
@@ -262,7 +345,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.static_canvas.mpl_connect('motion_notify_event', self.mouse_move)
         self.static_canvas.mpl_connect('button_press_event', self.mouse_press)
         self.static_canvas.mpl_connect('button_release_event', self.mouse_release)
-        self.static_canvas.mpl_connect('pick_event', self.onpick)
+        self.static_canvas.mpl_connect('axes_leave_event', self.leave_axes)
 
         #Log
         self.log_info = QtWidgets.QTextBrowser(self)
@@ -318,12 +401,12 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.dataSelection.getdata.connect(self.addNewData)
         self.dataSelection.hide()
 
-        self.map_widget = MapWidget()
+        self.map_widget = MapWidget(self)
         self.map_widget.setWindowIcon(QtGui.QIcon('rds.ico'))
         self.map_widget.hiddened.connect(self.mapClosed)
         self.map_widget.keyPressEvent = self.keyPressEvent
 
-        self.targetPrecision = TargetPrecision(self.read_thread)
+        self.targetPrecision = TargetPrecision(self)
         self.targetPrecision.hide()
         # dataView相关的初始化
         self.dataViewNewOne(None)
@@ -413,205 +496,10 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         return content
 
     def updateMap(self):
-        if self.mid_line_t is None:
-            return
-        loc_idx = self.key_loc_idx
-        laser_idx = self.key_laser_idx
-        min_laser_channel = self.key_laser_channel
-        if 'LocationEachFrame' in self.read_thread.content:
-            if len(self.read_thread.content['LocationEachFrame']['x']) > 0 :
-                if loc_idx < 0:
-                    loc_ts = np.array(self.read_thread.content['LocationEachFrame']['t'])
-                    loc_idx = (np.abs(loc_ts - self.mid_line_t)).argmin()
-                if loc_idx < 1:
-                    loc_idx = 1
-                if self.map_widget:
-                    self.map_widget.readtrajectory(self.read_thread.content['LocationEachFrame']['x'][0:loc_idx], self.read_thread.content['LocationEachFrame']['y'][0:loc_idx],
-                                                self.read_thread.content['LocationEachFrame']['x'][loc_idx::], self.read_thread.content['LocationEachFrame']['y'][loc_idx::],
-                                                self.read_thread.content['LocationEachFrame']['x'][loc_idx], self.read_thread.content['LocationEachFrame']['y'][loc_idx], 
-                                                np.deg2rad(self.read_thread.content['LocationEachFrame']['theta'][loc_idx]))
-        else :
-            if 'Location' in self.read_thread.content:
-                loc_ts = np.array(self.read_thread.content['Location']['t'])
-                loc_idx = (np.abs(loc_ts - self.mid_line_t)).argmin()
-                if self.map_widget:
-                    self.map_widget.readtrajectory(self.read_thread.content['Location']['x'][0:loc_idx], self.read_thread.content['Location']['y'][0:loc_idx],
-                                                self.read_thread.content['Location']['x'][loc_idx::], self.read_thread.content['Location']['y'][loc_idx::],
-                                                self.read_thread.content['Location']['x'][loc_idx], self.read_thread.content['Location']['y'][loc_idx], 
-                                                np.deg2rad(self.read_thread.content['Location']['theta'][loc_idx]))
-        if 'LocationEachFrame' in self.read_thread.content:
-            if self.read_thread.content['LocationEachFrame']['timestamp']:
-                #最近的定位时间
-                if loc_idx < 0:
-                    loc_ts = np.array(self.read_thread.content['LocationEachFrame']['t'])
-                    loc_idx = (np.abs(loc_ts - self.mid_line_t)).argmin()
-                robot_loc_pos = [self.read_thread.content['LocationEachFrame']['x'][loc_idx],
-                            self.read_thread.content['LocationEachFrame']['y'][loc_idx],
-                            np.deg2rad(self.read_thread.content['LocationEachFrame']['theta'][loc_idx])]
-                loc_info = (str(self.read_thread.content['LocationEachFrame']['t'][loc_idx]) 
-                                    + ' , ' + str((int)(self.read_thread.content['LocationEachFrame']['timestamp'][loc_idx]))
-                                    + ' , ' + str(self.read_thread.content['LocationEachFrame']['x'][loc_idx])
-                                    + ' , ' + str(self.read_thread.content['LocationEachFrame']['y'][loc_idx])
-                                    + ' , ' + str(self.read_thread.content['LocationEachFrame']['theta'][loc_idx]))
-                obs_pos = []
-                obs_info = ''
-                stop_ts = np.array(self.read_thread.content['StopPoints']['t'])
-                if len(stop_ts) > 0:
-                    stop_idx = (np.abs(stop_ts - self.mid_line_t)).argmin()
-                    dt = (stop_ts[stop_idx] - self.mid_line_t).total_seconds()
-                    if abs(dt) < 0.5:
-                        obs_pos = [self.read_thread.content['StopPoints']['x'][stop_idx], self.read_thread.content['StopPoints']['y'][stop_idx]]
-                        stop_type = ["Ultrasonic", "Laser", "Fallingdown", "CollisionBar" ,"Infrared",
-                        "VirtualPoint", "APIObstacle", "ReservedPoint", "DiUltrasonic", "DepthCamera", 
-                        "ReservedDepthCamera", "DistanceNode"]
-                        cur_type = "unknown"
-                        tmp_id = (int)(self.read_thread.content['StopPoints']['category'][stop_idx])
-                        if tmp_id >= 0 and tmp_id < len(stop_type):
-                            cur_type = stop_type[(int)(self.read_thread.content['StopPoints']['category'][stop_idx])]
-                        obs_info = ('x: ' + str(self.read_thread.content['StopPoints']['x'][stop_idx])
-                                    + ' y: ' + str(self.read_thread.content['StopPoints']['y'][stop_idx])
-                                    + ' 类型: ' + cur_type
-                                    + ' id: ' + str((int)(self.read_thread.content['StopPoints']['ultra_id'][stop_idx]))
-                                    + ' 距离: ' + str(self.read_thread.content['StopPoints']['dist'][stop_idx]))
-
-                depthCamera_idx = 0
-                t = np.array(self.read_thread.depthcamera.t())
-                depth_pos = []
-                if len(t) > 0:
-                    depthCamera_idx = (np.abs(t-self.mid_line_t)).argmin()
-                    dt = (t[depthCamera_idx] - self.mid_line_t).total_seconds()
-                    if abs(dt) < 0.5:
-                        pos_x = self.read_thread.depthcamera.x()[0][depthCamera_idx]
-                        pos_y = self.read_thread.depthcamera.y()[0][depthCamera_idx]
-                        pos_z = self.read_thread.depthcamera.z()[0][depthCamera_idx]
-                        depth_pos = np.array([pos_x, pos_y, pos_z])
-
-                particle_idx = 0
-                t = np.array(self.read_thread.particle.t())
-                particle_pos = []
-                if len(t) > 0:
-                    particle_idx = (np.abs(t-self.mid_line_t)).argmin()
-                    dt = (t[particle_idx] - self.mid_line_t).total_seconds()
-                    if abs(dt) < 0.5:
-                        pos_x = self.read_thread.particle.x()[0][particle_idx]
-                        pos_y = self.read_thread.particle.y()[0][particle_idx]
-                        theta = self.read_thread.particle.theta()[0][particle_idx]
-                        particle_pos = np.array([pos_x, pos_y, theta])
-
-                laser_points = np.array([])
-                robot_pos = []
-                laser_info = ""
-                rssi = []
-                if self.read_thread.laser.datas:
-                    #最近的激光时间
-                    if laser_idx < 0 or min_laser_channel < 0:
-                        min_laser_channel = 0
-                        laser_idx = 0
-                        min_dt = None
-                        for index in self.read_thread.laser.datas.keys():
-                            if self.map_widget is not None and not self.map_widget.isHidden():
-                                if index in self.map_widget.check_lasers:
-                                    if not self.map_widget.check_lasers[index].isChecked():
-                                        continue
-                            t = np.array(self.read_thread.laser.t(index))
-                            if len(t) < 1:
-                                continue
-                            tmp_laser_idx = (np.abs(t-self.mid_line_t)).argmin()
-                            tmp_dt = np.min(np.abs(t-self.mid_line_t))
-                            if min_dt == None or tmp_dt < min_dt:
-                                min_laser_channel = index
-                                laser_idx = tmp_laser_idx
-                                min_dt = tmp_dt
-                    laser_x = self.read_thread.laser.x(min_laser_channel)[0][laser_idx]
-                    laser_y = self.read_thread.laser.y(min_laser_channel)[0][laser_idx]
-                    laser_points = np.array([laser_x, laser_y])
-                    rssi = np.array(self.read_thread.laser.rssi(min_laser_channel)[0][laser_idx])
-                    #在一个区间内差找最小值
-                    ts = self.read_thread.laser.ts(min_laser_channel)[0][laser_idx]
-                    loc_min_ind = loc_idx - 100
-                    loc_max_ind = loc_idx + 100
-                    if loc_min_ind < 0:
-                        loc_min_ind = 0
-                    if loc_max_ind >= len(self.read_thread.content['LocationEachFrame']['timestamp']):
-                        loc_max_ind = len(self.read_thread.content['LocationEachFrame']['timestamp']) - 1
-                        if loc_max_ind < 0:
-                            loc_max_ind = 0
-                    pos_ts = np.array(self.read_thread.content['LocationEachFrame']['timestamp'][loc_min_ind:loc_max_ind])
-                    pos_idx = (np.abs(pos_ts - ts)).argmin()
-                    pos_idx = loc_min_ind + pos_idx
-                    robot_pos = [self.read_thread.content['LocationEachFrame']['x'][pos_idx],
-                                self.read_thread.content['LocationEachFrame']['y'][pos_idx],
-                                np.deg2rad(self.read_thread.content['LocationEachFrame']['theta'][pos_idx])]
-                    laser_info = (str(self.read_thread.content['LocationEachFrame']['t'][pos_idx]) 
-                                        + ' , ' + str((int)(self.read_thread.content['LocationEachFrame']['timestamp'][pos_idx]))
-                                        + ' , ' + str(self.read_thread.content['LocationEachFrame']['x'][pos_idx])
-                                        + ' , ' + str(self.read_thread.content['LocationEachFrame']['y'][pos_idx])
-                                        + ' , ' + str(self.read_thread.content['LocationEachFrame']['theta'][pos_idx]))
-                if self.map_widget:
-                    self.map_widget.updateRobotLaser(laser_points,rssi,min_laser_channel,robot_pos,robot_loc_pos, laser_info, loc_info, obs_pos, obs_info, depth_pos, particle_pos)
-        # print("min_laser_channer: ", min_laser_channel, " laser_idx: " , laser_idx)
-        self.key_loc_idx = loc_idx
-        self.key_laser_idx = laser_idx
-        self.key_laser_channel = min_laser_channel
         self.updateMapSelectLine()
         self.updateLogView()
         self.updateJsonView()
         self.updateDataViews()
-
-        map_name = None
-        if len(self.read_thread.rstatus.chassis()[1]) > 0:
-            ts = np.array(self.read_thread.rstatus.chassis()[1])
-            idx = (np.abs(ts - self.mid_line_t)).argmin()
-            j = json.loads(self.read_thread.rstatus.chassis()[0][idx])   
-            map_name = j.get("CURRENT_MAP",None)
-            if map_name:
-                map_name = map_name + ".smap"
-
-        if self.map_widget:
-            if self.filenames:
-                full_map_name = None
-                dir_name, _ = os.path.split(self.filenames[0])
-                pdir_name, _ = os.path.split(dir_name)
-                if map_name:
-                    map_dir = os.path.join(pdir_name,"maps")
-                    full_map_name = os.path.join(map_dir,map_name)
-                    if not os.path.exists(full_map_name):
-                        map_dir = dir_name
-                        full_map_name = os.path.join(map_dir,map_name)
-                        if not os.path.exists(full_map_name):
-                            map_dir = os.path.join(dir_name,"maps")
-                            full_map_name = os.path.join(map_dir,map_name)
-                            if not os.path.exists(full_map_name):
-                                full_map_name = None
-                    if full_map_name == self.map_widget.map_name:
-                        full_map_name = None
-
-                model_dir = os.path.join(pdir_name,"models")
-                model_name = os.path.join(model_dir,"robot.model")
-                cp_name = os.path.join(model_dir,"robot.cp")
-                if not os.path.exists(model_name):
-                    model_dir = dir_name
-                    model_name = os.path.join(model_dir,"robot.model")
-                    cp_name = os.path.join(model_dir,"robot.cp")
-                    if not os.path.exists(model_name):
-                        model_dir = os.path.join(dir_name,"models")
-                        model_name = os.path.join(model_dir,"robot.model")
-                        cp_name = os.path.join(model_dir,"robot.cp")
-                        if not os.path.exists(model_name):
-                            model_name = None      
-
-                if model_name == self.map_widget.model_name:
-                    model_name = None
-
-                if cp_name == self.map_widget.cp_name:
-                    cp_name = None
-                self.map_widget.readFiles([full_map_name, model_name, cp_name]) 
-            else:
-                self.map_widget.readFiles([None, None, None])
-
-                
-        if self.map_widget:
-            self.map_widget.redraw()
 
     def updateJsonView(self):
         map_name = None
@@ -656,68 +544,132 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                         j["notices"] = self.read_thread.rstatus.notices()[0][idx]
                 self.sts_widget.loadJson(j)    
 
+    def updateSelection(self):
+        self.select_type = SelectEnum.NoSelect
+        for s in self.select_regions:
+            if s.select_type is not SelectEnum.NoSelect:
+                self.select_type = s.select_type
+                break
+
     def mouse_press(self, event):
-        self.mouse_pressed = True
         if event.inaxes and self.finishReadFlag:
-            mouse_time = event.xdata * 86400 - 62135712000
-            if mouse_time > 1e6:
-                mouse_time = datetime.fromtimestamp(mouse_time)
-                if event.button == 1:
-                    content = 't, '  + event.inaxes.get_ylabel() + ' : ' + str(mouse_time) + ',' +str(event.ydata)
-                    self.log_info.append(content)
-                elif event.button == 3:
-                    if not self.toolBar.isActive():
-                        self.popMenu = QtWidgets.QMenu(self)
-                        self.popMenu.addAction('&Save Data',lambda:self.savePlotData(event.inaxes))
-                        self.popMenu.addAction('&Move Here',lambda:self.moveHere(event.xdata))
-                        self.popMenu.addAction('&reset Data', lambda:self.resetData(event.inaxes))
-                        self.popMenu.addAction('&Diff Time', lambda:self.diffData(event.inaxes))
-                        self.popMenu.addAction('&- Data', lambda:self.negData(event.inaxes))
-                        self.popMenu.addAction('&Add Data', lambda:self.addData(event.inaxes))
-                        cursor = QtGui.QCursor()
-                        self.popMenu.exec_(cursor.pos())
-                    # show info
-                    content = self.get_content(mouse_time)
-                    if content != "":
-                        self.log_info.append(content[:-1])
-                # if self.mid_line_select:
-                #     self.updateMap(mouse_time, -1, -1, -1)
+            mouse_time = num2date(event.xdata)
+            if event.button == 1:
+                self.updateSelection()
+                print("select_type:", self.select_type)
+                if self.select_type is not SelectEnum.NoSelect:
+                    self.mouse_pressed = True
+                content = 't, '  + event.inaxes.get_ylabel() + ' : ' + str(mouse_time) + ',' +str(event.ydata)
+                self.log_info.append(content)
+            elif event.button == 3:
+                if not self.toolBar.isActive():
+                    self.popMenu = QtWidgets.QMenu(self)
+                    self.popMenu.addAction('&Save All Data',lambda:self.saveAllData(event.inaxes))
+                    self.popMenu.addAction('&Save View Data',lambda:self.saveViewData(event.inaxes))
+                    self.popMenu.addAction('&Save Select Data',lambda:self.saveSelectData(event.inaxes))
+                    self.popMenu.addAction('&Move Here',lambda:self.moveHere(event.xdata))
+                    self.popMenu.addAction('&reset Data', lambda:self.resetData(event.inaxes))
+                    self.popMenu.addAction('&Diff Time', lambda:self.diffData(event.inaxes))
+                    self.popMenu.addAction('&- Data', lambda:self.negData(event.inaxes))
+                    self.popMenu.addAction('&Add Data', lambda:self.addData(event.inaxes))
+                    cursor = QtGui.QCursor()
+                    self.popMenu.exec_(cursor.pos())
+                # show info
+                content = self.get_content(mouse_time)
+                if content != "":
+                    self.log_info.append(content[:-1])
 
     def mouse_move(self, event):
         if event.inaxes and self.finishReadFlag:
-            mouse_time = event.xdata * 86400 - 62135712000
-            if mouse_time > 1e6:
-                mouse_time = datetime.fromtimestamp(mouse_time)
-                content = self.get_content(mouse_time)
-                self.info.setText(content)
-                if self.mid_line_select:
+            mouse_time = num2date(event.xdata)
+            content = self.get_content(mouse_time)
+            self.info.setText(content)
+            if self.mouse_pressed:
+                if self.select_type == SelectEnum.Mid:
                     self.resetMidLineProperty(mouse_time)
                     self.updateMap()
-            else:
-                self.info.setText("")
+                elif self.select_type == SelectEnum.Left:
+                    self.setSelectLeft(mouse_time)
+                elif self.select_type == SelectEnum.Right:
+                    self.setSelectRight(mouse_time)
+                elif self.select_type == SelectEnum.Region:
+                    self.setSelectRegion(event.xdata)
         elif not self.finishReadFlag:
             self.info.setText("")
 
     def mouse_release(self, event):
         self.mouse_pressed = False
-        self.mid_line_select = False
+        self.select_type = SelectEnum.NoSelect
+        for s in self.select_regions:
+            s.select_type = SelectEnum.NoSelect
+
+    def leave_axes(self, event):
+        self.mouse_pressed = False
+        self.select_type = SelectEnum.NoSelect
+        for s in self.select_regions:
+            s.select_type = SelectEnum.NoSelect
 
     def moveHere(self, mtime):
         mouse_time = mtime
         if type(mouse_time) is not datetime:
-            mouse_time = mtime * 86400 - 62135712000
-            mouse_time = datetime.fromtimestamp(mouse_time)
+            mouse_time = num2date(mtime)
         self.resetMidLineProperty(mouse_time)
         self.updateMap()
 
-    def x2time(self, d):
-        t = d * 86400 - 62135712000
-        return datetime.fromtimestamp(t)
-    def savePlotData(self, cur_ax):
+    def setSelectLeft(self, t):
+        self.left_line_t = t
+        for s in self.select_regions:
+            s.setRegion(self.left_line_t, self.right_line_t)
+        self.static_canvas.figure.canvas.draw()
+
+    def setSelectRight(self,t):
+        self.right_line_t = t
+        for s in self.select_regions:
+            s.setRegion(self.left_line_t, self.right_line_t)
+        self.static_canvas.figure.canvas.draw()
+
+    def setSelectRegion(self, midx):
+
+        lt = date2num(self.left_line_t)
+        rt = date2num(self.right_line_t)
+        dt = midx - (lt + rt)/2.0
+        lt += dt
+        rt += dt
+        self.left_line_t = num2date(lt)
+        self.right_line_t = num2date(rt)
+        for s in self.select_regions:
+            s.setRegion(lt, rt)
+        self.static_canvas.figure.canvas.draw()
+
+    def saveAllData(self, cur_ax):
+        indx = self.axs.tolist().index(cur_ax)
+        # print(xmin, xmax, time0, time1)
+        xy = self.xys[indx]
+        group_name = xy.y_combo.currentText().split('.')[0]
+        tmpdata = []
+
+        # 获取数据
+        if xy.x_combo.currentText() == 't':
+            tmpdata = self.read_thread.getData(xy.y_combo.currentText())
+        elif xy.x_combo.currentText() == 'timestamp':
+            org_t = self.read_thread.getData(group_name + '.timestamp')[0]
+            dt = [timedelta(seconds = (tmp_t/1e9 - org_t[0]/1e9)) for tmp_t in org_t]
+            t = [self.read_thread.getData(xy.y_combo.currentText())[1][0] + tmp for tmp in dt]
+            tmpdata = (self.read_thread.getData(xy.y_combo.currentText())[0], t)
+        self.savePlotData(cur_ax, tmpdata[1][0], tmpdata[1][-1])
+
+    def saveViewData(self, cur_ax):
         indx = self.axs.tolist().index(cur_ax)
         xmin,xmax = cur_ax.get_xlim()
-        time0 = self.x2time(xmin)
-        time1 = self.x2time(xmax)
+        time0 = num2date(xmin)
+        time1 = num2date(xmax)
+        self.savePlotData(cur_ax, time0, time1)
+
+    def saveSelectData(self, cur_ax):
+        self.savePlotData(cur_ax, self.left_line_t, self.right_line_t)
+
+    def savePlotData(self, cur_ax, time0, time1):
+        indx = self.axs.tolist().index(cur_ax)
         # print(xmin, xmax, time0, time1)
         xy = self.xys[indx]
         fname, _ = QtWidgets.QFileDialog.getSaveFileName(self,"选取log文件", "","CSV Files (*.csv);;PY Files (*.py)")
@@ -740,7 +692,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         # 对数据存之前进行处理
         if isPy:
             ind1 = (np.abs(np.array(tmpdata[1])-time0)).argmin()
-            ind2 = (np.abs(np.array(tmpdata[1])-time1)).argmin()
+            ind2 = (np.abs(np.array(tmpdata[1][ind1::])-time1)).argmin() + ind1
             x,y = [],[]
             for i in range(len(tmpdata[1])):
                 if i >= ind1 and i < ind2:
@@ -754,7 +706,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             list_tmpdata = [(t,d) for t,d in zip(tmpdata[1], tmpdata[0])]
             tmpdata[1].sort()
             ind1 = (np.abs(np.array(tmpdata[1])-time0)).argmin()
-            ind2 = (np.abs(np.array(tmpdata[1])-time1)).argmin()
+            ind2 = (np.abs(np.array(tmpdata[1][ind1::])-time1)).argmin() + ind1
             list_tmpdata.sort(key=lambda d: d[0])
             for (ind, data) in enumerate(list_tmpdata):
                 if ind >= ind1 and ind <= ind2:
@@ -835,71 +787,63 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.drawdata(cur_ax, tmpdata, self.read_thread.ylabel[current_text], False, False)
 
 
-    def onpick(self, event):
-        if self.map_action.isChecked() \
-        or self.view_action.isChecked() \
-        or self.json_action.isChecked() \
-        or self.data_action.isChecked():
-            self.mid_line_select = True
-        else:
-            self.mid_line_select = False
-
     def keyPressEvent(self,event):
-        if self.map_action.isChecked():
-            if len(self.mid_select_lines) > 1:
-                if (event.key() == QtCore.Qt.Key_A or event.key() == QtCore.Qt.Key_D
-                    or event.key() == QtCore.Qt.Key_Left or event.key() == QtCore.Qt.Key_Right):
-                    cur_t = self.mid_select_lines[0].get_xdata()[0]
-                    if type(cur_t) is not datetime:
-                        cur_t = cur_t * 86400 - 62135712000
-                        cur_t = datetime.fromtimestamp(cur_t)
-                    if event.key() == QtCore.Qt.Key_A or event.key() == QtCore.Qt.Key_D:
-                        self.key_laser_idx = -1
-                        self.key_laser_channel = -1
-                        t = np.array(self.read_thread.content['LocationEachFrame']['t'])
-                        if self.key_loc_idx < 0:
-                            self.key_loc_idx = (np.abs(t-cur_t)).argmin()
-                        if event.key() == QtCore.Qt.Key_A:
-                            if self.key_loc_idx > 0:
-                                self.key_loc_idx = self.key_loc_idx - 1
-                        if event.key() ==  QtCore.Qt.Key_D:
-                            if self.key_loc_idx < (len(t) -1 ):
-                                self.key_loc_idx = self.key_loc_idx + 1
-                        cur_t = t[self.key_loc_idx]
-                    else:
-                        self.key_loc_idx = -1
-                        if self.key_laser_idx < 0:
-                            min_laser_channel = -1
-                            laser_idx = -1
-                            min_dt = None
-                            for index in self.read_thread.laser.datas.keys():
-                                t = np.array(self.read_thread.laser.t(index))
-                                if len(t) < 1:
-                                    continue
-                                tmp_laser_idx = (np.abs(t-cur_t)).argmin()
-                                tmp_dt = np.min(np.abs(t-cur_t))
-                                if min_dt == None or tmp_dt < min_dt:
-                                    min_laser_channel = index
-                                    laser_idx = tmp_laser_idx
-                                    min_dt = tmp_dt
-                            self.key_laser_idx = laser_idx
-                            self.key_laser_channel = min_laser_channel
-                            t = self.read_thread.laser.t(min_laser_channel)
-                            cur_t = t[laser_idx]
-                        if event.key() == QtCore.Qt.Key_Left:
-                            self.key_laser_idx = self.key_laser_idx -1
-                            t = self.read_thread.laser.t(self.key_laser_channel)
-                            if self.key_laser_idx < 0:
-                                self.key_laser_idx = len(t) - 1
-                            cur_t = t[self.key_laser_idx]
-                        if event.key() == QtCore.Qt.Key_Right:
-                            self.key_laser_idx = self.key_laser_idx + 1
-                            t = self.read_thread.laser.t(self.key_laser_channel)
-                            if self.key_laser_idx >= len(t):
-                                self.key_laser_idx = 0
-                            cur_t = t[self.key_laser_idx]
-                    self.mid_line_t = cur_t
-                    self.updateMap()
+        if not self.map_action.isChecked():
+            return
+        if len(self.select_regions) < 1:
+            return
+        if (event.key() == QtCore.Qt.Key_A or event.key() == QtCore.Qt.Key_D
+            or event.key() == QtCore.Qt.Key_Left or event.key() == QtCore.Qt.Key_Right):
+            cur_t = self.select_regions[0].getMidLineX()
+            if type(cur_t) is not datetime:
+                cur_t = num2date(cur_t)
+            if event.key() == QtCore.Qt.Key_A or event.key() == QtCore.Qt.Key_D:
+                self.key_laser_idx = -1
+                self.key_laser_channel = -1
+                t = np.array(self.read_thread.content['LocationEachFrame']['t'])
+                if self.key_loc_idx < 0:
+                    self.key_loc_idx = (np.abs(t-cur_t)).argmin()
+                if event.key() == QtCore.Qt.Key_A:
+                    if self.key_loc_idx > 0:
+                        self.key_loc_idx = self.key_loc_idx - 1
+                if event.key() ==  QtCore.Qt.Key_D:
+                    if self.key_loc_idx < (len(t) -1 ):
+                        self.key_loc_idx = self.key_loc_idx + 1
+                cur_t = t[self.key_loc_idx]
+            else:
+                self.key_loc_idx = -1
+                if self.key_laser_idx < 0:
+                    min_laser_channel = -1
+                    laser_idx = -1
+                    min_dt = None
+                    for index in self.read_thread.laser.datas.keys():
+                        t = np.array(self.read_thread.laser.t(index))
+                        if len(t) < 1:
+                            continue
+                        tmp_laser_idx = (np.abs(t-cur_t)).argmin()
+                        tmp_dt = np.min(np.abs(t-cur_t))
+                        if min_dt == None or tmp_dt < min_dt:
+                            min_laser_channel = index
+                            laser_idx = tmp_laser_idx
+                            min_dt = tmp_dt
+                    self.key_laser_idx = laser_idx
+                    self.key_laser_channel = min_laser_channel
+                    t = self.read_thread.laser.t(min_laser_channel)
+                    cur_t = t[laser_idx]
+                if event.key() == QtCore.Qt.Key_Left:
+                    self.key_laser_idx = self.key_laser_idx -1
+                    t = self.read_thread.laser.t(self.key_laser_channel)
+                    if self.key_laser_idx < 0:
+                        self.key_laser_idx = len(t) - 1
+                    cur_t = t[self.key_laser_idx]
+                if event.key() == QtCore.Qt.Key_Right:
+                    self.key_laser_idx = self.key_laser_idx + 1
+                    t = self.read_thread.laser.t(self.key_laser_channel)
+                    if self.key_laser_idx >= len(t):
+                        self.key_laser_idx = 0
+                    cur_t = t[self.key_laser_idx]
+            self.mid_line_t = cur_t
+            self.updateMap()
 
     def new_home(self, *args, **kwargs):
         for ax, xy in zip(self.axs, self.xys):
@@ -1030,7 +974,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.setWindowTitle('Log分析器: {0}'.format([f.split('/')[-1] for f in self.filenames]))
         if self.read_thread.filenames:
             #画图 mcl.t, mcl.x
-            self.mid_select_lines = []
             keys = list(self.read_thread.data.keys())
             for ax, xy in zip(self.axs, self.xys):
                 last_combo_ind = xy.y_combo.currentIndex()
@@ -1051,8 +994,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             self.key_laser_channel = -1
             self.key_laser_idx = -1
             self.key_loc_idx = -1
-            self.updateMidLine()
-            self.updateMapSelectLine()
+            self.resetSelect()
             self.openMap(self.map_action.isChecked())
             self.openViewer(self.view_action.isChecked())
             self.openJsonView(self.json_action.isChecked())
@@ -1064,7 +1006,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.close()
 
     def about(self):
-        QtWidgets.QMessageBox.about(self, "关于", """Log Viewer V2.4.2.a""")
+        QtWidgets.QMessageBox.about(self, "关于", """Log Viewer V2.4.3.c""")
 
     def ycombo_onActivated(self):
         curcombo = self.sender()
@@ -1179,7 +1121,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                         data = (self.read_thread.getData(xy.y_combo.currentText())[0], t)
                         self.drawdata(ax, data,
                                     self.read_thread.ylabel[xy.y_combo.currentText()], False)
-                self.updateMidLine()
+                self.resetSelect()
+        self.static_canvas.figure.canvas.draw()
 
 
     def drawdata(self, ax, data, ylabel, resize = False, replot = True):
@@ -1202,8 +1145,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             ax.set_ylabel(ylabel)
             ax.grid()
             ind = np.where(self.axs == ax)[0][0]
-            if self.mid_select_lines:
-                ax.add_line(self.mid_select_lines[ind])
+            for s in self.select_regions:
+                s.addAgain(ax)
             self.ruler.add_ruler(ax)
         else:
             if data[1] and data[0]:
@@ -1394,22 +1337,22 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             self.motor_view_widget.show()
             (xmin,xmax) = self.axs[0].get_xlim()
             tmid = (xmin+xmax)/2.0 
-            if len(self.mid_select_lines) > 1:
-                for ln in self.mid_select_lines:
-                    ln.set_visible(True)
-                cur_t = self.mid_select_lines[0].get_xdata()[0]
-                if type(cur_t) is not datetime:
-                    cur_t = cur_t * 86400 - 62135712000
-                    cur_t = datetime.fromtimestamp(cur_t)
-                self.updateMap(cur_t, self.key_loc_idx, self.key_laser_idx, self.key_laser_channel)
-            else:
-                for ax in self.axs:
-                    wl = ax.axvline(tmid, color = 'c', linewidth = 10, alpha = 0.5, picker = 10)
-                    self.mid_select_lines.append(wl) 
-                    mouse_time = tmid * 86400 - 62135712000
-                    if mouse_time > 1e6:
-                        mouse_time = datetime.fromtimestamp(mouse_time)
-                        self.updateMap(mouse_time, -1, -1, -1)
+            # if len(self.mid_select_lines) > 1:
+            #     for ln in self.mid_select_lines:
+            #         ln.set_visible(True)
+            #     cur_t = self.mid_select_lines[0].get_xdata()[0]
+            #     if type(cur_t) is not datetime:
+            #         cur_t = cur_t * 86400 - 62135712000
+            #         cur_t = datetime.fromtimestamp(cur_t)
+            #     self.updateMap(cur_t, self.key_loc_idx, self.key_laser_idx, self.key_laser_channel)
+            # else:
+            #     for ax in self.axs:
+            #         wl = ax.axvline(tmid, color = 'c', linewidth = 10, alpha = 0.5, picker = 10)
+            #         self.mid_select_lines.append(wl)
+            #         mouse_time = tmid * 86400 - 62135712000
+            #         if mouse_time > 1e6:
+            #             mouse_time = datetime.fromtimestamp(mouse_time)
+            #             self.updateMap(mouse_time, -1, -1, -1)
         else:
             if self.motor_view_widget:
                 self.motor_view_widget.clearPlainText()
@@ -1433,8 +1376,10 @@ class ApplicationWindow(QtWidgets.QMainWindow):
     def updateLogView(self):
         if self.log_widget is not None \
             and self.mid_line_t is not None \
-                and self.read_thread.reader is not None \
-                    and self.key_loc_idx >= 0:
+                and self.read_thread.reader is not None:
+            if self.key_loc_idx < 0:
+                t = np.array(self.read_thread.content['LocationEachFrame']['t'])
+                self.key_loc_idx = (np.abs(t-self.mid_line_t)).argmin()
             label = ''
             if 'LocationEachFrame' in self.read_thread.content:
                 label = 'LocationEachFrame'
@@ -1525,48 +1470,27 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.key_laser_idx = -1
         self.key_loc_idx = -1
 
-    def updateMidLine(self):
+    def resetSelect(self):
         (xmin,xmax) = self.axs[0].get_xlim()
         tmid = (xmin+xmax)/2.0 
-        if len(self.mid_select_lines) < 1:
-            for ax in self.axs:
-                wl = ax.axvline(tmid, color = 'c', linewidth = 10, alpha = 0.5, picker = 10)
-                self.mid_select_lines.append(wl) 
-                mouse_time = tmid * 86400 - 62135712000
-                if mouse_time > 1e6:
-                    self.mid_line_t = datetime.fromtimestamp(mouse_time)
-        else:
-            cur_t = self.mid_select_lines[0].get_xdata()[0]
-            if type(cur_t) is not datetime:
-                cur_t = cur_t * 86400 - 62135712000
-                cur_t = datetime.fromtimestamp(cur_t)
-            if type(xmin) is not datetime:
-                xmin = xmin * 86400 - 62135712000
-                xmin = datetime.fromtimestamp(xmin)
-            if type(xmax) is not datetime:
-                xmax = xmax * 86400 - 62135712000
-                xmax = datetime.fromtimestamp(xmax)
-            if cur_t >= xmin and cur_t <= xmax:
-                for ln in self.mid_select_lines:
-                    ln.set_visible(True)
-            else:
-                for ln in self.mid_select_lines:
-                    ln.set_visible(True)
-                    ln.set_xdata([tmid, tmid])
-                    mouse_time = tmid * 86400 - 62135712000
-                    if mouse_time > 1e6:
-                        self.mid_line_t = datetime.fromtimestamp(mouse_time)
+        self.select_regions = []
+
+        self.mid_line_t = num2date(tmid)
+        for ax in self.axs:
+            dx = xmax - xmin
+            self.left_line_t = num2date(xmin + dx * 0.1)
+            self.right_line_t = num2date(xmax - dx * 0.1)
+            s = SelectRegion(ax, xmin + dx * 0.1, xmax - dx * 0.1, tmid)
+            self.select_regions.append(s)
 
     def updateMapSelectLine(self):
-        for ln in self.mid_select_lines:
+        for s in self.select_regions:
             if self.mid_line_t is not None:
-                ln.set_xdata([self.mid_line_t,self.mid_line_t])
+                s.setMidLine(self.mid_line_t)
         self.static_canvas.figure.canvas.draw()
 
     def mapClosed(self,info):
         self.map_widget.hide()
-        for ln in self.mid_select_lines:
-            ln.set_visible(False)
         self.map_action.setChecked(False)
         self.openMap(False)
 
@@ -1594,6 +1518,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             self.motor_view_widget.close()
         for d in self.dataViews:
             d.close()
+        self.targetPrecision.close()
         self.close()
 
     def updateDataView(self, d:DataView):
@@ -1606,7 +1531,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                     t = self.read_thread.getData(k)[1]
                     break
         if t is None or len(t) < 1:
-            # print(t, self.mid_line_t)
             j = dict()
             j[first_k] = "No Valid Data"
             d.loadJson(j)
@@ -1646,10 +1570,10 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         dataView.show()
         self.initDataView(dataView)
         self.dataViews.append(dataView)  
-        self.updateDataView(dataView)
+        self.updateDataView(dataView) 
 
     def initDataView(self, d:DataView):
-        d.setSelectionItems(list(self.read_thread.content.keys()))
+        d.setSelectionItems(list(self.read_thread.content.keys())) 
 
     def downloadLog(self):
         if not self.cmdArgs.ip:

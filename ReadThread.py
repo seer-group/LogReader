@@ -153,7 +153,7 @@ class ReadThread(QThread):
             else:
                 tmin = self.reader.tmin
             dt = tmax - tmin
-            self.tlist = [tmin + timedelta(microseconds=x) for x in range(0, int(dt.total_seconds()*1e6+1000),1000)]
+            self.tlist = [tmin, tmax]
             #save Error
             ts = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
             self.output_fname = "Report_" + str(ts).replace(':','-').replace(' ','_') + ".txt"
