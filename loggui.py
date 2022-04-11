@@ -769,8 +769,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         
 
     def keyPressEvent(self,event):
-        if not self.map_action.isChecked():
-            return
         if len(self.select_regions) < 1:
             return
         if (event.key() == QtCore.Qt.Key_A or event.key() == QtCore.Qt.Key_D
