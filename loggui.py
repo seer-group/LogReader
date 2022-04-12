@@ -33,6 +33,8 @@ from TargetPrecision import TargetPrecision
 from CmdArgs import CmdArgs
 from LogDownloader import LogDownloader
 from MyFileSelectionWidget import MyFileSelectionWidget
+from ExtractZipThread import ExtractZipThread
+from LogDownloadWidget import LogDownloadWidget
 
 class XYSelection:
     def __init__(self, num = 1):
@@ -185,8 +187,13 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.in_close = False
         self.setupUI()
         self.logDownloader = None
+        self.logDownload_widget = None
         self.fs_widget = None
-        self.downloadLog()
+
+        if self.cmdArgs.zip:
+            self.extractZip()
+        elif self.cmdArgs.ip:
+            self.downloadLog()
 
     def setupUI(self):
         """初始化窗口结构""" 
@@ -266,23 +273,24 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.precision.triggered.connect(self.openPrecision)
         self.tools_menu.addAction(self.precision)
 
+        self.logdownload_action = QtWidgets.QAction("&Log Download", self.tools_menu)
+        self.logdownload_action.triggered.connect(self.openDownloadLogWidget)
+        self.tools_menu.addAction(self.logdownload_action)
+
         self.help_menu = QtWidgets.QMenu('&Help', self)
         self.help_menu.addAction('&About', self.about)
         self.menuBar().addMenu(self.help_menu)
 
         # 状态栏显示log下载进度 和状态信息 默认不显示
-        pb = QtWidgets.QProgressBar(self)
-        pb.setObjectName("downloadProgressBar")
-        lb1 = QtWidgets.QLabel()
-        lb1.setObjectName("downloadLabel")
-        lb1.setAlignment(QtCore.Qt.AlignBottom)
-        lb2 = QtWidgets.QLabel()
-        lb2.setObjectName("statusLabel")
-        lb2.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignBottom)
-        self.statusBar().addWidget(pb,3)
-        self.statusBar().addWidget(lb1,5)
-        self.statusBar().addPermanentWidget(lb2,2)
-        self.statusBar().close()
+        self.statusProgressBar = QtWidgets.QProgressBar(self)
+        self.statusLabel1 = QtWidgets.QLabel()
+        self.statusLabel1.setAlignment(QtCore.Qt.AlignBottom)
+        self.statusLabel2 = QtWidgets.QLabel()
+        self.statusLabel2.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignBottom)
+        self.statusBar().addWidget(self.statusProgressBar,3)
+        self.statusBar().addWidget(self.statusLabel1,5)
+        self.statusBar().addPermanentWidget(self.statusLabel2,2)
+        self.statusBar().setHidden(True)
 
         self._main = Widget()
         self._main.dropped.connect(self.dragFiles)
@@ -1422,6 +1430,16 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             self.targetPrecision.show()
         else:
             self.targetPrecision.hide()
+
+    def openDownloadLogWidget(self):
+        def func(args):
+            self.cmdArgs.startTime,self.cmdArgs.endTime,self.cmdArgs.ip,self.cmdArgs.dirName,self.cmdArgs.onlyLog = args
+            self.downloadLog()
+            self.logDownload_widget = None
+        self.logDownload_widget = LogDownloadWidget()
+        self.logDownload_widget.createDownloadTasked.connect(func)
+        self.logDownload_widget.show()
+
     # 画电机跟随曲线
     def drawMotorFollow(self, checked):
         dir_name, _ = os.path.split(self.filenames[0])
@@ -1518,6 +1536,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             self.motor_view_widget.close()
         if self.fs_widget:
             self.fs_widget.close()
+        if self.logDownload_widget:
+            self.logDownload_widget.close()
         for d in self.dataViews:
             d.close()
         self.targetPrecision.close()
@@ -1578,18 +1598,45 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         d.setSelectionItems(list(self.read_thread.content.keys())) 
 
     def downloadLog(self):
-        if not self.cmdArgs.ip:
-            return
-        def release():
+        def release(*args):
+            self.statusBar().setHidden(True)
             self.logDownloader = None
-        def fileSelection(dirPath):
-            self.fs_widget = MyFileSelectionWidget(dirPath)
-            self.fs_widget.setWindowIcon(QtGui.QIcon('rbk.ico'))
-            self.fs_widget.submit.connect(self.dragFiles)
-            self.fs_widget.show()
-        self.logDownloader = LogDownloader(self.statusBar(),self.cmdArgs)
-        self.logDownloader.filesReady.connect(fileSelection)
-        self.logDownloader.downloadEnd.connect(release)
+        self.statusProgressBar.setValue(0)
+        self.statusLabel1.setText("")
+        self.statusLabel2.setText("")
+        self.statusBar().setToolTip("")
+        self.statusBar().setHidden(False)
+        self.logDownloader = LogDownloader(self.cmdArgs)
+        self.logDownloader.downloadProgressChanged.connect(self.statusProgressBar.setValue)
+        self.logDownloader.downloadStatusChanged.connect(self.statusLabel1.setText)
+        self.logDownloader.connectionChanged.connect(self.statusLabel2.setText)
+        self.logDownloader.reqOrResInfoChanged.connect(self.statusBar().setToolTip)
+        self.logDownloader.filesReady.connect(self.createFSWidget)
+        self.logDownloader.filesReady.connect(release)
+        self.logDownloader.error.connect(lambda msg: QtWidgets.QMessageBox.critical(None,"Error",msg))
+        self.logDownloader.error.connect(release)
+        self.logDownloader.run()
+
+    def extractZip(self):
+        self.statusProgressBar.setValue(0)
+        self.statusLabel1.setText("")
+        self.statusLabel2.setText("")
+        self.statusBar().setToolTip("")
+        self.statusBar().setHidden(False)
+        thread = ExtractZipThread(self.cmdArgs.zip,self)
+        thread.extractFileChanged.connect(self.statusLabel1.setText)
+        thread.extractProgressChanged.connect(self.statusProgressBar.setValue)
+        thread.error.connect(lambda msg: QtWidgets.QMessageBox.critical(None,"Error",msg))
+        thread.error.connect(lambda msg: self.statusBar().setHidden(True))
+        thread.filesReady.connect(self.createFSWidget)
+        thread.filesReady.connect(lambda dir: self.statusBar().setHidden(True))
+        thread.start()
+
+    def createFSWidget(self, dirPath):
+        self.fs_widget = MyFileSelectionWidget(dirPath)
+        self.fs_widget.setWindowIcon(QtGui.QIcon('rbk.ico'))
+        self.fs_widget.submit.connect(self.dragFiles)
+        self.fs_widget.show()
 
 if __name__ == "__main__":
     freeze_support()

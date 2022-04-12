@@ -5,8 +5,10 @@ import re
 
 class CmdArgs():
     def __init__(self):
-        self.startTime, self.endTime, self.dirName, self.onlyLog, self.ip = self.__GetCmdArgs()
-        # self.dirName = self.dirName.replace("\\","/")
+        self.startTime, self.endTime, self.dirName, self.onlyLog, self.ip, self.zip = self.__GetCmdArgs()
+
+    def __str__(self):
+        return f"({self.startTime}, {self.endTime}, {self.dirName}, {self.onlyLog}, {self.ip}, {self.zip})"
 
     def __GetCmdArgs(self):
         parser = argparse.ArgumentParser()
@@ -22,6 +24,8 @@ class CmdArgs():
                             help="Whether to download logs only", action="store_true")
         parser.add_argument("-i", "--ip", metavar="", dest="ip",
                             help="Robot IP")
+        parser.add_argument("-z", "--zip", metavar="", dest="zip",
+                            help="Debug zip file")
         args = parser.parse_args()
         try:
             if args.ip and not re.match(r"^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$",args.ip):
@@ -31,7 +35,7 @@ class CmdArgs():
         except Exception as e:
             print(e)
             exit(-1)
-        return args.startTime, args.endTime, args.dirName, args.onlyLog, args.ip
+        return args.startTime, args.endTime, args.dirName, args.onlyLog, args.ip, args.zip
 
 
 if __name__ == '__main__':

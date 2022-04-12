@@ -135,9 +135,13 @@ class SeerObj():
 class LogDownloader(QObject):
 
     filesReady = pyqtSignal(str)
-    downloadEnd = pyqtSignal()
-    def __init__(self,statusBar:QStatusBar,cmdArgs:CmdArgs):
-        super(LogDownloader, self).__init__()
+    error = pyqtSignal(str)
+    downloadStatusChanged = pyqtSignal(str)
+    reqOrResInfoChanged = pyqtSignal(str)
+    downloadProgressChanged = pyqtSignal(int)
+    connectionChanged = pyqtSignal(str)
+    def __init__(self, cmdArgs:CmdArgs,parent = None):
+        super(LogDownloader, self).__init__(parent)
         self.PORT = 19208
         self.recvByteArray = QByteArray()
         self.recvSeerObj = None
@@ -145,32 +149,24 @@ class LogDownloader(QObject):
         self.currentReqFile = None
         self.reqFilesTotal = 0
         self.socket = QTcpSocket(self)
-        self.statusBar = statusBar
         self.cmdArgs = cmdArgs
-        self.downloadProgressBar:QProgressBar = statusBar.findChild(QProgressBar, "downloadProgressBar")
-        self.downloadLabel:QLabel = statusBar.findChild(QLabel, "downloadLabel")
-        self.statusLabel:QLabel = statusBar.findChild(QLabel, "statusLabel")
-        self.downloadProgressBar.setValue(0)
-        self.downloadLabel.setText("")
-        self.statusLabel.setText("")
-        self.statusBar.show()
-        self._connectToHost()
 
-    def __del__(self):
-        self.statusBar.close()
-
-    def _connectToHost(self):
-        self.socket.connectToHost(self.cmdArgs.ip, self.PORT)
-        self._slotStateChanged(f"Connecting to {self.cmdArgs.ip}:{self.PORT}")
         self.socket.stateChanged.connect(self._slotStateChanged)
         self.socket.readyRead.connect(self._slotReadyRead)
         self.socket.error.connect(self._slotError)
 
+    def run(self):
+        self._connectToHost()
+
+    def _connectToHost(self):
+        self.socket.connectToHost(self.cmdArgs.ip, self.PORT)
+        self._slotStateChanged(f"Connecting to {self.cmdArgs.ip}:{self.PORT}")
+
     def _slotStateChanged(self,e: Union[str, int]):
         if isinstance(e, str):
-            self.statusLabel.setText(e)
+            self.connectionChanged.emit(e)
             return
-        self.statusLabel.setText(str(SocketState(e)))
+        self.connectionChanged.emit(str(SocketState(e)))
         if SocketState.ConnectedState.value == e:
             #获取debug文件列表
             reqDict = {"endTime": self.cmdArgs.endTime, "isDownloadLogOnly": self.cmdArgs.onlyLog, "startTime": self.cmdArgs.startTime}
@@ -181,15 +177,15 @@ class LogDownloader(QObject):
 
     def _slotReadyRead(self):
         if self.currentReqFile:
-            self.downloadLabel.setText(f"Downloading:{self.currentReqFile[2]}")
+            self.downloadStatusChanged.emit(f"Downloading:{self.currentReqFile[2]}")
         else:
-            self.downloadLabel.setText("Get:DebugFileList")
+            self.downloadStatusChanged.emit("Get:DebugFileList")
         self.recvByteArray += self.socket.readAll()
         if not SeerObj.checkIfComplete(self.recvByteArray):
             return
         seerObj = SeerObj().fromBytearray(self.recvByteArray.data())
         info = self._statusInfofmt(seerObj)
-        self.statusBar.setToolTip(info)
+        self.reqOrResInfoChanged.emit(info)
         if seerObj.type - 10000 == ProtocolType.GetDebugFileList.value:
             fileDict:dict = json.loads(seerObj.data)
             if not "fileList" in fileDict.keys():
@@ -202,7 +198,7 @@ class LogDownloader(QObject):
             self.downladFileIte = self._debugFileGenerator(fileDict)
 
         elif seerObj.type - 10000 == ProtocolType.GetFile.value:
-            self.downloadProgressBar.setValue(self.currentReqFile[3])
+            self.downloadProgressChanged.emit(self.currentReqFile[3])
             dirPath = self.cmdArgs.dirName + "/" + self.currentReqFile[0]
 
             if not QDir().exists(dirPath):
@@ -222,8 +218,8 @@ class LogDownloader(QObject):
             text = e
         else:
             text =str(SocketError(e))
-        QMessageBox.critical(None, 'Error', text)
-        self.downloadEnd.emit()
+        # QMessageBox.critical(None, 'Error', text)
+        self.error.emit(text)
 
     def _statusInfofmt(self,seerObj:SeerObj):
         info = f"Type:{seerObj.type}\nPort:{self.PORT}\nNumber:{seerObj.number}\nHeader:{'0x'}{str(binascii.b2a_hex(seerObj.toBytearray()[0:17]))[2:-1]}\nDataLength:{seerObj.length}\nData:"
@@ -236,11 +232,11 @@ class LogDownloader(QObject):
     def _sendRequest(self, seerObj:SeerObj):
         self.socket.write(seerObj.toBytearray())
         if seerObj.type == ProtocolType.GetDebugFileList.value:
-            self.downloadLabel.setText(f"Req:DebugFileList")
+            self.downloadStatusChanged.emit(f"Req:DebugFileList")
         else:
-            self.downloadLabel.setText(f"Req:{self.currentReqFile[2]}")
+            self.downloadStatusChanged.emit(f"Req:{self.currentReqFile[2]}")
         info = self._statusInfofmt(seerObj)
-        self.statusBar.setToolTip(info)
+        self.reqOrResInfoChanged.emit(info)
 
     def _sendRequestFile(self):
         try:
@@ -248,7 +244,6 @@ class LogDownloader(QObject):
         except Exception as e:
             dirPath = self.cmdArgs.dirName + "/log"
             self.filesReady.emit(dirPath)
-            self.downloadEnd.emit()
             return
         reqDict = {"path": self.currentReqFile[1], "file_name": self.currentReqFile[2]}
         seerObj = SeerObj()
