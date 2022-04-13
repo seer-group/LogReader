@@ -201,18 +201,27 @@ class Readmap(QThread):
         try:
             with open(self.map_name, encoding= 'UTF-8') as fid:
                 self.js = js.load(fid)
-        except UnicodeDecodeError:
-            fz = zipfile.ZipFile(self.map_name, 'r')
-            full_map_name = os.path.splitext(self.map_name)[0]
-            map_name = ""
-            for file in fz.namelist():
-                fz.extract(file, full_map_name)    
-                if os.path.splitext(file)[1] == ".smap":
-                    map_name = os.path.join(full_map_name, file)
-            logging.debug("mapWidget|readMap|{}|{}".format(full_map_name, map_name))
-            with open(map_name, encoding= 'UTF-8') as fid:
-                self.js = js.load(fid)
-        fid.close()
+        except UnicodeDecodeError as e:
+            logging.warn("readMap {} in utf-8 error. {}".format(self.map_name, e))
+            try:
+                with open(self.map_name, encoding='gbk') as fid:
+                    self.js = js.load(fid)
+            except UnicodeDecodeError as e:
+                logging.warn("readMap {} in gbk error. {}".format(self.map_name, e))
+                try:
+                    fz = zipfile.ZipFile(self.map_name, 'r')
+                    full_map_name = os.path.splitext(self.map_name)[0]
+                    map_name = ""
+                    for file in fz.namelist():
+                        fz.extract(file, full_map_name)    
+                        if os.path.splitext(file)[1] == ".smap":
+                            map_name = os.path.join(full_map_name, file)
+                    logging.debug("mapWidget|readMap|{}|{}".format(full_map_name, map_name))
+                    with open(map_name, encoding= 'UTF-8') as fid:
+                        self.js = js.load(fid)
+                except Exception as e:
+                    print(e)
+                    logging.error("readMap error: {}. {}".format(self.map_name, e))
         self.map_x = []
         self.map_y = []
         self.lines = []
@@ -235,7 +244,7 @@ class Readmap(QThread):
             if 'y' in endPos:
                 y2 = endPos['y']
             self.straights.append([(x1,y1),(x2,y2)])            
-        for pos in self.js['normalPosList']:
+        for pos in self.js.get('normalPosList', []):
             if 'x' in pos:
                 self.map_x.append(float(pos['x']))
             else:
@@ -1716,7 +1725,7 @@ class MapWidget(QtWidgets.QWidget):
         self.odo_next.set_ydata(yn)
 
     def updateRobotData(self):
-        if self.robot_log is not None:
+        if self.robot_log is not None and not self.isHidden():
             if self.mid_line_t != self.robot_log.mid_line_t:
                 self.mid_line_t = self.robot_log.mid_line_t
                 self.updateMapAndShape()
