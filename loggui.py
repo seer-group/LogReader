@@ -137,7 +137,7 @@ class SelectRegion:
             self.ax.add_artist(self.mid_line)
 
     def getMidLineX(self):
-        return self.mid_line.get_xdata()[0]
+        return self.mid_line.get_xdata()
 
     def pickfunc(self, artist, mouseevent):
         if artist is self.select_region or\
@@ -796,8 +796,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
 
     def keyPressEvent(self,event):
-        if not self.map_action.isChecked():
-            return
         if len(self.select_regions) < 1:
             return
         if (event.key() == QtCore.Qt.Key_A or event.key() == QtCore.Qt.Key_D
@@ -820,7 +818,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 cur_t = t[self.key_loc_idx]
             else:
                 self.key_loc_idx = -1
-                if self.key_laser_idx < 0:
+                if self.key_laser_idx < 0 \
+                or self.key_laser_channel < 0:
                     min_laser_channel = -1
                     laser_idx = -1
                     min_dt = None
