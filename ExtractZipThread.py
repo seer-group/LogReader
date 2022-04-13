@@ -1,5 +1,6 @@
 from PyQt5.QtCore import QThread, QFileInfo, pyqtSignal
 import zipfile
+import re
 
 class ExtractZipThread(QThread):
     filesReady = pyqtSignal(str)
@@ -15,7 +16,12 @@ class ExtractZipThread(QThread):
             self.error.emit(f"\"{self.zipFile}\" is not a zip file !")
             return
         zipFile = zipfile.ZipFile(self.zipFile)
-        if not "log/" in zipFile.namelist():
+        isContainLogDir = False
+        for fn in zipFile.namelist():
+            if re.match("^log/",fn):
+                isContainLogDir = True
+                break
+        if not isContainLogDir:
             self.error.emit("There is no log directory in this zip file !")
             return
         total = len(zipFile.filelist)

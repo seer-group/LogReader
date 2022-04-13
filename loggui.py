@@ -1437,6 +1437,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             self.downloadLog()
             self.logDownload_widget = None
         self.logDownload_widget = LogDownloadWidget()
+        self.logDownload_widget.setWindowIcon(QtGui.QIcon('rbk.ico'))
         self.logDownload_widget.createDownloadTasked.connect(func)
         self.logDownload_widget.show()
 
@@ -1611,7 +1612,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.logDownloader.downloadStatusChanged.connect(self.statusLabel1.setText)
         self.logDownloader.connectionChanged.connect(self.statusLabel2.setText)
         self.logDownloader.reqOrResInfoChanged.connect(self.statusBar().setToolTip)
-        self.logDownloader.filesReady.connect(self.createFSWidget)
+        self.logDownloader.filesReady.connect(self.openFSWidget)
         self.logDownloader.filesReady.connect(release)
         self.logDownloader.error.connect(lambda msg: QtWidgets.QMessageBox.critical(None,"Error",msg))
         self.logDownloader.error.connect(release)
@@ -1628,11 +1629,11 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         thread.extractProgressChanged.connect(self.statusProgressBar.setValue)
         thread.error.connect(lambda msg: QtWidgets.QMessageBox.critical(None,"Error",msg))
         thread.error.connect(lambda msg: self.statusBar().setHidden(True))
-        thread.filesReady.connect(self.createFSWidget)
+        thread.filesReady.connect(self.openFSWidget)
         thread.filesReady.connect(lambda dir: self.statusBar().setHidden(True))
         thread.start()
 
-    def createFSWidget(self, dirPath):
+    def openFSWidget(self, dirPath):
         self.fs_widget = MyFileSelectionWidget(dirPath)
         self.fs_widget.setWindowIcon(QtGui.QIcon('rbk.ico'))
         self.fs_widget.submit.connect(self.dragFiles)
