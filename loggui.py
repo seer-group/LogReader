@@ -547,8 +547,9 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                     self.popMenu = QtWidgets.QMenu(self)
                     self.popMenu.addAction('&Save All Data',lambda:self.saveAllData(event.inaxes))
                     self.popMenu.addAction('&Save View Data',lambda:self.saveViewData(event.inaxes))
-                    self.popMenu.addAction('&Save Select Data',lambda:self.saveSelectData(event.inaxes))
+                    self.popMenu.addAction('&Save Region Data',lambda:self.saveSelectData(event.inaxes))
                     self.popMenu.addAction('&Move Here',lambda:self.moveHere(event.xdata))
+                    self.popMenu.addAction('&resize Region',lambda:self.resizeRegion())
                     self.popMenu.addAction('&reset Data', lambda:self.resetData(event.inaxes))
                     self.popMenu.addAction('&Diff Time', lambda:self.diffData(event.inaxes))
                     self.popMenu.addAction('&- Data', lambda:self.negData(event.inaxes))
@@ -597,17 +598,26 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.resetMidLineProperty(mouse_time)
         self.updateMap()
 
+    def resizeRegion(self):
+        (xmin,xmax) = self.axs[0].get_xlim()
+        tmid = (xmin+xmax)/2.0
+        dx = xmax - xmin
+        self.setSelectLeft(num2date(xmin + dx * 0.1))
+        self.setSelectRight(num2date(xmax - dx * 0.1))     
+
     def setSelectLeft(self, t):
-        self.left_line_t = t
-        for s in self.select_regions:
-            s.setRegion(self.left_line_t, self.right_line_t)
-        self.static_canvas.figure.canvas.draw()
+        if t < self.right_line_t:
+            self.left_line_t = t
+            for s in self.select_regions:
+                s.setRegion(self.left_line_t, self.right_line_t)
+            self.static_canvas.figure.canvas.draw()
 
     def setSelectRight(self,t):
-        self.right_line_t = t
-        for s in self.select_regions:
-            s.setRegion(self.left_line_t, self.right_line_t)
-        self.static_canvas.figure.canvas.draw()
+        if t > self.left_line_t:
+            self.right_line_t = t
+            for s in self.select_regions:
+                s.setRegion(self.left_line_t, self.right_line_t)
+            self.static_canvas.figure.canvas.draw()
 
     def setSelectRegion(self, midx):
 
@@ -986,7 +996,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.close()
 
     def about(self):
-        QtWidgets.QMessageBox.about(self, "关于", """Log Viewer V2.4.3.d""")
+        QtWidgets.QMessageBox.about(self, "关于", """Log Viewer V2.4.4.a""")
 
     def ycombo_onActivated(self):
         curcombo = self.sender()

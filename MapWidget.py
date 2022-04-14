@@ -992,6 +992,7 @@ class MapWidget(QtWidgets.QWidget):
                     if self.laser_index is k:
                         self.laser_data.set_visible(cur_check.isChecked())
                         self.laser_data_points.set_visible(cur_check.isChecked())
+                    self.mid_line_t = None
                        
         self.static_canvas.figure.canvas.draw() 
 
@@ -1465,12 +1466,20 @@ class MapWidget(QtWidgets.QWidget):
         laser_idx = self.robot_log.key_laser_idx
         min_laser_channel = self.robot_log.key_laser_channel
         if laser_idx < 0 or min_laser_channel < 0:
-            min_laser_channel = 0
-            laser_idx = 0
+            if min_laser_channel < 0: 
+                min_laser_channel = 0
+            if laser_idx < 0:
+                laser_idx = 0
             min_dt = None
             for index in laser_data.datas.keys():
                 t = np.array(laser_data.t(index))
                 if len(t) < 1:
+                    continue
+                ischecked = False
+                if index in self.check_lasers:
+                    if self.check_lasers[index].isChecked():
+                        ischecked = True
+                if not ischecked:
                     continue
                 tmp_laser_idx = (np.abs(t - mid_line_t)).argmin()
                 tmp_dt = np.min(np.abs(t - mid_line_t))
