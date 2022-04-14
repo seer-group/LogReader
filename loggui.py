@@ -281,17 +281,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.help_menu.addAction('&About', self.about)
         self.menuBar().addMenu(self.help_menu)
 
-        # 状态栏显示log下载进度 和状态信息 默认不显示
-        self.statusProgressBar = QtWidgets.QProgressBar(self)
-        self.statusLabel1 = QtWidgets.QLabel()
-        self.statusLabel1.setAlignment(QtCore.Qt.AlignBottom)
-        self.statusLabel2 = QtWidgets.QLabel()
-        self.statusLabel2.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignBottom)
-        self.statusBar().addWidget(self.statusProgressBar,3)
-        self.statusBar().addWidget(self.statusLabel1,5)
-        self.statusBar().addPermanentWidget(self.statusLabel2,2)
-        self.statusBar().setHidden(True)
-
         self._main = Widget()
         self._main.dropped.connect(self.dragFiles)
         self.setCentralWidget(self._main)
@@ -1599,18 +1588,26 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
     def downloadLog(self):
         def release(*args):
-            self.statusBar().setHidden(True)
+            self.setStatusBar(None)
             self.logDownloader = None
-        self.statusProgressBar.setValue(0)
-        self.statusLabel1.setText("")
-        self.statusLabel2.setText("")
-        self.statusBar().setToolTip("")
-        self.statusBar().setHidden(False)
+
+        progressBar = QtWidgets.QProgressBar(self)
+        progressBar.setMaximumHeight(15)
+        statusLabel1 = QtWidgets.QLabel()
+        statusLabel1.setAlignment(QtCore.Qt.AlignBottom)
+        statusLabel2 = QtWidgets.QLabel()
+        statusLabel2.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignBottom)
+        statusBar = QtWidgets.QStatusBar(self)
+        statusBar.addWidget(progressBar,3)
+        statusBar.addWidget(statusLabel1,5)
+        statusBar.addPermanentWidget(statusLabel2,2)
+        self.setStatusBar(statusBar)
+
         self.logDownloader = LogDownloader(self.cmdArgs)
-        self.logDownloader.downloadProgressChanged.connect(self.statusProgressBar.setValue)
-        self.logDownloader.downloadStatusChanged.connect(self.statusLabel1.setText)
-        self.logDownloader.connectionChanged.connect(self.statusLabel2.setText)
-        self.logDownloader.reqOrResInfoChanged.connect(self.statusBar().setToolTip)
+        self.logDownloader.downloadProgressChanged.connect(progressBar.setValue)
+        self.logDownloader.downloadStatusChanged.connect(statusLabel1.setText)
+        self.logDownloader.connectionChanged.connect(statusLabel2.setText)
+        self.logDownloader.reqOrResInfoChanged.connect(statusBar.setToolTip)
         self.logDownloader.filesReady.connect(self.openFSWidget)
         self.logDownloader.filesReady.connect(release)
         self.logDownloader.error.connect(lambda msg: QtWidgets.QMessageBox.critical(None,"Error",msg))
@@ -1618,18 +1615,23 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.logDownloader.run()
 
     def extractZip(self):
-        self.statusProgressBar.setValue(0)
-        self.statusLabel1.setText("")
-        self.statusLabel2.setText("")
-        self.statusBar().setToolTip("")
-        self.statusBar().setHidden(False)
+
+        progressBar = QtWidgets.QProgressBar(self)
+        progressBar.setMaximumHeight(15)
+        statusLabel1 = QtWidgets.QLabel()
+        statusLabel1.setAlignment(QtCore.Qt.AlignBottom)
+        statusBar = QtWidgets.QStatusBar(self)
+        statusBar.addWidget(progressBar, 3)
+        statusBar.addWidget(statusLabel1, 7)
+        self.setStatusBar(statusBar)
+
         thread = ExtractZipThread(self.cmdArgs.zip,self)
-        thread.extractFileChanged.connect(self.statusLabel1.setText)
-        thread.extractProgressChanged.connect(self.statusProgressBar.setValue)
+        thread.extractFileChanged.connect(statusLabel1.setText)
+        thread.extractProgressChanged.connect(progressBar.setValue)
         thread.error.connect(lambda msg: QtWidgets.QMessageBox.critical(None,"Error",msg))
-        thread.error.connect(lambda msg: self.statusBar().setHidden(True))
+        thread.error.connect(lambda msg: self.setStatusBar(None))
         thread.filesReady.connect(self.openFSWidget)
-        thread.filesReady.connect(lambda dir: self.statusBar().setHidden(True))
+        thread.filesReady.connect(lambda dir: self.setStatusBar(None))
         thread.start()
 
     def openFSWidget(self, dirPath):
