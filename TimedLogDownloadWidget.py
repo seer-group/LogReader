@@ -126,7 +126,6 @@ class TimedLogDownloadWidget(QWidget):
             self.closed.emit()
 
     def timerEvent(self, e: QTimerEvent):
-        print(time.time())
         needKill = True
         for row in range(self.model.rowCount()):
             if self.model.item(row, 0).data() > QDateTime.currentDateTime():
