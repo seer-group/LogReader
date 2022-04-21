@@ -1,6 +1,7 @@
 from PyQt5.QtWidgets import QLayout, QSizePolicy
 from PyQt5.QtCore import Qt, QRect, QSize, QPoint
 
+
 class FlowLayout(QLayout):
     def __init__(self, parent=None, margin=0, spacing=-1):
         super(FlowLayout, self).__init__(parent)

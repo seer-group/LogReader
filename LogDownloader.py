@@ -1,5 +1,4 @@
-from PyQt5.QtWidgets import QProgressBar, QLabel, QStatusBar, QMessageBox
-from PyQt5.QtCore import QObject , QByteArray, pyqtSignal, QDir
+from PyQt5.QtCore import QObject, QByteArray, pyqtSignal, QDir
 from PyQt5.QtNetwork import QTcpSocket
 from typing import Union
 import os
@@ -8,9 +7,11 @@ import binascii
 from enum import Enum
 from CmdArgs import CmdArgs
 
+
 class ProtocolType(Enum):
     GetDebugFileList = 5130
     GetFile = 5101
+
 
 class SocketState(Enum):
     UnconnectedState = 0
@@ -20,6 +21,7 @@ class SocketState(Enum):
     BoundState = 4
     ClosingState = 6
     ListeningState = 5
+
 
 class SocketError(Enum):
     ConnectionRefusedError = 0
@@ -56,23 +58,23 @@ class SeerObj():
         self.__number = 0
         self.__type = ProtocolType.GetDebugFileList.value
         self.__reserved = bytes(6)
-        self.__length = 0x0
+        self.__length = 0
         self.__data = bytearray()
 
     def __str__(self):
         return {
-                "className": self.__class__.__name__,
-                "sync": hex(self.__sync),
-                "version": hex(self.__version),
-                "number": self.__number,
-                "type": hex(self.__type),
-                "reserved": self.__reserved,
-                "length": self.__length,
-                "data": self.__data
-                }.__str__()
+            "className": self.__class__.__name__,
+            "sync": hex(self.__sync),
+            "version": hex(self.__version),
+            "number": self.__number,
+            "type": hex(self.__type),
+            "reserved": self.__reserved,
+            "length": self.__length,
+            "data": self.__data
+        }.__str__()
 
     @staticmethod
-    def checkIfComplete(d:QByteArray):
+    def checkIfComplete(d: QByteArray):
         length = int.from_bytes(d.data()[4:8], "big")
         return d.count() - 16 >= length
 
@@ -87,15 +89,17 @@ class SeerObj():
     @property
     def number(self):
         return self.__number
+
     @number.setter
-    def number(self, v:int):
+    def number(self, v: int):
         self.__number = v
 
     @property
     def type(self):
-        return  self.__type
+        return self.__type
+
     @type.setter
-    def type(self, v:ProtocolType):
+    def type(self, v: ProtocolType):
         self.__type = v.value
 
     @property
@@ -105,13 +109,13 @@ class SeerObj():
     @property
     def data(self):
         return self.__data
+
     @data.setter
-    def data(self, v:Union[bytearray,bytes]):
+    def data(self, v: Union[bytearray, bytes]):
         self.__data = v
         self.__length = len(v)
 
-
-    def fromBytearray(self,data:Union[bytearray,bytes]):
+    def fromBytearray(self, data: Union[bytearray, bytes]):
         self.__sync = data[0]
         self.__version = data[1]
         self.__number = int.from_bytes(data[2:4], "big")
@@ -125,27 +129,28 @@ class SeerObj():
         barr = bytearray()
         barr.append(self.__sync)
         barr.append(self.__version)
-        barr += self.__number.to_bytes(2,"big")
-        barr += self.__length.to_bytes(4,"big")
-        barr += self.__type.to_bytes(2,"big")
+        barr += self.__number.to_bytes(2, "big")
+        barr += self.__length.to_bytes(4, "big")
+        barr += self.__type.to_bytes(2, "big")
         barr += self.__reserved
         barr += self.__data
         return barr
 
-class LogDownloader(QObject):
 
+class LogDownloader(QObject):
     filesReady = pyqtSignal(str)
     error = pyqtSignal(str)
     downloadStatusChanged = pyqtSignal(str)
     reqOrResInfoChanged = pyqtSignal(str)
     downloadProgressChanged = pyqtSignal(int)
     connectionChanged = pyqtSignal(str)
-    def __init__(self, cmdArgs:CmdArgs,parent = None):
+
+    def __init__(self, cmdArgs: CmdArgs, parent=None):
         super(LogDownloader, self).__init__(parent)
         self.PORT = 19208
         self.recvByteArray = QByteArray()
         self.recvSeerObj = None
-        self.downladFileIte = None
+        self.downloadFileIte = None
         self.currentReqFile = None
         self.reqFilesTotal = 0
         self.socket = QTcpSocket(self)
@@ -162,14 +167,15 @@ class LogDownloader(QObject):
         self.socket.connectToHost(self.cmdArgs.ip, self.PORT)
         self._slotStateChanged(f"Connecting to {self.cmdArgs.ip}:{self.PORT}")
 
-    def _slotStateChanged(self,e: Union[str, int]):
+    def _slotStateChanged(self, e: Union[str, int]):
         if isinstance(e, str):
             self.connectionChanged.emit(e)
             return
         self.connectionChanged.emit(str(SocketState(e)))
         if SocketState.ConnectedState.value == e:
-            #获取debug文件列表
-            reqDict = {"endTime": self.cmdArgs.endTime, "isDownloadLogOnly": self.cmdArgs.onlyLog, "startTime": self.cmdArgs.startTime}
+            # 获取debug文件列表
+            reqDict = {"endTime": self.cmdArgs.endTime, "isDownloadLogOnly": self.cmdArgs.onlyLog,
+                       "startTime": self.cmdArgs.startTime}
             seerObj = SeerObj()
             seerObj.type = ProtocolType.GetDebugFileList
             seerObj.data = json.dumps(reqDict, separators=(',', ':')).encode("utf-8")
@@ -187,7 +193,7 @@ class LogDownloader(QObject):
         info = self._statusInfofmt(seerObj)
         self.reqOrResInfoChanged.emit(info)
         if seerObj.type - 10000 == ProtocolType.GetDebugFileList.value:
-            fileDict:dict = json.loads(seerObj.data)
+            fileDict = json.loads(seerObj.data)
             if not "fileList" in fileDict.keys():
                 self._slotError(fileDict)
                 return
@@ -195,7 +201,7 @@ class LogDownloader(QObject):
                 for v in d.values():
                     if isinstance(v, list):
                         self.reqFilesTotal += len(v)
-            self.downladFileIte = self._debugFileGenerator(fileDict)
+            self.downloadFileIte = self._debugFileGenerator(fileDict)
 
         elif seerObj.type - 10000 == ProtocolType.GetFile.value:
             self.downloadProgressChanged.emit(self.currentReqFile[3])
@@ -213,15 +219,14 @@ class LogDownloader(QObject):
         self._sendRequestFile()
         return
 
-    def _slotError(self,e:Union[str, int]):
+    def _slotError(self, e: Union[str, int]):
         if isinstance(e, str):
             text = e
         else:
-            text =str(SocketError(e))
-        # QMessageBox.critical(None, 'Error', text)
+            text = str(SocketError(e))
         self.error.emit(text)
 
-    def _statusInfofmt(self,seerObj:SeerObj):
+    def _statusInfofmt(self, seerObj: SeerObj):
         info = f"Type:{seerObj.type}\nPort:{self.PORT}\nNumber:{seerObj.number}\nHeader:{'0x'}{str(binascii.b2a_hex(seerObj.toBytearray()[0:17]))[2:-1]}\nDataLength:{seerObj.length}\nData:"
         if seerObj.type - 10000 == ProtocolType.GetFile.value:
             info += "File"
@@ -229,7 +234,7 @@ class LogDownloader(QObject):
             info += seerObj.data.__str__()
         return info
 
-    def _sendRequest(self, seerObj:SeerObj):
+    def _sendRequest(self, seerObj: SeerObj):
         self.socket.write(seerObj.toBytearray())
         if seerObj.type == ProtocolType.GetDebugFileList.value:
             self.downloadStatusChanged.emit(f"Req:DebugFileList")
@@ -240,8 +245,9 @@ class LogDownloader(QObject):
 
     def _sendRequestFile(self):
         try:
-            self.currentReqFile: tuple = next(self.downladFileIte)
+            self.currentReqFile: tuple = next(self.downloadFileIte)
         except Exception as e:
+            self.socket.close()
             dirPath = self.cmdArgs.dirName + "/log"
             self.filesReady.emit(dirPath)
             return
@@ -251,17 +257,15 @@ class LogDownloader(QObject):
         seerObj.data = json.dumps(reqDict, separators=(',', ':')).encode("utf-8")
         self._sendRequest(seerObj)
 
-    def _debugFileGenerator(self, filesDict:dict):
+    def _debugFileGenerator(self, filesDict: dict):
         i = 0
         for dir in filesDict["fileList"]:
             for filePath in dir["filePaths"]:
-                fp,fn = os.path.split(filePath)
+                fp, fn = os.path.split(filePath)
                 i += 1
                 yield dir["dirName"], fp, fn, i / self.reqFilesTotal * 100
 
 
 if __name__ == '__main__':
-    reqDict = {"1": 1, "2": 1,"3": 1}
-    reqData = json.dumps(reqDict,separators=(',', ':')).encode("utf-8")
     s = SeerObj()
     print(s.toBytearray())

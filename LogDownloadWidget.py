@@ -1,13 +1,17 @@
 from datetime import datetime, timedelta
 import sys
-from PyQt5.QtWidgets import QWidget, QApplication, QGridLayout,QLabel, QLineEdit, QDateTimeEdit, QToolButton,\
-    QPushButton, QCheckBox, QHBoxLayout, QVBoxLayout, QSpacerItem, QSizePolicy, QFileDialog
+from PyQt5.QtWidgets import QWidget, QApplication, QGridLayout, QLabel, QLineEdit, QDateTimeEdit, QToolButton, \
+    QPushButton, QCheckBox, QHBoxLayout, QVBoxLayout, QSpacerItem, QSizePolicy, QFileDialog, QGroupBox
 from PyQt5.QtGui import QRegExpValidator
 from PyQt5.QtCore import QRegExp, Qt, QStandardPaths, pyqtSignal
+from CmdArgs import CmdArgs
+
 
 class LogDownloadWidget(QWidget):
-    createDownloadTasked = pyqtSignal(tuple)
-    def __init__(self,parent = None):
+    createDownloadTasked = pyqtSignal(object)
+    closed = pyqtSignal()
+
+    def __init__(self, parent=None):
         super(LogDownloadWidget, self).__init__(parent)
         self.setWindowTitle("Log download")
         gridLayout = QGridLayout()
@@ -25,21 +29,22 @@ class LogDownloadWidget(QWidget):
         self.ipLabel = QLabel("IP")
         self.ipLabel.setAlignment(Qt.AlignRight)
         self.ipEdit = QLineEdit()
-        self.regExp = QRegExp("\\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\b")
+        self.regExp = QRegExp(
+            "\\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\b")
         self.ipEdit.setValidator(QRegExpValidator(self.regExp))
 
-        self.downloaDirLabel = QLabel("Directory")
-        self.downloaDirLabel.setAlignment(Qt.AlignRight)
-        self.downloaDirEdit = QLineEdit()
-        self.downloaDirEdit.setReadOnly(True)
-        self.openDirButton = QToolButton(text = "...")
+        self.downloadDirLabel = QLabel("Directory")
+        self.downloadDirLabel.setAlignment(Qt.AlignRight)
+        self.downloadDirEdit = QLineEdit()
+        self.downloadDirEdit.setReadOnly(True)
+        self.openDirButton = QToolButton(text="...")
 
         self.onlyDownloadLogCheckBox = QCheckBox("Only Robokit logs")
         self.createDownloadTaskButton = QPushButton("Create")
 
         hBoxLayout1 = QHBoxLayout()
-        hBoxLayout1.addWidget(self.downloaDirLabel)
-        hBoxLayout1.addWidget(self.downloaDirEdit)
+        hBoxLayout1.addWidget(self.downloadDirLabel)
+        hBoxLayout1.addWidget(self.downloadDirEdit)
         hBoxLayout1.addWidget(self.openDirButton)
 
         hBoxLayout2 = QHBoxLayout()
@@ -65,36 +70,54 @@ class LogDownloadWidget(QWidget):
         self.openDirButton.clicked.connect(self._slotOpenDirClicked)
         self.createDownloadTaskButton.clicked.connect(self._slotCreateDownloadTaskClicked)
 
+    def closeEvent(self, QCloseEvent):
+        self.closed.emit()
+
     def dataInit(self):
         self.startTimeEdit.setDateTime(datetime.now() - timedelta(minutes=30))
         self.endTimeEdit.setDateTime(datetime.now())
         self.ipEdit.setText("192.168.192.5")
-        dir = QStandardPaths.standardLocations(QStandardPaths.DesktopLocation)[0] + "/robokit-Debug-%s" % datetime.now().strftime("%Y%m%d%H%M%S")
-        self.downloaDirEdit.setText(dir)
-        self.downloaDirEdit.setCursorPosition(0)
-        self.downloaDirEdit.setToolTip(dir)
+        dir = QStandardPaths.standardLocations(QStandardPaths.DesktopLocation)[
+                  0] + "/robokit-Debug-%s" % datetime.now().strftime("%Y%m%d%H%M%S")
+        self.downloadDirEdit.setText(dir)
+        self.downloadDirEdit.setCursorPosition(0)
+        self.downloadDirEdit.setToolTip(dir)
 
     def _slotOpenDirClicked(self):
         defaultDir = QStandardPaths.standardLocations(QStandardPaths.DesktopLocation)[0]
         dir = QFileDialog.getExistingDirectory(self, "Select directory", defaultDir)
         if dir:
-            self.downloaDirEdit.setText(dir)
-            self.downloaDirEdit.setCursorPosition(0)
-            self.downloaDirEdit.setToolTip(dir)
+            self.downloadDirEdit.setText(dir)
+            self.downloadDirEdit.setCursorPosition(0)
+            self.downloadDirEdit.setToolTip(dir)
 
     def _slotCreateDownloadTaskClicked(self):
-        if self.regExp.exactMatch(self.ipEdit.text()):
-            tp = (self.startTimeEdit.text(),
-                  self.endTimeEdit.text(),
-                  self.ipEdit.text(),
-                  self.downloaDirEdit.text(),
-                  self.onlyDownloadLogCheckBox.isChecked())
-            self.createDownloadTasked.emit(tp)
+        isOK = True
+        if not self.regExp.exactMatch(self.ipEdit.text()):
+            self.ipEdit.setStyleSheet("color: red")
+            isOK = False
+        else:
+            self.ipEdit.setStyleSheet("")
+        if self.startTimeEdit.dateTime() >= self.endTimeEdit.dateTime():
+            self.endTimeEdit.setStyleSheet("color: red")
+            isOK = False
+        else:
+            self.endTimeEdit.setStyleSheet("")
 
+        if isOK:
+            tp = CmdArgs(
+                    self.startTimeEdit.text(),
+                    self.endTimeEdit.text(),
+                    self.downloadDirEdit.text(),
+                    self.onlyDownloadLogCheckBox.isChecked(),
+                    self.ipEdit.text()
+                )
+            self.createDownloadTasked.emit(tp)
 
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     l = LogDownloadWidget()
+    l.createDownloadTasked.connect(print)
     l.show()
     app.exec()

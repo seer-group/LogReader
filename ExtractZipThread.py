@@ -2,12 +2,14 @@ from PyQt5.QtCore import QThread, QFileInfo, pyqtSignal
 import zipfile
 import re
 
+
 class ExtractZipThread(QThread):
     filesReady = pyqtSignal(str)
     error = pyqtSignal(str)
     extractProgressChanged = pyqtSignal(int)
     extractFileChanged = pyqtSignal(str)
-    def __init__(self, zipFile, parent = None):
+
+    def __init__(self, zipFile, parent=None):
         super(ExtractZipThread, self).__init__(parent)
         self.zipFile = zipFile
 
@@ -18,7 +20,7 @@ class ExtractZipThread(QThread):
         zipFile = zipfile.ZipFile(self.zipFile)
         isContainLogDir = False
         for fn in zipFile.namelist():
-            if re.match("^log/",fn):
+            if re.match("^log/", fn):
                 isContainLogDir = True
                 break
         if not isContainLogDir:
@@ -33,11 +35,12 @@ class ExtractZipThread(QThread):
                 zipFile.extract(file, dir)
                 i += 1
                 self.extractProgressChanged.emit(i / total * 100)
-                self.extractFileChanged.emit("Extract:"+file)
+                self.extractFileChanged.emit("Extract:" + file)
         except Exception as e:
             self.error.emit(str(e))
             return
         self.filesReady.emit(dir + "/log")
+
 
 if __name__ == '__main__':
     s = ExtractZipThread("C:/Users/User/Downloads/robokit-Debug.zip")
