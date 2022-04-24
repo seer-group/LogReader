@@ -201,18 +201,27 @@ class Readmap(QThread):
         try:
             with open(self.map_name, encoding= 'UTF-8') as fid:
                 self.js = js.load(fid)
-        except UnicodeDecodeError:
-            fz = zipfile.ZipFile(self.map_name, 'r')
-            full_map_name = os.path.splitext(self.map_name)[0]
-            map_name = ""
-            for file in fz.namelist():
-                fz.extract(file, full_map_name)    
-                if os.path.splitext(file)[1] == ".smap":
-                    map_name = os.path.join(full_map_name, file)
-            logging.debug("mapWidget|readMap|{}|{}".format(full_map_name, map_name))
-            with open(map_name, encoding= 'UTF-8') as fid:
-                self.js = js.load(fid)
-        fid.close()
+        except UnicodeDecodeError as e:
+            logging.warn("readMap {} in utf-8 error. {}".format(self.map_name, e))
+            try:
+                with open(self.map_name, encoding='gbk') as fid:
+                    self.js = js.load(fid)
+            except UnicodeDecodeError as e:
+                logging.warn("readMap {} in gbk error. {}".format(self.map_name, e))
+                try:
+                    fz = zipfile.ZipFile(self.map_name, 'r')
+                    full_map_name = os.path.splitext(self.map_name)[0]
+                    map_name = ""
+                    for file in fz.namelist():
+                        fz.extract(file, full_map_name)    
+                        if os.path.splitext(file)[1] == ".smap":
+                            map_name = os.path.join(full_map_name, file)
+                    logging.debug("mapWidget|readMap|{}|{}".format(full_map_name, map_name))
+                    with open(map_name, encoding= 'UTF-8') as fid:
+                        self.js = js.load(fid)
+                except Exception as e:
+                    print(e)
+                    logging.error("readMap error: {}. {}".format(self.map_name, e))
         self.map_x = []
         self.map_y = []
         self.lines = []
@@ -235,7 +244,7 @@ class Readmap(QThread):
             if 'y' in endPos:
                 y2 = endPos['y']
             self.straights.append([(x1,y1),(x2,y2)])            
-        for pos in self.js['normalPosList']:
+        for pos in self.js.get('normalPosList', []):
             if 'x' in pos:
                 self.map_x.append(float(pos['x']))
             else:
@@ -983,6 +992,7 @@ class MapWidget(QtWidgets.QWidget):
                     if self.laser_index is k:
                         self.laser_data.set_visible(cur_check.isChecked())
                         self.laser_data_points.set_visible(cur_check.isChecked())
+                    self.mid_line_t = None
                        
         self.static_canvas.figure.canvas.draw() 
 
@@ -1456,12 +1466,20 @@ class MapWidget(QtWidgets.QWidget):
         laser_idx = self.robot_log.key_laser_idx
         min_laser_channel = self.robot_log.key_laser_channel
         if laser_idx < 0 or min_laser_channel < 0:
-            min_laser_channel = 0
-            laser_idx = 0
+            if min_laser_channel < 0: 
+                min_laser_channel = 0
+            if laser_idx < 0:
+                laser_idx = 0
             min_dt = None
             for index in laser_data.datas.keys():
                 t = np.array(laser_data.t(index))
                 if len(t) < 1:
+                    continue
+                ischecked = False
+                if index in self.check_lasers:
+                    if self.check_lasers[index].isChecked():
+                        ischecked = True
+                if not ischecked:
                     continue
                 tmp_laser_idx = (np.abs(t - mid_line_t)).argmin()
                 tmp_dt = np.min(np.abs(t - mid_line_t))
@@ -1716,7 +1734,7 @@ class MapWidget(QtWidgets.QWidget):
         self.odo_next.set_ydata(yn)
 
     def updateRobotData(self):
-        if self.robot_log is not None:
+        if self.robot_log is not None and not self.isHidden():
             if self.mid_line_t != self.robot_log.mid_line_t:
                 self.mid_line_t = self.robot_log.mid_line_t
                 self.updateMapAndShape()

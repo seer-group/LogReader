@@ -594,14 +594,15 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             elif event.button == 3:
                 if not self.toolBar.isActive():
                     self.popMenu = QtWidgets.QMenu(self)
-                    self.popMenu.addAction('&Save All Data', lambda: self.saveAllData(event.inaxes))
-                    self.popMenu.addAction('&Save View Data', lambda: self.saveViewData(event.inaxes))
-                    self.popMenu.addAction('&Save Select Data', lambda: self.saveSelectData(event.inaxes))
-                    self.popMenu.addAction('&Move Here', lambda: self.moveHere(event.xdata))
-                    self.popMenu.addAction('&reset Data', lambda: self.resetData(event.inaxes))
-                    self.popMenu.addAction('&Diff Time', lambda: self.diffData(event.inaxes))
-                    self.popMenu.addAction('&- Data', lambda: self.negData(event.inaxes))
-                    self.popMenu.addAction('&Add Data', lambda: self.addData(event.inaxes))
+                    self.popMenu.addAction('&Save All Data',lambda:self.saveAllData(event.inaxes))
+                    self.popMenu.addAction('&Save View Data',lambda:self.saveViewData(event.inaxes))
+                    self.popMenu.addAction('&Save Region Data',lambda:self.saveSelectData(event.inaxes))
+                    self.popMenu.addAction('&Move Here',lambda:self.moveHere(event.xdata))
+                    self.popMenu.addAction('&resize Region',lambda:self.resizeRegion())
+                    self.popMenu.addAction('&reset Data', lambda:self.resetData(event.inaxes))
+                    self.popMenu.addAction('&Diff Time', lambda:self.diffData(event.inaxes))
+                    self.popMenu.addAction('&- Data', lambda:self.negData(event.inaxes))
+                    self.popMenu.addAction('&Add Data', lambda:self.addData(event.inaxes))
                     cursor = QtGui.QCursor()
                     self.popMenu.exec_(cursor.pos())
                 # show info
@@ -646,17 +647,26 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.resetMidLineProperty(mouse_time)
         self.updateMap()
 
-    def setSelectLeft(self, t):
-        self.left_line_t = t
-        for s in self.select_regions:
-            s.setRegion(self.left_line_t, self.right_line_t)
-        self.static_canvas.figure.canvas.draw()
+    def resizeRegion(self):
+        (xmin,xmax) = self.axs[0].get_xlim()
+        tmid = (xmin+xmax)/2.0
+        dx = xmax - xmin
+        self.setSelectLeft(num2date(xmin + dx * 0.1))
+        self.setSelectRight(num2date(xmax - dx * 0.1))
 
-    def setSelectRight(self, t):
-        self.right_line_t = t
-        for s in self.select_regions:
-            s.setRegion(self.left_line_t, self.right_line_t)
-        self.static_canvas.figure.canvas.draw()
+    def setSelectLeft(self, t):
+        if t < self.right_line_t:
+            self.left_line_t = t
+            for s in self.select_regions:
+                s.setRegion(self.left_line_t, self.right_line_t)
+            self.static_canvas.figure.canvas.draw()
+
+    def setSelectRight(self,t):
+        if t > self.left_line_t:
+            self.right_line_t = t
+            for s in self.select_regions:
+                s.setRegion(self.left_line_t, self.right_line_t)
+            self.static_canvas.figure.canvas.draw()
 
     def setSelectRegion(self, midx):
 
@@ -1068,7 +1078,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.close()
 
     def about(self):
-        QtWidgets.QMessageBox.about(self, "关于", """Log Viewer V2.4.3.c""")
+        QtWidgets.QMessageBox.about(self, "关于", """Log Viewer V2.4.4.a""")
 
     def ycombo_onActivated(self):
         curcombo = self.sender()
@@ -1136,7 +1146,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.ruler.clear_rulers()
         for ax in self.axs:
             self.ruler.add_ruler(ax)
-        self.static_canvas.figure.canvas.draw()
         self.scroll.setWidgetResizable(True)
         for i in range(0, self.xy_hbox.count()):
             self.xy_hbox.itemAt(i).widget().deleteLater()
@@ -1154,7 +1163,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             self.xy_hbox.addWidget(selection.groupBox)
         if self.finishReadFlag:
             if self.read_thread.filenames:
-                self.mid_select_lines = []
                 keys = list(self.read_thread.data.keys())
                 count = 0
                 for ax, xy in zip(self.axs, self.xys):
