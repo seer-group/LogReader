@@ -5,7 +5,7 @@ from enum import Enum
 
 from PyQt5.QtWidgets import QApplication, QWidget, QDateTimeEdit, QHBoxLayout, QGridLayout, QLabel, \
     QTreeView, QAbstractItemView, QLineEdit, QMenu, QAction, QMessageBox
-from PyQt5.QtCore import Qt, QDateTime, pyqtSignal, QTimerEvent, QPoint, QStandardPaths
+from PyQt5.QtCore import Qt, QDateTime, pyqtSignal, QTimerEvent, QModelIndex, QStandardPaths
 from PyQt5.QtGui import QStandardItemModel, QStandardItem, QCursor, QCloseEvent
 from LogDownloadWidget import LogDownloadWidget
 from CmdArgs import CmdArgs
@@ -157,8 +157,8 @@ class TimedLogDownloadWidget(QWidget):
             self.contextMenu.exec(QCursor.pos())
 
     def _slotOpenFileSelection(self, v):
-        if isinstance(v, QPoint):
-            row = self.treeView.indexAt(v).row()
+        if isinstance(v, bool):
+            row = self.treeView.currentIndex().row()
             self.filesReady.emit(self.model.item(row, 3).dir)
         elif self.model.item(v.row(), 1).text() == TimedLogDownloadStatus.Finished.name:
             self.filesReady.emit(self.model.item(v.row(), 3).dir)

@@ -3,11 +3,8 @@ import re
 import matplotlib
 matplotlib.use("Qt5Agg")
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
-from matplotlib import legend
 from matplotlib.figure import Figure
-import matplotlib.pyplot as plt
-import numpy as np
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout,QHBoxLayout, QSlider, QLabel, QCheckBox
+from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QSlider, QLabel, QCheckBox
 from PyQt5.QtCore import Qt, pyqtSignal, QThread
 from PyQt5.QtGui import QCloseEvent
 
