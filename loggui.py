@@ -37,6 +37,7 @@ from MyFileSelectionWidget import MyFileSelectionWidget
 from ExtractZipThread import ExtractZipThread
 from LogDownloadWidget import LogDownloadWidget
 from TimedLogDownloadWidget import TimedLogDownloadWidget
+from CPUPieView import CPUPieView
 
 
 class XYSelection:
@@ -285,6 +286,10 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.precision.triggered.connect(self.openPrecision)
         self.tools_menu.addAction(self.precision)
 
+        self.cpuPie = QtWidgets.QAction("&CPU Pie View", self.tools_menu, checkable=True)
+        self.cpuPie.triggered.connect(self.openCPUPie)
+        self.tools_menu.addAction(self.cpuPie)
+
         self.logdownload_action = QtWidgets.QAction("&Log download", self.tools_menu)
         self.logdownload_action.triggered.connect(self.openLogDownloadWidget)
         self.tools_menu.addAction(self.logdownload_action)
@@ -415,12 +420,17 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.dataSelection.hide()
 
         self.map_widget = MapWidget(self)
-        self.map_widget.setWindowIcon(QtGui.QIcon('rds.ico'))
+        self.map_widget.setWindowIcon(QtGui.QIcon('rdk.ico'))
         self.map_widget.hiddened.connect(self.mapClosed)
         self.map_widget.keyPressEvent = self.keyPressEvent
 
         self.targetPrecision = TargetPrecision(self)
         self.targetPrecision.hide()
+
+        self.cpuPieView = CPUPieView(self.read_thread)
+        self.cpuPieView.setWindowIcon(QtGui.QIcon('rbk.ico'))
+        self.cpuPieView.closed.connect(lambda : self.cpuPie.setChecked(False))
+        self.cpuPieView.hide()
         # dataView相关的初始化
         self.dataViewNewOne(None)
 
@@ -906,7 +916,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         options |= QtWidgets.QFileDialog.DontUseNativeDialog
         options |= QtCore.Qt.WindowStaysOnTopHint
         self.filenames, _ = QtWidgets.QFileDialog.getOpenFileNames(self, "选取log文件", "",
-                                                                   "Log Files (*.log, *.gz);;All Files (*)",
+                                                                   "Log Files (*.log | *.gz);;All Files (*)",
                                                                    options=options)
         if self.filenames:
             self.finishReadFlag = False
@@ -1052,6 +1062,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             self.openJsonView(self.json_action.isChecked())
             self.openDataView(self.data_action.isChecked())
             self.updateMap()
+            self.cpuPieView.loadData()
 
     def fileQuit(self):
         self.close()
@@ -1472,6 +1483,12 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         else:
             self.targetPrecision.hide()
 
+    def openCPUPie(self,checked):
+        if checked:
+            self.cpuPieView.show()
+        else:
+            self.cpuPieView.hide()
+
     def openLogDownloadWidget(self):
         if self.logDownload_widget:
             return
@@ -1595,6 +1612,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             self.logDownload_widget.close()
         if self.timedLogDownload_widget:
             self.timedLogDownload_widget.close()
+        if self.cpuPieView:
+            self.cpuPieView.close()
         for d in self.dataViews:
             d.close()
         self.targetPrecision.close()
