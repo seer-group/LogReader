@@ -219,8 +219,8 @@ class ReadLog:
 class Data:
     def __init__(self, info, key_name:str):
         self.type = key_name
-        self.regex = re.compile("\[(.*?)\].*\["+self.type+"\]\[(.*?)\]")
-        self.regex2 = re.compile("\[(.*?)\].*\["+self.type+"\|(.*?)\]")
+        self.regex = re.compile("\[(.*?)\].*\["+self.type+"\]\[(.*?)\]$")
+        self.regex2 = re.compile("\[(.*?)\].*\["+self.type+"\|(.*?)\]$")
         self.short_regx = "["+self.type
         self.info = info['content']
         self.data = dict()
@@ -799,8 +799,9 @@ class Service:
         if self.short_regx in line:               
             out = self.regex.match(line)
             if out:
-                self.data[0].append(rbktimetodate(out.group(1)))
-                self.data[1].append(out.group(0))
+                if "(call from C++)" not in line :
+                    self.data[0].append(rbktimetodate(out.group(1)))
+                    self.data[1].append(out.group(0))
                 return True
             return False
         return False

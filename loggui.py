@@ -11,7 +11,6 @@ from matplotlib.figure import Figure
 from datetime import datetime
 from datetime import timedelta
 import os, sys
-from numpy import searchsorted
 from ExtendedComboBox import ExtendedComboBox
 from Widget import Widget
 from ReadThread import ReadThread, Fdir2Flink
@@ -996,7 +995,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.close()
 
     def about(self):
-        QtWidgets.QMessageBox.about(self, "关于", """Log Viewer V2.4.4.a""")
+        QtWidgets.QMessageBox.about(self, "关于", """Log Viewer V2.4.4.b""")
 
     def ycombo_onActivated(self):
         curcombo = self.sender()
