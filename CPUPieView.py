@@ -83,7 +83,7 @@ class MyChart(QChart):
         pieSeries1.setHoleSize(0.6)
         pieSeries2.setPieSize(0.6)
         for l, v in d1:
-            temp = QPieSlice("%s:%.2f%%" % (l, v), v)
+            temp = QPieSlice("%s: %.2f%%" % (l, v), v)
             temp.setBorderColor(Qt.gray)
             temp.setBorderWidth(2)
             if self.outerSliceLabelVisible and v:
@@ -91,7 +91,7 @@ class MyChart(QChart):
                 temp.setLabelPosition(self.outerSliceLabelPosition)
             pieSeries1.append(temp)
         for l, v in d2:
-            temp = QPieSlice("%s:%.2f%%" % (l, v), v)
+            temp = QPieSlice("%s: %.2f%%" % (l, v), v)
             temp.setBorderColor(Qt.gray)
             temp.setBorderWidth(2)
             if self.innerSliceLabelVisible and v:
