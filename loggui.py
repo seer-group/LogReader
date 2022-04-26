@@ -39,7 +39,6 @@ from LogDownloadWidget import LogDownloadWidget
 from TimedLogDownloadWidget import TimedLogDownloadWidget
 from CPUPieView import CPUPieView
 
-
 class XYSelection:
     def __init__(self, num=1):
         self.num = num
