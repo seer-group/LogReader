@@ -1077,7 +1077,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.close()
 
     def about(self):
-        QtWidgets.QMessageBox.about(self, "关于", """Log Viewer V2.4.4.a""")
+        QtWidgets.QMessageBox.about(self, "关于", """Log Viewer cd.1.0.0""")
 
     def ycombo_onActivated(self):
         curcombo = self.sender()
@@ -1085,7 +1085,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         for (ind, xy) in enumerate(self.xys):
             if xy.y_combo == curcombo:
                 index = ind
-                break;
+                break
         text = curcombo.currentText()
         current_x_index = self.xys[index].x_combo.currentIndex()
         self.xys[index].x_combo.clear()

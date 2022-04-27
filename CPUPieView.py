@@ -3,7 +3,7 @@ import re
 from PyQt5.QtChart import QPieSeries, QPieSlice, QChartView, QChart
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QSlider, QLabel, QCheckBox, QSpacerItem, QSizePolicy
 from PyQt5.QtCore import Qt, pyqtSignal, QThread
-from PyQt5.QtGui import QCloseEvent, QBrush, QColor, QFont
+from PyQt5.QtGui import QCloseEvent, QBrush, QColor
 
 
 class LoadDataTread(QThread):
@@ -20,15 +20,16 @@ class LoadDataTread(QThread):
         self.generalData = []
         self.detailedData = []
         self.oriData = []
+        regex = re.compile("\[.+?\]")
         if not self.readThread:
             return
         for line in self.readThread.reader.lines:
             if not "[CPU][d] [ProbeCpu]" in line:
                 continue
+            temp = regex.findall(line)
             self.oriData.append(line)
-            temp = re.split(r"\[|\]", line)
-            dateTime = datetime.datetime.strptime(temp[1], '%y%m%d %H%M%S.%f')
-            temp = temp[-2].split("|")
+            dateTime = datetime.datetime.strptime(temp[0], '[%y%m%d %H%M%S.%f]')
+            temp = temp[-1][1:-1].split("|")
             name = ["System", "free", "rbkProc"]
             num = ["", "", ""]
             ratio = [float(temp[0]), 100 - float(temp[0]) - float(temp[1]), float(temp[1])]
@@ -48,7 +49,6 @@ class LoadDataTread(QThread):
             ratio.append(self.generalData[-1][-1][-1] - sum(ratio[2:]))
             self.detailedData.append([dateTime, name, num, ratio])
         self.readReady.emit()
-
 
 class MyChart(QChart):
     def __init__(self):
@@ -178,5 +178,5 @@ class CPUPieView(QWidget):
         d2 = zip(self.load.generalData[index][1], self.load.generalData[index][-1])
         self.chart.updateSeries(d1, d2)
 
-        self.label.setText(f"time: {self.load.generalData[index][0]}\t{index + 1}/{len(self.load.generalData)}")
+        self.label.setText(f"Time: {self.load.generalData[index][0]}\t{index + 1}/{len(self.load.generalData)}")
         self.label.setToolTip(self.load.oriData[index])
