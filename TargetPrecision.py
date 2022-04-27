@@ -188,7 +188,6 @@ class TargetPrecision(QtWidgets.QWidget):
         self.ruler = RulerShape()
         self.ruler.add_ruler(self.ax)
         self.toolbar = MyToolBar(self.static_canvas, self, ruler = self.ruler)
-        self.toolbar.fig_ratio = 1
         w0 = QtWidgets.QWidget()
         v0 = QtWidgets.QVBoxLayout()
         v0.addWidget(self.toolbar)
@@ -212,7 +211,6 @@ class TargetPrecision(QtWidgets.QWidget):
             a.axis('auto')
             self.pruler.add_ruler(a)
         self.ptoolbar = MyToolBar(self.pstatic_canvas, self, ruler = self.pruler)
-        self.ptoolbar.fig_ratio = 1
         w1 = QtWidgets.QWidget()
         v1 = QtWidgets.QVBoxLayout()
         v1.addWidget(self.ptoolbar)

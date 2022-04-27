@@ -19,7 +19,7 @@ from loglibPlus import date2num, num2date
 from MapWidget import MapWidget, Readmap
 from LogViewer import LogViewer
 from JsonView import JsonView, DataView
-from MyToolBar import MyToolBar, RulerShapeMap, RulerShape
+from MyToolBar import MyToolBar, RulerShapeMap
 import logging
 import numpy as np
 import traceback
@@ -308,13 +308,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.key_laser_channel = -1 # 按键盘更新时， 用于记住当前激光的信息
         # self.layout.addWidget(self.scroll)
         self.ruler = RulerShapeMap()
-        self.old_home = MyToolBar.home
-        self.old_forward = MyToolBar.forward
-        self.old_back = MyToolBar.back
-        MyToolBar.home = self.new_home
-        MyToolBar.forward = self.new_forward
-        MyToolBar.back = self.new_back
-        self.toolBar = MyToolBar(self.static_canvas, self._main, ruler = self.ruler)
+        self.toolBar = MyToolBar(self.static_canvas, self._main, self.ruler)
+        self.toolBar.update_home_callBack(self.new_home)
         self.addToolBar(self.toolBar)
         # self.static_canvas.figure.subplots_adjust(left = 0.2/cur_fig_num, right = 0.99, bottom = 0.05, top = 0.99, hspace = 0.1)
         self.axs= self.static_canvas.figure.subplots(cur_fig_num, 1, sharex = True)
@@ -995,7 +990,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.close()
 
     def about(self):
-        QtWidgets.QMessageBox.about(self, "关于", """Log Viewer V2.4.4.b""")
+        QtWidgets.QMessageBox.about(self, "关于", """Log Viewer V2.5.0.a""")
 
     def ycombo_onActivated(self):
         curcombo = self.sender()
@@ -1120,7 +1115,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             if data[1] and data[0]:
                 ax.plot(data[1], data[0], '.', url = ylabel)
                 if isinstance(data[0][0], float):
-                    tmpd = np.array(data[0], dtype=np.float)
+                    tmpd = np.array(data[0], dtype=float)
                     tmpd = tmpd[~np.isnan(tmpd)]
                     if len(tmpd) > 0:
                         max_range = max(max(tmpd) - min(tmpd), 1.0)
