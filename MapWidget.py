@@ -1467,7 +1467,7 @@ class MapWidget(QtWidgets.QWidget):
         min_laser_channel = self.robot_log.key_laser_channel
         if laser_idx < 0 or min_laser_channel < 0:
             if min_laser_channel < 0: 
-                min_laser_channel = 0
+                min_laser_channel = list(laser_data.datas.keys())[0]
             if laser_idx < 0:
                 laser_idx = 0
             min_dt = None
@@ -1490,6 +1490,7 @@ class MapWidget(QtWidgets.QWidget):
         self.robot_log.key_laser_idx = laser_idx
         self.key_laser_channel = min_laser_channel
 
+        print("min_laser_channel", min_laser_channel, laser_idx)
         laser_x = laser_data.x(min_laser_channel)[0][laser_idx]
         laser_y = laser_data.y(min_laser_channel)[0][laser_idx]
         laser_points = np.array([laser_x, laser_y])

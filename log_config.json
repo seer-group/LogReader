@@ -1148,5 +1148,13 @@
       {"index":8, "name":"cur_vL", "type":"double"},
       {"index":9, "name":"cur_vR", "type":"double"}
     ]
+  },
+  "ChargerBrandInfo":{
+    "type":"ChargerBrandInfo",
+    "content":[
+      {"index":0, "name":"charger_name", "type":"str"},
+      {"index":1, "name":"is_push_di_tirggered", "type":"bool"},
+      {"index":2, "name":"brand_specific_info", "type":"json"}
+    ]    
   }
 }
