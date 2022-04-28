@@ -49,6 +49,8 @@ class MyToolBar(NavigationToolbar2QT):
         self._actions["ruler"] = a
         self.triggle_mode = "none"
         self.ruler_active = False
+        self.pan_active = False
+        self.zoom_active = False
         self._idPress = None
         self._idRelease = None
         self._idDrag = None
@@ -106,11 +108,15 @@ class MyToolBar(NavigationToolbar2QT):
         super().pan(*args)
         self.triggle_mode = "pan"
         self._update_buttons_checked()
+        self.pan_active = not self.pan_active
+        self._actions['pan'].setChecked(self.pan_active)
 
     def zoom(self, *args):
         super().zoom(*args)
         self.triggle_mode = "zoom"
         self._update_buttons_checked()
+        self.zoom_active = not self.zoom_active
+        self._actions['zoom'].setChecked(self.zoom_active)
 
     def ruler(self):
         """Activate ruler."""
