@@ -11,7 +11,6 @@ from matplotlib.figure import Figure
 from datetime import datetime
 from datetime import timedelta
 import os, sys
-from numpy import searchsorted
 from ExtendedComboBox import ExtendedComboBox
 from Widget import Widget
 from ReadThread import ReadThread, Fdir2Flink
@@ -20,7 +19,7 @@ from loglibPlus import date2num, num2date
 from MapWidget import MapWidget, Readmap
 from LogViewer import LogViewer
 from JsonView import JsonView, DataView
-from MyToolBar import MyToolBar, RulerShapeMap, RulerShape
+from MyToolBar import MyToolBar, RulerShapeMap
 import logging
 import numpy as np
 import traceback
@@ -336,13 +335,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.key_laser_channel = -1 # 按键盘更新时， 用于记住当前激光的信息
         # self.layout.addWidget(self.scroll)
         self.ruler = RulerShapeMap()
-        self.old_home = MyToolBar.home
-        self.old_forward = MyToolBar.forward
-        self.old_back = MyToolBar.back
-        MyToolBar.home = self.new_home
-        MyToolBar.forward = self.new_forward
-        MyToolBar.back = self.new_back
-        self.toolBar = MyToolBar(self.static_canvas, self._main, ruler = self.ruler)
+        self.toolBar = MyToolBar(self.static_canvas, self._main, self.ruler)
+        self.toolBar.update_home_callBack(self.new_home)
         self.addToolBar(self.toolBar)
         # self.static_canvas.figure.subplots_adjust(left = 0.2/cur_fig_num, right = 0.99, bottom = 0.05, top = 0.99, hspace = 0.1)
         self.axs= self.static_canvas.figure.subplots(cur_fig_num, 1, sharex = True)
@@ -907,9 +901,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         options = QtWidgets.QFileDialog.Options()
         options |= QtWidgets.QFileDialog.DontUseNativeDialog
         options |= QtCore.Qt.WindowStaysOnTopHint
-        self.filenames, _ = QtWidgets.QFileDialog.getOpenFileNames(self, "选取log文件", "",
-                                                                   "Log Files (*.log | *.gz);;All Files (*)",
-                                                                   options=options)
+        self.filenames, _ = QtWidgets.QFileDialog.getOpenFileNames(self,"选取log文件", "","Log Files (*.log | *.gz);;All Files (*)", options=options)
         if self.filenames:
             self.finishReadFlag = False
             self.read_thread.filenames = self.filenames
@@ -1024,13 +1016,14 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             self.openJsonView(self.json_action.isChecked())
             self.openDataView(self.data_action.isChecked())
             self.updateMap()
+            self.cpuPieView.loadData()
 
 
     def fileQuit(self):
         self.close()
 
     def about(self):
-        QtWidgets.QMessageBox.about(self, "关于", """Log Viewer cd.1.0.0""")
+        QtWidgets.QMessageBox.about(self, "关于", """Log Viewer cd.1.1.0""")
 
     def ycombo_onActivated(self):
         curcombo = self.sender()
@@ -1038,7 +1031,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         for (ind, xy) in enumerate(self.xys):
             if xy.y_combo == curcombo:
                 index = ind
-                break
+                break; 
         text = curcombo.currentText()
         current_x_index = self.xys[index].x_combo.currentIndex()
         self.xys[index].x_combo.clear()
@@ -1067,7 +1060,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         for (ind, xy) in enumerate(self.xys):
             if xy.x_combo == curcombo:
                 index = ind
-                break
+                break; 
         text = curcombo.currentText()
         ax = self.axs[index]
         y_label = self.xys[index].y_combo.currentText()
@@ -1155,7 +1148,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             if data[1] and data[0]:
                 ax.plot(data[1], data[0], '.', url = ylabel)
                 if isinstance(data[0][0], float):
-                    tmpd = np.array(data[0], dtype=np.float)
+                    tmpd = np.array(data[0], dtype=float)
                     tmpd = tmpd[~np.isnan(tmpd)]
                     if len(tmpd) > 0:
                         max_range = max(max(tmpd) - min(tmpd), 1.0)

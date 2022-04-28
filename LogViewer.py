@@ -111,7 +111,7 @@ class LogViewer(QWidget):
 
     def findUp(self):
         searchStr = self.find_edit.text()
-        if searchStr is not "":
+        if searchStr != "":
             doc = self.plainText.document()
             cur_highlightCursor = self.plainText.textCursor()
             if self.find_cursor:
@@ -134,7 +134,7 @@ class LogViewer(QWidget):
 
     def findDown(self):
         searchStr = self.find_edit.text()
-        if searchStr is not "":
+        if searchStr != "":
             doc = self.plainText.document()
             cur_highlightCursor = self.plainText.textCursor()
             if self.find_cursor:

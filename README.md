@@ -1,7 +1,7 @@
 # LogReader
 从log文件中读取IMU, Odometer, MCLoc, Send, Get, Laser, fatal, error, warning and notice信息
 
-使用环境Python 3, 推荐使用[Anaconda](https://www.anaconda.com/download/)
+使用环境**Python 3.9.12**, 推荐使用[Anaconda](https://www.anaconda.com/download/)
 * get_report.py 为生成错误报告的脚本。在命名窗口输入:<pre><code>python test_get_report.py test1.log test2.log</pre></code>
   将test1.log和test2.log替换为所需的log文件即可
 
@@ -33,7 +33,7 @@
   
 <pre><code> pyinstaller -w loggui.py</pre></code>
 或者
-<pre><code> pyinstaller -D loggui.spec</pre></code>
+<pre><code> pyinstaller loggui.spec</pre></code>
 * 如果在打包的时候出现字体错误，则先在控制台运行下面的命令
 * 如果没有尺子图标，把images文件夹拷贝到dist/loggui文件夹下
 <pre><code> chcp 65001 </pre></code>

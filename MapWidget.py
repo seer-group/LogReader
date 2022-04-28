@@ -671,8 +671,8 @@ class MapWidget(QtWidgets.QWidget):
         self.ax.add_line(self.odo_next)
         self.ruler = RulerShape()
         self.ruler.add_ruler(self.ax)
-        MyToolBar.home = self.toolbarHome
-        self.toolbar = MyToolBar(self.static_canvas, self, ruler = self.ruler)
+        self.toolbar = MyToolBar(self.static_canvas, self, self.ruler)
+        self.toolbar.update_home_callBack(self.toolbarHome)
         self.toolbar.fig_ratio = 1
         self.userToolbar = QtWidgets.QToolBar(self)
         self.autoMap = QtWidgets.QAction("AUTO", self.userToolbar)
@@ -720,15 +720,15 @@ class MapWidget(QtWidgets.QWidget):
         self.timestamp_lable = QtWidgets.QLabel(self)
         self.timestamp_lable.setText('当前激光时刻定位（实框）: ')
         self.timestamp_lable.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
-        self.timestamp_lable.setFixedHeight(16.0)
+        self.timestamp_lable.setFixedHeight(16)
         self.logt_lable = QtWidgets.QLabel(self)
         self.logt_lable.setText('当前时刻定位(虚框): ')
         self.logt_lable.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
-        self.logt_lable.setFixedHeight(16.0)
+        self.logt_lable.setFixedHeight(16)
         self.obs_lable = QtWidgets.QLabel(self)
         self.obs_lable.setText('')
         self.obs_lable.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
-        self.obs_lable.setFixedHeight(16.0)
+        self.obs_lable.setFixedHeight(16)
         self.fig_layout.addWidget(self.toolbar)
         self.fig_layout.addWidget(self.userToolbar)
         self.fig_layout.addWidget(self.timestamp_lable)
@@ -1179,7 +1179,7 @@ class MapWidget(QtWidgets.QWidget):
     def readModelFinished(self, result):
         self.readingModelFlag = True
         if self.read_model.head and self.read_model.tail and self.read_model.width:
-            if self.laser_index is -1:
+            if self.laser_index == -1:
                 if len(self.read_model.laser) > 0:
                     self.laser_index = list(self.read_model.laser.keys())[0]
             if self.laser_index in self.read_model.laser.keys():

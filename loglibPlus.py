@@ -1,21 +1,16 @@
 import re
 import math
-from datetime import datetime
-import codecs
-import chardet
+from datetime import datetime, timezone
 import logging
 import gzip
 from multiprocessing import Pool, Manager
 import json
-
+import matplotlib
 def date2num(d):
-    s = d.timestamp()
-    n = (s + 62135712000.0)/86400.0
-    return n
-
+    return matplotlib.dates.date2num(d)
+    
 def num2date(n):
-    t = n * 86400 - 62135712000
-    return datetime.fromtimestamp(t)
+    return matplotlib.dates.num2date(n).replace(tzinfo=None) 
 
 def rbktimetodate(rbktime):
     """ 将rbk的时间戳转化为datatime """

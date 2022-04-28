@@ -233,7 +233,7 @@ class DataView(QtWidgets.QMainWindow):
     def setSelectionItems(self, data):
         self.selection.y_combo.addItems(data)
         first_k = self.selection.y_combo.currentText()
-        if first_k is not "":
+        if first_k != "":
             self.setWindowTitle(first_k)  
 
     def newOne(self):
@@ -241,7 +241,7 @@ class DataView(QtWidgets.QMainWindow):
 
     def dataViewUpdate(self):
         first_k = self.selection.y_combo.currentText()
-        if first_k is not "":
+        if first_k != "":
             self.setWindowTitle(first_k)
         self.dataViewMsg.emit(self)
 
