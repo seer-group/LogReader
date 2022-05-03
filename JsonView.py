@@ -195,6 +195,19 @@ class JsonView(QTreeView):
         self.setWindowTitle("Status")
         self.setItemDelegate(SelectOnlyDelegate(self))
         self.setEditTriggers(QAbstractItemView.EditTrigger.DoubleClicked)
+    # TODO plot the select key
+    #     self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+    #     self.customContextMenuRequested.connect(self.showContextMenu)
+
+    # def showContextMenu(self, point):
+    #     ix = self.indexAt(point)
+    #     if ix.column() == 1:
+    #         menu = QtWidgets.QMenu()
+    #         menu.addAction("Plot")
+    #         action = menu.exec_(self.mapToGlobal(point))
+    #         if action:
+    #             if action.text() == "Plot":
+    #                 self.edit(ix)
 
     def loadJson(self, bytes_json):
         self.model.loadJson(bytes_json)

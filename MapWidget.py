@@ -997,7 +997,7 @@ class MapWidget(QtWidgets.QWidget):
         self.static_canvas.figure.canvas.draw() 
 
     def closeEvent(self,event):
-        if self.robot_log.in_close:
+        if self.robot_log is not None and self.robot_log.in_close:
             self.getLine.close()
             self.getCurve.close()
             self.getPoint.close()
@@ -1170,6 +1170,7 @@ class MapWidget(QtWidgets.QWidget):
                     arrow = patches.Arrow(pt[0],pt[1], pr * np.cos(pt[2]), pr*np.sin(pt[2]), pr)
                     arrow.set_zorder(19)
                     self.ax.add_patch(arrow)
+            self.ruler.add_ruler(self.ax)
             self.setWindowTitle("{} : {}".format('MapViewer', os.path.split(self.map_name)[1]))
             font = QtGui.QFont()
             font.setBold(True)

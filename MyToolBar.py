@@ -5,7 +5,8 @@ import math, os
 from matplotlib.backends.backend_qt5agg import  FigureCanvas, NavigationToolbar2QT
 from PyQt5 import QtGui, QtCore,QtWidgets
 from datetime import datetime
-
+from loglibPlus import num2date
+from enum import IntEnum
 def keepRatio(xmin, xmax, ymin, ymax, fig_ratio, bigger = True):
     ax_ratio = (xmax - xmin)/(ymax - ymin)
     spanx = xmax - xmin 
@@ -28,6 +29,11 @@ def keepRatio(xmin, xmax, ymin, ymax, fig_ratio, bigger = True):
             xmin = xmid - spanx*fig_ratio/ax_ratio/2
     return xmin, xmax, ymin ,ymax
 
+class TriggleFlag(IntEnum):
+    ZOOM = 0
+    PAN = 1
+    RULER = 2
+    NONE = 3
 class MyToolBar(NavigationToolbar2QT):
     toolitems = (
         ('Home', 'Reset original view', 'home', 'home'),
@@ -47,10 +53,7 @@ class MyToolBar(NavigationToolbar2QT):
         a.setCheckable(True)
         
         self._actions["ruler"] = a
-        self.triggle_mode = "none"
-        self.ruler_active = False
-        self.pan_active = False
-        self.zoom_active = False
+        self.triggle_mode = TriggleFlag.NONE
         self._idPress = None
         self._idRelease = None
         self._idDrag = None
@@ -99,38 +102,41 @@ class MyToolBar(NavigationToolbar2QT):
         self._has_home_back = True
         self._actions["home"].triggered.connect(func)
 
-    def _update_buttons_checked(self):
-        self._actions['ruler'].setChecked(self.triggle_mode == 'ruler')
-        self._actions['zoom'].setChecked(self.triggle_mode == 'zoom')
-        self._actions['pan'].setChecked(self.triggle_mode == 'pan')
+
+    def my_update_buttons_checked(self):
+        if self.triggle_mode != TriggleFlag.RULER:
+            if self._idPress is not None:
+                self._idPress = self.canvas.mpl_disconnect(self._idPress)
+            if self._idRelease is not None:
+                self._idRelease = self.canvas.mpl_disconnect(self._idRelease)
+        elif self.triggle_mode != TriggleFlag.NONE:
+            if self._actions['pan'].isChecked():
+                super().pan(None)
+            if self._actions['zoom'].isChecked():
+                super().zoom(None)            
+        self._actions['ruler'].setChecked(self.triggle_mode == TriggleFlag.RULER)
+        self._actions['zoom'].setChecked(self.triggle_mode == TriggleFlag.ZOOM)
+        self._actions['pan'].setChecked(self.triggle_mode == TriggleFlag.PAN)
 
     def pan(self, *args):
+        # print("pan", self.triggle_mode)
         super().pan(*args)
-        self.triggle_mode = "pan"
-        self._update_buttons_checked()
-        self.pan_active = not self.pan_active
-        self._actions['pan'].setChecked(self.pan_active)
+        self.triggle_mode = TriggleFlag.NONE if self.triggle_mode == TriggleFlag.PAN else TriggleFlag.PAN
+        self.my_update_buttons_checked()
 
     def zoom(self, *args):
+        # print("zoom", self.triggle_mode)
         super().zoom(*args)
-        self.triggle_mode = "zoom"
-        self._update_buttons_checked()
-        self.zoom_active = not self.zoom_active
-        self._actions['zoom'].setChecked(self.zoom_active)
+        self.triggle_mode = TriggleFlag.NONE if self.triggle_mode == TriggleFlag.ZOOM else TriggleFlag.ZOOM
+        self.my_update_buttons_checked()
 
     def ruler(self):
+        # print("ruler", self.triggle_mode)
         """Activate ruler."""
-        self.triggle_mode = "ruler"
-        self.mode = "" # 这个是继承来的
-        self._update_buttons_checked()
-        self.ruler_active = not self.ruler_active
-        self._actions['ruler'].setChecked(self.ruler_active)
-        if self._idPress is not None:
-            self._idPress = self.canvas.mpl_disconnect(self._idPress)
-        if self._idRelease is not None:
-            self._idRelease = self.canvas.mpl_disconnect(self._idRelease)
+        self.triggle_mode = TriggleFlag.NONE if self.triggle_mode == TriggleFlag.RULER else TriggleFlag.RULER
+        active = self.triggle_mode == TriggleFlag.RULER
 
-        if self.ruler_active:
+        if active:
             self._idPress = self.canvas.mpl_connect('button_press_event',
                                                     self.press_ruler)
             self._idRelease = self.canvas.mpl_connect('button_release_event',
@@ -142,10 +148,13 @@ class MyToolBar(NavigationToolbar2QT):
             self.canvas.figure.canvas.draw()
 
         for a in self.canvas.figure.get_axes():
-            a.set_navigate_mode(self.ruler_active)
+            a.set_navigate_mode(active)
+        self.my_update_buttons_checked()
 
     def press_ruler(self, event):
         """Callback for mouse button press in Ruler mode."""
+        if self.triggle_mode != TriggleFlag.RULER:
+            return
         if event.button == 1 and event.inaxes:
             self._button_pressed = 1
         else:
@@ -160,6 +169,8 @@ class MyToolBar(NavigationToolbar2QT):
 
     def release_ruler(self, event):
         """Callback for mouse button release in Ruler mode."""
+        if self.triggle_mode != TriggleFlag.RULER:
+            return
         if event.button == 1 and event.inaxes:
             self._button_pressed = 1
         else:
@@ -170,6 +181,8 @@ class MyToolBar(NavigationToolbar2QT):
 
     def move_ruler(self, event):
         """Callback for mouse button move in Ruler mode."""
+        if self.triggle_mode != TriggleFlag.RULER:
+            return
         if event.button == 1 and event.inaxes:
             self._button_pressed = 1
         else:
@@ -277,8 +290,8 @@ class RulerShapeMap(RulerShape):
         self._texts[indx].set_y(text_y)  
         dt = data[1][0] - data[0][0]
         try:
-            t1 = datetime.fromtimestamp(data[1][0] * 86400 - 62135712000)
-            t0 = datetime.fromtimestamp(data[0][0] * 86400 - 62135712000)
+            t1 = num2date(data[1][0])
+            t0 = num2date(data[0][0])
             dt = (t1 - t0).total_seconds()
         except:
             pass 
