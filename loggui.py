@@ -36,6 +36,7 @@ from ExtractZipThread import ExtractZipThread
 from LogDownloadWidget import LogDownloadWidget
 from TimedLogDownloadWidget import TimedLogDownloadWidget
 from CPUPieView import CPUPieView
+from MapCheckWidget import MapCheckWidget
 
 class XYSelection:
     def __init__(self, num = 1):
@@ -190,6 +191,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.logDownloader = None
         self.logDownload_widget = None
         self.timedLogDownload_widget = None
+        self.mapCheckWidget = None
         self.fs_widget = None
 
         if isinstance(self.cmdArgs, str):
@@ -275,17 +277,21 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.precision.triggered.connect(self.openPrecision)
         self.tools_menu.addAction(self.precision)
 
-        self.cpuPie = QtWidgets.QAction("&CPU Pie View", self.tools_menu, checkable=True)
+        self.cpuPie = QtWidgets.QAction("&CPU饼图", self.tools_menu, checkable=True)
         self.cpuPie.triggered.connect(self.openCPUPie)
         self.tools_menu.addAction(self.cpuPie)
 
-        self.logdownload_action = QtWidgets.QAction("&Log download", self.tools_menu)
+        self.logdownload_action = QtWidgets.QAction("&Log下载", self.tools_menu)
         self.logdownload_action.triggered.connect(self.openLogDownloadWidget)
         self.tools_menu.addAction(self.logdownload_action)
 
-        self.logdownload_action2 = QtWidgets.QAction("&Timed Log download", self.tools_menu)
+        self.logdownload_action2 = QtWidgets.QAction("&批量定时log下载", self.tools_menu)
         self.logdownload_action2.triggered.connect(self.openTimedLogDownloadWidget)
         self.tools_menu.addAction(self.logdownload_action2)
+
+        self.mapCheck = QtWidgets.QAction("&地图检查",self.tools_menu)
+        self.mapCheck.triggered.connect(self.openMapCheckWidget)
+        self.tools_menu.addAction(self.mapCheck)
 
         self.help_menu = QtWidgets.QMenu('&Help', self)
         self.help_menu.addAction('&About', self.about)
@@ -1467,6 +1473,11 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.timedLogDownload_widget.closed.connect(func)
         self.timedLogDownload_widget.show()
 
+    def openMapCheckWidget(self):
+        self.mapCheckWidget = MapCheckWidget()
+        self.mapCheckWidget.setWindowIcon(QtGui.QIcon('rbk.ico'))
+        self.mapCheckWidget.show()
+
     # 画电机跟随曲线
     def drawMotorFollow(self, checked):
         dir_name, _ = os.path.split(self.filenames[0])
@@ -1569,6 +1580,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             self.timedLogDownload_widget.close()
         if self.cpuPieView:
             self.cpuPieView.close()
+        if self.mapCheckWidget:
+            self.mapCheckWidget.close()
         for d in self.dataViews:
             d.close()
         self.targetPrecision.close()

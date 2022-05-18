@@ -30,11 +30,11 @@ class LoadDataTread(QThread):
             self.oriData.append(line)
             dateTime = datetime.datetime.strptime(temp[0], '[%y%m%d %H%M%S.%f]')
             temp = temp[-1][1:-1].split("|")
-            name = ["System", "free", "rbkProc"]
+            name = ["系统", "空闲", "rbk"]
             num = ["", "", ""]
             ratio = [float(temp[0]), 100 - float(temp[0]) - float(temp[1]), float(temp[1])]
             self.generalData.append([dateTime, name, num, ratio])
-            name = ["System", "free"]
+            name = ["系统", "空闲"]
             num = ["", ""]
             ratio = [float(temp[0]), 100 - float(temp[0]) - float(temp[1])]
             index = 0
@@ -44,7 +44,7 @@ class LoadDataTread(QThread):
                 num.append(temp[index + 1])
                 ratio.append(float(temp[index + 2]))
                 index += 3
-            name.append("other")
+            name.append("其他")
             num.append("")
             ratio.append(self.generalData[-1][-1][-1] - sum(ratio[2:]))
             self.detailedData.append([dateTime, name, num, ratio])
@@ -112,7 +112,7 @@ class CPUPieView(QWidget):
     def __init__(self, readThread, parent=None):
         super(CPUPieView, self).__init__(parent)
         self.readThread = readThread
-        self.setWindowTitle("CPU pie view")
+        self.setWindowTitle("CPU饼图")
         self.setLayout(QVBoxLayout())
         self.chart = MyChart()
         self.chartView = QChartView(self)
@@ -120,11 +120,11 @@ class CPUPieView(QWidget):
         self.slider = QSlider(Qt.Horizontal, self)
         self.label = QLabel()
         self.label.setFixedHeight(15)
-        self.legendCheckBox = QCheckBox("Legend")
+        self.legendCheckBox = QCheckBox("图例")
         self.legendCheckBox.setChecked(True)
-        self.innerLabelCheckBox = QCheckBox("Inner Slice label")
+        self.innerLabelCheckBox = QCheckBox("内部标签")
         self.innerLabelCheckBox.setChecked(True)
-        self.outerLabelCheckBox = QCheckBox("Outer Slice label")
+        self.outerLabelCheckBox = QCheckBox("外部标签")
         self.outerLabelCheckBox.setChecked(True)
         hLayout = QHBoxLayout(self)
         hLayout.addWidget(self.label)
@@ -178,5 +178,5 @@ class CPUPieView(QWidget):
         d2 = zip(self.load.generalData[index][1], self.load.generalData[index][-1])
         self.chart.updateSeries(d1, d2)
 
-        self.label.setText(f"Time: {self.load.generalData[index][0]}\t{index + 1}/{len(self.load.generalData)}")
+        self.label.setText(f"时间: {str(self.load.generalData[index][0])[:-3]}   {index + 1}/{len(self.load.generalData)}")
         self.label.setToolTip(self.load.oriData[index])

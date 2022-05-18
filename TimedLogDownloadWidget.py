@@ -16,14 +16,14 @@ class ExtLogDownloadWidget(LogDownloadWidget):
     def __init__(self, parent=None):
         super(ExtLogDownloadWidget, self).__init__(parent)
 
-        timerLabel = QLabel("Timer")
-        timerLabel.setAlignment(Qt.AlignRight)
+        timerLabel = QLabel("定时")
+        timerLabel.setAlignment(Qt.AlignRight|Qt.AlignVCenter)
         self.timerEdit = QDateTimeEdit()
         self.timerEdit.setDisplayFormat("yyyy-MM-dd HH:mm:ss")
         self.timerEdit.setDateTime(datetime.now() + timedelta(minutes=30))
 
-        noteLabel = QLabel("Note")
-        noteLabel.setAlignment(Qt.AlignRight)
+        noteLabel = QLabel("备注")
+        noteLabel.setAlignment(Qt.AlignRight|Qt.AlignVCenter)
         self.noteEdit = QLineEdit()
 
         gridLayout: QGridLayout = self.layout().findChild(QGridLayout)
@@ -82,7 +82,7 @@ class TimedLogDownloadWidget(QWidget):
         super(TimedLogDownloadWidget, self).__init__(parent)
 
         self.pTimer = None
-        self.setWindowTitle("Timed log download")
+        self.setWindowTitle("批量定时log下载")
         self.logDownloadWidget = ExtLogDownloadWidget(self)
         self.logDownloadWidget.setMaximumWidth(330)
         self.treeView = QTreeView(self)
@@ -91,7 +91,7 @@ class TimedLogDownloadWidget(QWidget):
         self.treeView.setSelectionMode(QAbstractItemView.ExtendedSelection)
         # self.treeView.setMinimumWidth(500)
         self.model = QStandardItemModel()
-        self.model.setHorizontalHeaderLabels(("Time", "Status", "Note", "Progress"))
+        self.model.setHorizontalHeaderLabels(("时间", "状态", "备注", "进度"))
         self.treeView.setModel(self.model)
         self.treeView.setColumnWidth(0, 200)
         self.treeView.setColumnWidth(1, 150)
@@ -99,8 +99,8 @@ class TimedLogDownloadWidget(QWidget):
         self.treeView.setColumnWidth(3, 100)
 
         self.contextMenu = QMenu(self.treeView)
-        self.deleteItem = QAction("Delete", self.treeView)
-        self.openfs = QAction("Open", self.treeView)
+        self.deleteItem = QAction("删除", self.treeView)
+        self.openfs = QAction("打开", self.treeView)
         self.contextMenu.addAction(self.openfs)
         self.contextMenu.addAction(self.deleteItem)
 
@@ -116,7 +116,7 @@ class TimedLogDownloadWidget(QWidget):
 
     def closeEvent(self, e: QCloseEvent):
         if self.model.rowCount():
-            s = QMessageBox.information(self, "Tooltip", "Are you sure?", QMessageBox.Yes | QMessageBox.No)
+            s = QMessageBox.information(self, "确定要退出？", "确定要退出？？？", QMessageBox.Yes | QMessageBox.No)
             if s == QMessageBox.Yes:
                 e.accept()
                 self.closed.emit()
@@ -169,7 +169,7 @@ class TimedLogDownloadWidget(QWidget):
         c0.setToolTip(tp[1].toString("yyyy-MM-dd HH:mm:ss"))
         c1 = QStandardItem(TimedLogDownloadStatus.Timing.name)
         c2 = QStandardItem(tp[2])
-        info = f"Start time: {tp[0].startTime}\nEnd time: {tp[0].endTime}\nIP: {tp[0].ip}\nDirectory: {tp[0].dirName}\nOnly Robokit logs: {tp[0].onlyLog}"
+        info = f"起始时间: {tp[0].startTime}\n结束时间: {tp[0].endTime}\nIP: {tp[0].ip}\n下载目录: {tp[0].dirName}\n仅下载log: {tp[0].onlyLog}"
         c2.setToolTip(info)
         c3 = QStandardItem()
         c3.setData(tp[0])

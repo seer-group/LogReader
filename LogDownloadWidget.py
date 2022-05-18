@@ -13,34 +13,34 @@ class LogDownloadWidget(QWidget):
 
     def __init__(self, parent=None):
         super(LogDownloadWidget, self).__init__(parent)
-        self.setWindowTitle("Log download")
+        self.setWindowTitle("Log下载")
         gridLayout = QGridLayout()
 
-        self.startTimeLabel = QLabel("Start time")
-        self.startTimeLabel.setAlignment(Qt.AlignRight)
+        self.startTimeLabel = QLabel("起始时间")
+        self.startTimeLabel.setAlignment(Qt.AlignRight|Qt.AlignVCenter)
         self.startTimeEdit = QDateTimeEdit()
         self.startTimeEdit.setDisplayFormat("yyyy-MM-dd HH:mm:ss")
 
-        self.endTimeLabel = QLabel("End time")
-        self.endTimeLabel.setAlignment(Qt.AlignRight)
+        self.endTimeLabel = QLabel("结束时间")
+        self.endTimeLabel.setAlignment(Qt.AlignRight|Qt.AlignVCenter)
         self.endTimeEdit = QDateTimeEdit()
         self.endTimeEdit.setDisplayFormat("yyyy-MM-dd HH:mm:ss")
 
         self.ipLabel = QLabel("IP")
-        self.ipLabel.setAlignment(Qt.AlignRight)
+        self.ipLabel.setAlignment(Qt.AlignRight|Qt.AlignVCenter)
         self.ipEdit = QLineEdit()
         self.regExp = QRegExp(
             "\\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\b")
         self.ipEdit.setValidator(QRegExpValidator(self.regExp))
 
-        self.downloadDirLabel = QLabel("Directory")
-        self.downloadDirLabel.setAlignment(Qt.AlignRight)
+        self.downloadDirLabel = QLabel("下载目录")
+        self.downloadDirLabel.setAlignment(Qt.AlignRight|Qt.AlignVCenter)
         self.downloadDirEdit = QLineEdit()
         self.downloadDirEdit.setReadOnly(True)
         self.openDirButton = QToolButton(text="...")
 
-        self.onlyDownloadLogCheckBox = QCheckBox("Only Robokit logs")
-        self.createDownloadTaskButton = QPushButton("Create")
+        self.onlyDownloadLogCheckBox = QCheckBox("仅下载log")
+        self.createDownloadTaskButton = QPushButton("创建")
 
         hBoxLayout1 = QHBoxLayout()
         hBoxLayout1.addWidget(self.downloadDirLabel)
@@ -85,7 +85,7 @@ class LogDownloadWidget(QWidget):
 
     def _slotOpenDirClicked(self):
         defaultDir = QStandardPaths.standardLocations(QStandardPaths.DesktopLocation)[0]
-        dir = QFileDialog.getExistingDirectory(self, "Select directory", defaultDir)
+        dir = QFileDialog.getExistingDirectory(self, "选择下载目录", defaultDir)
         if dir:
             self.downloadDirEdit.setText(dir)
             self.downloadDirEdit.setCursorPosition(0)

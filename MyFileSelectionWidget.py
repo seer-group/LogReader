@@ -139,14 +139,14 @@ class MyFileSelectionWidget(QWidget):
     def __init__(self, dirParh, parent = None):
         super(MyFileSelectionWidget, self).__init__(parent)
         self.dirPath = dirParh
-        self.setWindowTitle("Select Log Files")
+        self.setWindowTitle("选择log文件")
         self.setMinimumHeight(500)
         self.setMinimumWidth(400)
 
         self.layout = QVBoxLayout(self)
         self.buttonLayout = QHBoxLayout(self)
 
-        self.groupBox = QGroupBox("Filter Log")
+        self.groupBox = QGroupBox("筛选log")
         self.groupBox.setLayout(FlowLayout(self.groupBox))
 
         self.statusLabel = QLabel()
@@ -161,16 +161,16 @@ class MyFileSelectionWidget(QWidget):
         self.filesView.setSelectionMode(QAbstractItemView.ExtendedSelection)
 
         self.contextMenu = QMenu()
-        self.expandAction = QAction("Expand all", self.filesView)
-        self.collapseAction = QAction("Collapse all", self.filesView)
+        self.expandAction = QAction("全部展开", self.filesView)
+        self.collapseAction = QAction("全部折叠", self.filesView)
         self.contextMenu.addAction(self.expandAction)
         self.contextMenu.addAction(self.collapseAction)
 
         self.checkBoxes = []
 
         self.getReportButton = QPushButton(text="GetReport")
-        self.filterButton = QPushButton(text="Filter")
-        self.openButton = QPushButton(text="Open")
+        self.filterButton = QPushButton(text="筛选")
+        self.openButton = QPushButton(text="打开")
 
         self.buttonLayout.addWidget(self.getReportButton)
         self.buttonLayout.addWidget(self.filterButton)
@@ -184,7 +184,7 @@ class MyFileSelectionWidget(QWidget):
 
         self._loadFileList()
 
-        self.filesView.itemSelectionChanged.connect(lambda :self.setWindowTitle(f"{len(self.filesView.selectedItems())} Log Files selected "))
+        self.filesView.itemSelectionChanged.connect(lambda :self.setWindowTitle(f"已选择{len(self.filesView.selectedItems())}个文件"))
         self.filesView.customContextMenuRequested.connect(lambda :self.contextMenu.exec(QCursor.pos()))
         self.expandAction.triggered.connect(self.filesView.expandAll)
         self.collapseAction.triggered.connect(self.filesView.collapseAll)
