@@ -37,6 +37,7 @@ from LogDownloadWidget import LogDownloadWidget
 from TimedLogDownloadWidget import TimedLogDownloadWidget
 from CPUPieView import CPUPieView
 from MapCheckWidget import MapCheckWidget
+from ParamWidget import ParamWidget
 
 class XYSelection:
     def __init__(self, num = 1):
@@ -192,6 +193,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.logDownload_widget = None
         self.timedLogDownload_widget = None
         self.mapCheckWidget = None
+        self.paramWidget = None
         self.fs_widget = None
 
         if isinstance(self.cmdArgs, str):
@@ -277,9 +279,9 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.precision.triggered.connect(self.openPrecision)
         self.tools_menu.addAction(self.precision)
 
-        self.cpuPie = QtWidgets.QAction("&CPU饼图", self.tools_menu, checkable=True)
-        self.cpuPie.triggered.connect(self.openCPUPie)
-        self.tools_menu.addAction(self.cpuPie)
+        self.cpuPie_action = QtWidgets.QAction("&CPU饼图", self.tools_menu, checkable=True)
+        self.cpuPie_action.triggered.connect(self.openCPUPie)
+        self.tools_menu.addAction(self.cpuPie_action)
 
         self.logdownload_action = QtWidgets.QAction("&Log下载", self.tools_menu)
         self.logdownload_action.triggered.connect(self.openLogDownloadWidget)
@@ -289,9 +291,13 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.logdownload_action2.triggered.connect(self.openTimedLogDownloadWidget)
         self.tools_menu.addAction(self.logdownload_action2)
 
-        self.mapCheck = QtWidgets.QAction("&地图检查",self.tools_menu)
-        self.mapCheck.triggered.connect(self.openMapCheckWidget)
-        self.tools_menu.addAction(self.mapCheck)
+        self.mapCheck_action = QtWidgets.QAction("&地图检查", self.tools_menu)
+        self.mapCheck_action.triggered.connect(self.openMapCheckWidget)
+        self.tools_menu.addAction(self.mapCheck_action)
+
+        self.param_action = QtWidgets.QAction("&查看param文件",self.tools_menu)
+        self.param_action.triggered.connect(self.openParamWidget)
+        self.tools_menu.addAction(self.param_action)
 
         self.help_menu = QtWidgets.QMenu('&Help', self)
         self.help_menu.addAction('&About', self.about)
@@ -419,7 +425,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
         self.cpuPieView = CPUPieView(self.read_thread)
         self.cpuPieView.setWindowIcon(QtGui.QIcon('rbk.ico'))
-        self.cpuPieView.closed.connect(lambda : self.cpuPie.setChecked(False))
+        self.cpuPieView.closed.connect(lambda : self.cpuPie_action.setChecked(False))
         self.cpuPieView.hide()
         # dataView相关的初始化
         self.dataViewNewOne(None)
@@ -1478,6 +1484,11 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.mapCheckWidget.setWindowIcon(QtGui.QIcon('rbk.ico'))
         self.mapCheckWidget.show()
 
+    def openParamWidget(self):
+        self.paramWidget = ParamWidget()
+        self.paramWidget.setWindowIcon(QtGui.QIcon('rbk.ico'))
+        self.paramWidget.show()
+
     # 画电机跟随曲线
     def drawMotorFollow(self, checked):
         dir_name, _ = os.path.split(self.filenames[0])
@@ -1582,6 +1593,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             self.cpuPieView.close()
         if self.mapCheckWidget:
             self.mapCheckWidget.close()
+        if self.paramWidget:
+            self.paramWidget.close()
         for d in self.dataViews:
             d.close()
         self.targetPrecision.close()
