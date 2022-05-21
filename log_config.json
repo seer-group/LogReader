@@ -1166,12 +1166,12 @@
       {"index":3, "name":"carrier_up_cnt", "type":"int"},
       {"index":4, "name":"iflink", "type":"int"},
       {"index":5, "name":"speed", "type":"int"},
-      {"index":8, "name":"rx_bytes", "type":"double"},
-      {"index":8, "name":"tx_bytes", "type":"double"},
+      {"index":6, "name":"rx_bytes", "type":"double"},
+      {"index":7, "name":"tx_bytes", "type":"double"},
       {"index":8, "name":"rx_dropped", "type":"double"},
-      {"index":8, "name":"tx_dropped", "type":"double"},
-      {"index":8, "name":"rx_errors", "type":"double"},
-      {"index":8, "name":"tx_errors", "type":"double"}
+      {"index":9, "name":"tx_dropped", "type":"double"},
+      {"index":10, "name":"rx_errors", "type":"double"},
+      {"index":11, "name":"tx_errors", "type":"double"}
     ] 
   }
 }
