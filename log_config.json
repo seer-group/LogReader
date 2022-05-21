@@ -1156,5 +1156,22 @@
       {"index":1, "name":"is_push_di_tirggered", "type":"bool"},
       {"index":2, "name":"brand_specific_info", "type":"json"}
     ]    
+  },
+  "NetStatus":{
+    "type":"NetStatus",
+    "content":[
+      {"index":0, "name":"operstate", "type":"str"},
+      {"index":1, "name":"carrier", "type":"int"},
+      {"index":2, "name":"carrier_down_cnt", "type":"int"},
+      {"index":3, "name":"carrier_up_cnt", "type":"int"},
+      {"index":4, "name":"iflink", "type":"int"},
+      {"index":5, "name":"speed", "type":"int"},
+      {"index":8, "name":"rx_bytes", "type":"double"},
+      {"index":8, "name":"tx_bytes", "type":"double"},
+      {"index":8, "name":"rx_dropped", "type":"double"},
+      {"index":8, "name":"tx_dropped", "type":"double"},
+      {"index":8, "name":"rx_errors", "type":"double"},
+      {"index":8, "name":"tx_errors", "type":"double"}
+    ] 
   }
 }
