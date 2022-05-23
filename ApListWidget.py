@@ -25,6 +25,9 @@ class LoadDataTread(QThread):
             # self.oriData.append(line)
             dateTime = QDateTime.fromString(temp[0], "[yyMMdd hhmmss.zzz]").addYears(100).toMSecsSinceEpoch()
             temp = temp[-1][1:-1].split("|")
+            # 这个数据有时为空
+            if len(temp) < 2:
+                continue
             index = 0
             while index < len(temp):
                 if temp[index] in self.data.keys():
@@ -71,6 +74,8 @@ class MyChart(QChart):
 
     def updateSeries(self, data: dict):
         self.removeAllSeries()
+        if len(data) < 1:
+            return
         dateAxisX = QDateTimeAxis(self)
         dateAxisX.setFormat("hh:mm:ss")
         for k, v in data.items():
