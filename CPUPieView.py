@@ -7,7 +7,6 @@ from PyQt5.QtGui import QCloseEvent, QBrush, QColor
 
 
 class LoadDataTread(QThread):
-    readReady = pyqtSignal()
 
     def __init__(self, readThred, parent=None):
         super(LoadDataTread, self).__init__(parent)
@@ -17,9 +16,6 @@ class LoadDataTread(QThread):
         self.oriData = []
 
     def run(self) -> None:
-        self.generalData = []
-        self.detailedData = []
-        self.oriData = []
         regex = re.compile("\[.+?\]")
         if not self.readThread:
             return
@@ -48,7 +44,6 @@ class LoadDataTread(QThread):
             num.append("")
             ratio.append(self.generalData[-1][-1][-1] - sum(ratio[2:]))
             self.detailedData.append([dateTime, name, num, ratio])
-        self.readReady.emit()
 
 class MyChart(QChart):
     def __init__(self):
@@ -155,7 +150,7 @@ class CPUPieView(QWidget):
         self.updateChart(self.slider.value())
 
     def loadData(self):
-        def _slotReadReady():
+        def _slotFineshed():
             if self.load.oriData:
                 self.slider.setMinimum(0)
                 self.slider.setMaximum(len(self.load.generalData) - 1)
@@ -167,7 +162,7 @@ class CPUPieView(QWidget):
                 self.slider.setDisabled(True)
 
         self.load = LoadDataTread(self.readThread)
-        self.load.readReady.connect(_slotReadReady)
+        self.load.finished.connect(_slotFineshed)
         self.load.start()
 
     def removeSeries(self):

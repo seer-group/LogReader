@@ -38,6 +38,7 @@ from TimedLogDownloadWidget import TimedLogDownloadWidget
 from CPUPieView import CPUPieView
 from MapCheckWidget import MapCheckWidget
 from ParamWidget import ParamWidget
+from ApListWidget import ApListWidget
 
 class XYSelection:
     def __init__(self, num = 1):
@@ -283,6 +284,10 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.cpuPie_action.triggered.connect(self.openCPUPie)
         self.tools_menu.addAction(self.cpuPie_action)
 
+        self.apList_action = QtWidgets.QAction("&Ap信号强度", self.tools_menu, checkable=True)
+        self.apList_action.triggered.connect(self.openAplistWidget)
+        self.tools_menu.addAction(self.apList_action)
+
         self.logdownload_action = QtWidgets.QAction("&Log下载", self.tools_menu)
         self.logdownload_action.triggered.connect(self.openLogDownloadWidget)
         self.tools_menu.addAction(self.logdownload_action)
@@ -427,6 +432,11 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.cpuPieView.setWindowIcon(QtGui.QIcon('rbk.ico'))
         self.cpuPieView.closed.connect(lambda : self.cpuPie_action.setChecked(False))
         self.cpuPieView.hide()
+
+        self.apListWidget = ApListWidget(self.read_thread)
+        self.apListWidget.setWindowIcon(QtGui.QIcon('rbk.ico'))
+        self.apListWidget.closed.connect(lambda : self.apList_action.setChecked(False))
+        self.apListWidget.hide()
         # dataView相关的初始化
         self.dataViewNewOne(None)
 
@@ -1029,13 +1039,14 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             self.openDataView(self.data_action.isChecked())
             self.updateMap()
             self.cpuPieView.loadData()
+            self.apListWidget.loadData()
 
 
     def fileQuit(self):
         self.close()
 
     def about(self):
-        QtWidgets.QMessageBox.about(self, "关于", """Log Viewer cd.1.2.0""")
+        QtWidgets.QMessageBox.about(self, "关于", """Log Viewer cd.1.3.0""")
 
     def ycombo_onActivated(self):
         curcombo = self.sender()
@@ -1456,6 +1467,13 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         else:
             self.cpuPieView.hide()
 
+    def openAplistWidget(self,checked):
+        if checked:
+            self.apListWidget.show()
+        else:
+            self.apListWidget.hide()
+
+
     def openLogDownloadWidget(self):
         if self.logDownload_widget:
             return
@@ -1591,6 +1609,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             self.timedLogDownload_widget.close()
         if self.cpuPieView:
             self.cpuPieView.close()
+        if self.apListWidget:
+            self.apListWidget.close()
         if self.mapCheckWidget:
             self.mapCheckWidget.close()
         if self.paramWidget:
