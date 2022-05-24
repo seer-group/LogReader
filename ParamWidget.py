@@ -1,13 +1,15 @@
+import os.path
 import sqlite3
 import sys
 
 from PyQt5.QtGui import QDragEnterEvent, QDropEvent, QStandardItemModel, QStandardItem, QKeyEvent
 from PyQt5.QtWidgets import QWidget, QApplication, QTableView, QPushButton, QVBoxLayout, QFileDialog, \
     QAbstractItemView, QLineEdit, QHBoxLayout
-from PyQt5.QtCore import Qt, QStandardPaths, QItemSelectionModel
+from PyQt5.QtCore import Qt, QStandardPaths, pyqtSignal
 
 
 class ParamWidget(QWidget):
+    closed = pyqtSignal()
     def __init__(self, paren=None):
         super(ParamWidget, self).__init__(paren)
         self.setWindowTitle("查看参数文件")
@@ -46,9 +48,12 @@ class ParamWidget(QWidget):
 
     def _openParamFile(self):
         defaultDir = QStandardPaths.standardLocations(QStandardPaths.DesktopLocation)[0]
-        self.paramFiles = QFileDialog.getOpenFileNames(self, "选择参数文件", defaultDir, "地图文件(*.param)")[0]
+        self.paramFiles = QFileDialog.getOpenFileNames(self, "选择参数文件", defaultDir, "参数文件(*.param)")[0]
         if self.paramFiles:
-            self._readParam()
+            self.readParam()
+
+    def closeEvent(self, event) -> None:
+        self.closed.emit()
 
     def dragEnterEvent(self, event: QDragEnterEvent) -> None:
         if event.mimeData().hasUrls:
@@ -62,7 +67,7 @@ class ParamWidget(QWidget):
             self.paramFiles = [file.toLocalFile() for file in mimeData.urls() if
                                file.fileName()[-6:].lower() == ".param"]
             if self.paramFiles:
-                self._readParam()
+                self.readParam()
 
     def keyPressEvent(self, event: QKeyEvent) -> None:
         # Ctrl+F打开/关闭搜索框
@@ -74,7 +79,10 @@ class ParamWidget(QWidget):
                 self.searchLineEdit.setHidden(True)
                 self.searchButton.setHidden(True)
 
-    def _readParam(self):
+    def readParam(self, files=None):
+        if files:
+            root = os.path.split(os.path.split(files)[0])[0]
+            self.paramFiles = [os.path.join(os.path.join(root, "params"), "robot.param")]
         self.model.removeRows(0, self.model.rowCount())
         for file in self.paramFiles:
             conn = sqlite3.connect(file)

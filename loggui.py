@@ -194,7 +194,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.logDownload_widget = None
         self.timedLogDownload_widget = None
         self.mapCheckWidget = None
-        self.paramWidget = None
         self.fs_widget = None
 
         if isinstance(self.cmdArgs, str):
@@ -288,6 +287,10 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.apList_action.triggered.connect(self.openAplistWidget)
         self.tools_menu.addAction(self.apList_action)
 
+        self.param_action = QtWidgets.QAction("&查看param文件",self.tools_menu, checkable=True)
+        self.param_action.triggered.connect(self.openParamWidget)
+        self.tools_menu.addAction(self.param_action)
+
         self.logdownload_action = QtWidgets.QAction("&Log下载", self.tools_menu)
         self.logdownload_action.triggered.connect(self.openLogDownloadWidget)
         self.tools_menu.addAction(self.logdownload_action)
@@ -299,10 +302,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.mapCheck_action = QtWidgets.QAction("&地图检查", self.tools_menu)
         self.mapCheck_action.triggered.connect(self.openMapCheckWidget)
         self.tools_menu.addAction(self.mapCheck_action)
-
-        self.param_action = QtWidgets.QAction("&查看param文件",self.tools_menu)
-        self.param_action.triggered.connect(self.openParamWidget)
-        self.tools_menu.addAction(self.param_action)
 
         self.help_menu = QtWidgets.QMenu('&Help', self)
         self.help_menu.addAction('&About', self.about)
@@ -437,6 +436,11 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.apListWidget.setWindowIcon(QtGui.QIcon('rbk.ico'))
         self.apListWidget.closed.connect(lambda : self.apList_action.setChecked(False))
         self.apListWidget.hide()
+
+        self.paramWidget = ParamWidget()
+        self.paramWidget.setWindowIcon(QtGui.QIcon('rbk.ico'))
+        self.paramWidget.closed.connect(lambda : self.param_action.setChecked(False))
+        self.paramWidget.hide()
         # dataView相关的初始化
         self.dataViewNewOne(None)
 
@@ -1040,6 +1044,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             self.updateMap()
             self.cpuPieView.loadData()
             self.apListWidget.loadData()
+            self.paramWidget.readParam(self.filenames[0])
 
 
     def fileQuit(self):
@@ -1473,6 +1478,12 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         else:
             self.apListWidget.hide()
 
+    def openParamWidget(self,checked):
+        if checked:
+            self.paramWidget.show()
+        else:
+            self.paramWidget.hide()
+
 
     def openLogDownloadWidget(self):
         if self.logDownload_widget:
@@ -1501,11 +1512,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.mapCheckWidget = MapCheckWidget()
         self.mapCheckWidget.setWindowIcon(QtGui.QIcon('rbk.ico'))
         self.mapCheckWidget.show()
-
-    def openParamWidget(self):
-        self.paramWidget = ParamWidget()
-        self.paramWidget.setWindowIcon(QtGui.QIcon('rbk.ico'))
-        self.paramWidget.show()
 
     # 画电机跟随曲线
     def drawMotorFollow(self, checked):
