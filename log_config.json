@@ -1173,5 +1173,14 @@
       {"index":10, "name":"rx_errors", "type":"double"},
       {"index":11, "name":"tx_errors", "type":"double"}
     ] 
+  },
+    "ApList":{
+    "type":"ApList",
+    "content":[
+      {"index":1, "name":"AP1", "type":"int"},
+      {"index":3, "name":"AP2", "type":"int"},
+      {"index":5, "name":"AP3", "type":"int"},
+      {"index":7, "name":"AP4", "type":"int"}
+    ]
   }
 }
