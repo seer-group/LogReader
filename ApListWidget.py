@@ -12,7 +12,7 @@ class LoadDataTread(QThread):
         super(LoadDataTread, self).__init__(parent)
         self.readThread = readThred
         self.data = {}
-        # self.oriData = []
+        self.oriData = {}
 
     def run(self) -> None:
         regex = re.compile("\[.+?\]")
@@ -22,12 +22,12 @@ class LoadDataTread(QThread):
             if not "[NP][d] [ApList]" in line:
                 continue
             temp = regex.findall(line)
-            # self.oriData.append(line)
             dateTime = QDateTime.fromString(temp[0], "[yyMMdd hhmmss.zzz]").addYears(100).toMSecsSinceEpoch()
             temp = temp[-1][1:-1].split("|")
             # 这个数据有时为空
             if len(temp) < 2:
                 continue
+            self.oriData[dateTime] = line
             index = 0
             while index < len(temp):
                 if temp[index] in self.data.keys():
@@ -38,6 +38,8 @@ class LoadDataTread(QThread):
 
 
 class MyChart(QChart):
+    dataHovered = pyqtSignal(object)
+
     def __init__(self):
         super(MyChart, self).__init__()
         # 动画在拖动时看上去卡顿
@@ -66,9 +68,9 @@ class MyChart(QChart):
         v = 0.8 if event.delta() > 0 else 1.2
         area = self.plotArea()
         centerPoint = area.center()
-        area.setWidth(area.width()*v)
-        area.setHeight(area.height()*v)
-        newCenterPoint = QPointF(2*centerPoint-event.pos()-(centerPoint-event.pos())/v)
+        area.setWidth(area.width() * v)
+        area.setHeight(area.height() * v)
+        newCenterPoint = QPointF(2 * centerPoint - event.pos() - (centerPoint - event.pos()) / v)
         area.moveCenter(newCenterPoint)
         self.zoomIn(area)
 
@@ -92,13 +94,15 @@ class MyChart(QChart):
         self.axisX(scatterSeries).setTitleText("时间")
         self.axisY(scatterSeries).setTitleText("信号强度(dBm)")
 
-    def _slotHovered(self, point: QPoint, state: bool):
+    def _slotHovered(self, point, state: bool):
         if state:
-            t = datetime.fromtimestamp(point.x()/1000).strftime('%H:%M:%S.%f')[:-3]
+            t = datetime.fromtimestamp(point.x() / 1000).strftime('%H:%M:%S.%f')[:-3]
             self.valueLabel.setText(f"{t}  {point.y()}")
             p = QCursor.pos()
             self.valueLabel.move(p.x() - (self.valueLabel.width() / 2), p.y() - (self.valueLabel.height() * 1.5))
             self.valueLabel.show()
+            self.dataHovered.emit(point.x())
+
         else:
             self.valueLabel.hide()
 
@@ -113,9 +117,11 @@ class ApListWidget(QWidget):
         self.setWindowTitle("AP信号强度")
         self.chart = MyChart()
         self.chartView = QChartView(self.chart)
-        self.resetButton = QPushButton("Reset")
         self.chartView.setRenderHint(QPainter.Antialiasing)
+        self.logLineLabel = QLabel()
+        self.resetButton = QPushButton("Reset")
         self.hBoxLayout = QHBoxLayout()
+        self.hBoxLayout.addWidget(self.logLineLabel)
         self.hBoxLayout.addItem(QSpacerItem(0, 0, QSizePolicy.Expanding, QSizePolicy.Minimum))
         self.hBoxLayout.addWidget(self.resetButton)
         self.setLayout(QVBoxLayout())
@@ -123,6 +129,7 @@ class ApListWidget(QWidget):
         self.layout().addLayout(self.hBoxLayout)
 
         self.resetButton.clicked.connect(self.resetButtonClicked)
+        self.chart.dataHovered.connect(lambda v: self.logLineLabel.setText(self.load.oriData[v]))
 
     def closeEvent(self, event) -> None:
         self.closed.emit()
