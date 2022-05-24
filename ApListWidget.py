@@ -1,10 +1,10 @@
 import re
 from datetime import datetime
 
-from PyQt5.QtCore import Qt, pyqtSignal, QThread, QDateTime, QPoint, QPointF, QRectF
+from PyQt5.QtCore import Qt, pyqtSignal, QThread, QDateTime, QPointF
 from PyQt5.QtGui import QPainter, QColor, QCursor
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLabel, QPushButton, QHBoxLayout, QSpacerItem, QSizePolicy
-from PyQt5.QtChart import QChartView, QChart, QScatterSeries, QDateTimeAxis, QValueAxis
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLabel, QPushButton, QHBoxLayout, QSpacerItem, QSizePolicy, QCheckBox
+from PyQt5.QtChart import QChartView, QChart, QScatterSeries, QDateTimeAxis, QLineSeries
 
 
 class LoadDataTread(QThread):
@@ -31,9 +31,9 @@ class LoadDataTread(QThread):
             index = 0
             while index < len(temp):
                 if temp[index] in self.data.keys():
-                    self.data[temp[index]].append((dateTime, int(temp[index + 1])))
+                    self.data[temp[index]].append(QPointF(dateTime, int(temp[index + 1])))
                 else:
-                    self.data[temp[index]] = [(dateTime, int(temp[index + 1]))]
+                    self.data[temp[index]] = [QPointF(dateTime, int(temp[index + 1]))]
                 index += 2
 
 
@@ -48,6 +48,7 @@ class MyChart(QChart):
         self.valueLabel.setWindowFlags(Qt.ToolTip)
         self.isLBPressed = False
         self.oPos = None
+        self.isLineEnabled = False
 
     def mousePressEvent(self, event) -> None:
         if event.button() == Qt.LeftButton:
@@ -86,9 +87,13 @@ class MyChart(QChart):
             scatterSeries.setBorderColor(QColor(0, 0, 0, 0))
             scatterSeries.setName(k)
             scatterSeries.hovered.connect(self._slotHovered)
-            for point in v:
-                scatterSeries.append(*point)
+            scatterSeries.append(v)
             self.addSeries(scatterSeries)
+            if self.isLineEnabled:
+                lineSeries = QLineSeries(self)
+                lineSeries.append(v)
+                lineSeries.setColor(scatterSeries.color())
+                self.addSeries(lineSeries)
         self.createDefaultAxes()
         self.setAxisX(dateAxisX, scatterSeries)
         self.axisX(scatterSeries).setTitleText("时间")
@@ -119,17 +124,20 @@ class ApListWidget(QWidget):
         self.chartView = QChartView(self.chart)
         self.chartView.setRenderHint(QPainter.Antialiasing)
         self.logLineLabel = QLabel()
+        self.lineCheckBox = QCheckBox("折线")
         self.resetButton = QPushButton("Reset")
         self.hBoxLayout = QHBoxLayout()
         self.hBoxLayout.addWidget(self.logLineLabel)
         self.hBoxLayout.addItem(QSpacerItem(0, 0, QSizePolicy.Expanding, QSizePolicy.Minimum))
+        self.hBoxLayout.addWidget(self.lineCheckBox)
         self.hBoxLayout.addWidget(self.resetButton)
         self.setLayout(QVBoxLayout())
         self.layout().addWidget(self.chartView)
         self.layout().addLayout(self.hBoxLayout)
 
-        self.resetButton.clicked.connect(self.resetButtonClicked)
+        self.resetButton.clicked.connect(self._slotResetButtonClicked)
         self.chart.dataHovered.connect(lambda v: self.logLineLabel.setText(self.load.oriData[v]))
+        self.lineCheckBox.clicked.connect(self._slotLineCheckBoxClicked)
 
     def closeEvent(self, event) -> None:
         self.closed.emit()
@@ -139,7 +147,11 @@ class ApListWidget(QWidget):
         self.load.finished.connect(lambda: self.chart.updateSeries(self.load.data))
         self.load.start()
 
-    def resetButtonClicked(self):
+    def _slotResetButtonClicked(self):
         # 通过记录坐标轴数据恢复有时会有Bug数据正确但是显示不正确,改为重绘
         if self.load and self.load.isFinished():
             self.chart.updateSeries(self.load.data)
+
+    def _slotLineCheckBoxClicked(self,checked:bool):
+        self.chart.isLineEnabled = checked
+        self._slotResetButtonClicked()
