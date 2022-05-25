@@ -88,12 +88,17 @@ class MyChart(QChart):
             scatterSeries.setName(k)
             scatterSeries.hovered.connect(self._slotHovered)
             scatterSeries.append(v)
-            self.addSeries(scatterSeries)
             if self.isLineEnabled:
                 lineSeries = QLineSeries(self)
                 lineSeries.append(v)
-                lineSeries.setColor(scatterSeries.color())
                 self.addSeries(lineSeries)
+                scatterSeries.setColor(lineSeries.color())
+            self.addSeries(scatterSeries)
+        if self.isLineEnabled:
+            # 把折线图例隐藏
+            for i, marker in enumerate(self.legend().markers()):
+                if not i % 2:
+                    marker.setVisible(False)
         self.createDefaultAxes()
         self.setAxisX(dateAxisX, scatterSeries)
         self.axisX(scatterSeries).setTitleText("时间")
