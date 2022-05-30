@@ -1511,8 +1511,8 @@ class MapWidget(QtWidgets.QWidget):
         pos_idx = (np.abs(pos_ts - ts)).argmin()
         pos_idx = loc_min_ind + pos_idx
         self.robot_pos = [loc['x'][pos_idx], loc['y'][pos_idx], np.deg2rad(loc['theta'][pos_idx])]
-        laser_info = "{},{},{},{},{}".format(loc['t'][laser_idx], (int)(loc['timestamp'][laser_idx]), 
-            loc['x'][laser_idx], loc['y'][laser_idx], loc['theta'][laser_idx])
+        laser_info = "{},{},{},{},{}".format(loc['t'][pos_idx], (int)(loc['timestamp'][pos_idx]), 
+            loc['x'][pos_idx], loc['y'][pos_idx], loc['theta'][pos_idx])
         self.timestamp_lable.setText('当前激光时刻定位（实框）: '+ laser_info)
 
         self.laser_org_data = laser_points

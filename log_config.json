@@ -1156,5 +1156,12 @@
       {"index":1, "name":"is_push_di_tirggered", "type":"bool"},
       {"index":2, "name":"brand_specific_info", "type":"json"}
     ]    
+  },
+  "SmartState":{
+    "type":"SmartState",
+    "content":[
+      {"index":0, "name":"plan_mode", "type":"int"},
+      {"index":1, "name":"plan_state", "type":"int"}
+    ]    
   }
 }

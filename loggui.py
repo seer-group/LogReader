@@ -521,6 +521,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
     def updateSelection(self):
         self.select_type = SelectEnum.NoSelect
+        if self.toolBar.isActive():
+            return
         for s in self.select_regions:
             if s.select_type is not SelectEnum.NoSelect:
                 self.select_type = s.select_type

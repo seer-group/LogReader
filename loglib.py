@@ -1,8 +1,6 @@
 import re
 import math
 from datetime import datetime
-import codecs
-import chardet
 import logging
 import numpy as np
 import gzip
