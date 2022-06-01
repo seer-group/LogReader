@@ -1172,6 +1172,13 @@
       {"index":9, "name":"tx_dropped", "type":"double"},
       {"index":10, "name":"rx_errors", "type":"double"},
       {"index":11, "name":"tx_errors", "type":"double"}
-    ] 
+    ]
+  },
+  "SmartState":{
+    "type":"SmartState",
+    "content":[
+      {"index":0, "name":"plan_mode", "type":"int"},
+      {"index":1, "name":"plan_state", "type":"int"}
+    ]
   }
 }

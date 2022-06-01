@@ -5,10 +5,19 @@ import sys
 from PyQt5.QtCore import QAbstractItemModel, QModelIndex, Qt , QItemSelectionModel, \
     QDataStream, QByteArray, QJsonDocument, QVariant, QJsonValue, QJsonParseError, \
         pyqtSignal 
-from PyQt5.QtWidgets import QApplication, QFileDialog, QTreeView, QStyledItemDelegate, QLineEdit
+from PyQt5.QtWidgets import QApplication, QTreeView, QStyledItemDelegate, QAbstractItemView
 import json
 from PyQt5 import QtCore, QtWidgets,QtGui
 from ExtendedComboBox import ExtendedComboBox
+
+class SelectOnlyDelegate(QStyledItemDelegate):
+    def __init__(self, parent) -> None:
+        super().__init__(parent)
+    def createEditor(self, parent, option: 'QStyleOptionViewItem', index: QtCore.QModelIndex):
+        editor = super().createEditor(parent, option, index)
+        editor.setReadOnly(True)
+        return editor
+
 class QJsonTreeItem(object):
     def __init__(self, parent=None):
 
@@ -116,7 +125,7 @@ class QJsonModel(QAbstractItemModel):
         item = index.internalPointer()
         col = index.column()
 
-        if role == Qt.DisplayRole:
+        if role == Qt.DisplayRole or role == Qt.EditRole:
             if col == 0:
                 return str(item.key())
             elif col == 1:
@@ -172,6 +181,10 @@ class QJsonModel(QAbstractItemModel):
     def columnCount(self, parent: QModelIndex = ...):
         return 2
 
+    def flags(self, index: QModelIndex):
+        return Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable | Qt.ItemFlag.ItemIsEditable
+
+
 class JsonView(QTreeView):
     hiddened = pyqtSignal('PyQt_PyObject')
     def __init__(self, parent =None):
@@ -180,10 +193,22 @@ class JsonView(QTreeView):
         self.setModel(self.model)  
         self.resize(520, 435)
         self.setWindowTitle("Status")
-        # self.delegate = JsonDelegate(self)
-        # self.setSelectionMode(QTreeView.SingleSelection)
-        # delegate = self.itemDelegate()
-        # self.setItemDelegate(self.delegate)
+        self.setItemDelegate(SelectOnlyDelegate(self))
+        self.setEditTriggers(QAbstractItemView.EditTrigger.DoubleClicked)
+    # TODO plot the select key
+    #     self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+    #     self.customContextMenuRequested.connect(self.showContextMenu)
+
+    # def showContextMenu(self, point):
+    #     ix = self.indexAt(point)
+    #     if ix.column() == 1:
+    #         menu = QtWidgets.QMenu()
+    #         menu.addAction("Plot")
+    #         action = menu.exec_(self.mapToGlobal(point))
+    #         if action:
+    #             if action.text() == "Plot":
+    #                 self.edit(ix)
+
     def loadJson(self, bytes_json):
         self.model.loadJson(bytes_json)
     def loadJsonFile(self, fileName):
