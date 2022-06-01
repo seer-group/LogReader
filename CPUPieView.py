@@ -3,7 +3,7 @@ import re
 from PyQt5.QtChart import QPieSeries, QPieSlice, QChartView, QChart
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QSlider, QLabel, QCheckBox, QSpacerItem, QSizePolicy
 from PyQt5.QtCore import Qt, pyqtSignal, QThread
-from PyQt5.QtGui import QCloseEvent, QBrush, QColor
+from PyQt5.QtGui import QCloseEvent, QBrush, QColor, QPainter
 
 
 class LoadDataTread(QThread):
@@ -59,12 +59,12 @@ class MyChart(QChart):
     def _slotPieSeriesHovered(self, slice: QPieSlice, state: bool):
         currentSeries: QPieSeries = slice.parent()
         if state:
-            [s.setVisible(False) for s in self.series() if s != currentSeries]
+            [s.hide() for s in self.series() if s != currentSeries]
             [s.setLabelVisible(False) for s in currentSeries.slices() if s != slice]
             slice.setExplodeDistanceFactor(0.03)
             slice.setExploded(state)
         else:
-            [s.setVisible(True) for s in self.series()]
+            [s.show() for s in self.series()]
             if (currentSeries.holeSize() and self.outerSliceLabelVisible) or \
                     (not currentSeries.holeSize() and self.innerSliceLabelVisible):
                 [s.setLabelVisible(True) for s in currentSeries.slices()]
@@ -111,6 +111,7 @@ class CPUPieView(QWidget):
         self.setLayout(QVBoxLayout())
         self.chart = MyChart()
         self.chartView = QChartView(self)
+        self.chartView.setRenderHint(QPainter.Antialiasing)
         self.chartView.setChart(self.chart)
         self.slider = QSlider(Qt.Horizontal, self)
         self.label = QLabel()

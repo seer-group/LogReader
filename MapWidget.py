@@ -11,7 +11,7 @@ from PyQt5.QtCore import QThread, pyqtSignal, pyqtSlot
 import numpy as np
 import json as js
 import os
-from MyToolBar import MyToolBar, keepRatio, RulerShape
+from MyToolBar import MyToolBar, keepRatio, RulerShape, RulerShapeMap
 from matplotlib.path import Path
 import matplotlib.patches as patches
 from matplotlib.textpath import TextPath
@@ -112,6 +112,7 @@ class Readmodel(QThread):
         self.laser_id2name = dict()
     # run method gets called when we start the thread
     def run(self):
+        print(self.model_name)
         with open(self.model_name, 'r',encoding= 'UTF-8') as fid:
             try:
                 self.js = js.load(fid)
@@ -122,54 +123,57 @@ class Readmodel(QThread):
             self.tail = None 
             self.width = None
             self.laser = dict() #x,y,r
-            if 'chassis' in self.js:
-                self.head = float(self.js['chassis']['head'])
-                self.tail = float(self.js['chassis']['tail'])
-                self.width = float(self.js['chassis']['width'])
-                laser0 = self.js['laser']['index'][0]
-                self.laser[0] = [float(laser0['x']),float(laser0['y']),np.deg2rad(float(laser0['r']))]
-            elif 'deviceTypes' in self.js:
-                for device in self.js['deviceTypes']:
-                    if device['name'] == 'chassis':
-                        for param in device['devices'][0]['deviceParams']:
-                            if param['key'] == 'shape':
-                                for childparam in param['comboParam']['childParams']:
-                                    if childparam['key'] == 'rectangle':
-                                        if param['comboParam']['childKey'] == childparam['key']:
-                                            for p in childparam['params']:
-                                                if p['key'] == 'width':
-                                                    self.width = p['doubleValue']
-                                                elif p['key'] == 'head':
-                                                    self.head = p['doubleValue']
-                                                elif p['key'] == 'tail':
-                                                    self.tail = p['doubleValue']
-                                    elif childparam['key'] == 'circle':
-                                        if param['comboParam']['childKey'] == childparam['key']:
-                                            for p in childparam['params']:
-                                                if p['key'] == 'radius':
-                                                    self.width = p['doubleValue']
-                                                    self.head = self.width
-                                                    self.tail = self.width
-                    elif device['name'] == 'laser':
-                        x, y, r, idx = 0, 0, 0, 0
-                        for laser in device['devices']:
-                            for param in laser['deviceParams']:
-                                if param['key'] == 'basic':
-                                    for p in param['arrayParam']['params']:
-                                        if p['key'] == 'x':
-                                            x = p['doubleValue']
-                                        elif p['key'] == 'y':
-                                            y = p['doubleValue']
-                                        elif p['key'] == 'yaw':
-                                            r = p['doubleValue']
-                                        elif p['key'] == 'id':
-                                            idx = p['uint32Value']
-                                        elif p['key'] == 'useForLocalization':
-                                            if p['boolValue'] == True:
-                                                self.loc_laser_ind = idx
-                            self.laser[idx] = [float(x),float(y),np.deg2rad(r)]
-                            self.laser_id2name[idx] = laser['name']
-            else:
+            try:
+                if 'chassis' in self.js:
+                    self.head = float(self.js['chassis']['head'])
+                    self.tail = float(self.js['chassis']['tail'])
+                    self.width = float(self.js['chassis']['width'])
+                    laser0 = self.js['laser']['index'][0]
+                    self.laser[0] = [float(laser0['x']),float(laser0['y']),np.deg2rad(float(laser0['r']))]
+                elif 'deviceTypes' in self.js:
+                    for device in self.js['deviceTypes']:
+                        if device['name'] == 'chassis':
+                            for param in device['devices'][0]['deviceParams']:
+                                if param['key'] == 'shape':
+                                    for childparam in param['comboParam']['childParams']:
+                                        if childparam['key'] == 'rectangle':
+                                            if param['comboParam']['childKey'] == childparam['key']:
+                                                for p in childparam['params']:
+                                                    if p['key'] == 'width':
+                                                        self.width = p['doubleValue']
+                                                    elif p['key'] == 'head':
+                                                        self.head = p['doubleValue']
+                                                    elif p['key'] == 'tail':
+                                                        self.tail = p['doubleValue']
+                                        elif childparam['key'] == 'circle':
+                                            if param['comboParam']['childKey'] == childparam['key']:
+                                                for p in childparam['params']:
+                                                    if p['key'] == 'radius':
+                                                        self.width = p['doubleValue']
+                                                        self.head = self.width
+                                                        self.tail = self.width
+                        elif device['name'] == 'laser':
+                            x, y, r, idx = 0, 0, 0, 0
+                            for laser in device['devices']:
+                                for param in laser['deviceParams']:
+                                    if param['key'] == 'basic':
+                                        for p in param['arrayParam']['params']:
+                                            if p['key'] == 'x':
+                                                x = p['doubleValue']
+                                            elif p['key'] == 'y':
+                                                y = p['doubleValue']
+                                            elif p['key'] == 'yaw':
+                                                r = p['doubleValue']
+                                            elif p['key'] == 'id':
+                                                idx = p['uint32Value']
+                                            elif p['key'] == 'useForLocalization':
+                                                if p['boolValue'] == True:
+                                                    self.loc_laser_ind = idx
+                                self.laser[idx] = [float(x),float(y),np.deg2rad(r)]
+                                self.laser_id2name[idx] = laser['name']
+                else:
+                    logging.error('Cannot Open robot.model: ' + self.model_name)
+            except:
                 logging.error('Cannot Open robot.model: ' + self.model_name)
             self.signal.emit(self.model_name)
 
@@ -669,7 +673,7 @@ class MapWidget(QtWidgets.QWidget):
         self.ax.add_line(self.trajectory_next)
         self.ax.add_line(self.odo)
         self.ax.add_line(self.odo_next)
-        self.ruler = RulerShape()
+        self.ruler = RulerShapeMap()
         self.ruler.add_ruler(self.ax)
         self.toolbar = MyToolBar(self.static_canvas, self, self.ruler)
         self.toolbar.update_home_callBack(self.toolbarHome)

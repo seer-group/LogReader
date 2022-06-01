@@ -1,40 +1,11 @@
 import re
 from datetime import datetime
 
-from PyQt5.QtCore import Qt, pyqtSignal, QThread, QDateTime, QPointF
-from PyQt5.QtGui import QPainter, QColor, QCursor
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLabel, QPushButton, QHBoxLayout, QSpacerItem, QSizePolicy, QCheckBox
+from PyQt5.QtCore import Qt, pyqtSignal, QThread, QDateTime, QPointF, QRect
+from PyQt5.QtGui import QPainter, QColor, QCursor, QResizeEvent
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLabel, QPushButton, QHBoxLayout, QSpacerItem, QSizePolicy, QCheckBox, \
+    QTextBrowser, QSplitter
 from PyQt5.QtChart import QChartView, QChart, QScatterSeries, QDateTimeAxis, QLineSeries
-
-
-class LoadDataTread(QThread):
-    def __init__(self, readThred, parent=None):
-        super(LoadDataTread, self).__init__(parent)
-        self.readThread = readThred
-        self.data = {}
-        self.oriData = {}
-
-    def run(self) -> None:
-        regex = re.compile("\[.+?\]")
-        if not self.readThread:
-            return
-        for line in self.readThread.reader.lines:
-            if not "[NP][d] [ApList]" in line:
-                continue
-            temp = regex.findall(line)
-            dateTime = QDateTime.fromString(temp[0], "[yyMMdd hhmmss.zzz]").addYears(100).toMSecsSinceEpoch()
-            temp = temp[-1][1:-1].split("|")
-            # 这个数据有时为空
-            if len(temp) < 2:
-                continue
-            self.oriData[dateTime] = line
-            index = 0
-            while index < len(temp):
-                if temp[index] in self.data.keys():
-                    self.data[temp[index]].append(QPointF(dateTime, int(temp[index + 1])))
-                else:
-                    self.data[temp[index]] = [QPointF(dateTime, int(temp[index + 1]))]
-                index += 2
 
 
 class MyChart(QChart):
@@ -90,6 +61,7 @@ class MyChart(QChart):
             scatterSeries.append(v)
             if self.isLineEnabled:
                 lineSeries = QLineSeries(self)
+                lineSeries.setName(k)
                 lineSeries.append(v)
                 self.addSeries(lineSeries)
                 scatterSeries.setColor(lineSeries.color())
@@ -106,57 +78,56 @@ class MyChart(QChart):
 
     def _slotHovered(self, point, state: bool):
         if state:
+            currentSeries = self.sender()
+            for s in self.series():
+                if s.name() != currentSeries.name():
+                    s.hide()
             t = datetime.fromtimestamp(point.x() / 1000).strftime('%H:%M:%S.%f')[:-3]
             self.valueLabel.setText(f"{t}  {point.y()}")
             p = QCursor.pos()
             self.valueLabel.move(p.x() - (self.valueLabel.width() / 2), p.y() - (self.valueLabel.height() * 1.5))
             self.valueLabel.show()
             self.dataHovered.emit(point.x())
-
         else:
+            [s.show() for s in self.series()]
+            if self.isLineEnabled:
+                # 把折线图例隐藏
+                for i, marker in enumerate(self.legend().markers()):
+                    if not i % 2:
+                        marker.setVisible(False)
             self.valueLabel.hide()
 
 
 class ApListWidget(QWidget):
-    closed = pyqtSignal()
 
     def __init__(self, readThread, parent=None):
         super(ApListWidget, self).__init__(parent)
         self.readThread = readThread
-        self.load = None
-        self.setWindowTitle("AP信号强度")
         self.chart = MyChart()
         self.chartView = QChartView(self.chart)
         self.chartView.setRenderHint(QPainter.Antialiasing)
-        self.logLineLabel = QLabel()
+        self.logLineLabel = QTextBrowser()
+        self.logLineLabel.setMinimumHeight(20)
+        self.logLineLabel.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Minimum)
         self.lineCheckBox = QCheckBox("折线")
         self.resetButton = QPushButton("Reset")
-        self.hBoxLayout = QHBoxLayout()
-        self.hBoxLayout.addWidget(self.logLineLabel)
-        self.hBoxLayout.addItem(QSpacerItem(0, 0, QSizePolicy.Expanding, QSizePolicy.Minimum))
-        self.hBoxLayout.addWidget(self.lineCheckBox)
-        self.hBoxLayout.addWidget(self.resetButton)
+        hBoxLayout = QHBoxLayout()
+        hBoxLayout.addWidget(self.logLineLabel)
+        hBoxLayout.addWidget(self.lineCheckBox)
+        hBoxLayout.addWidget(self.resetButton)
         self.setLayout(QVBoxLayout())
         self.layout().addWidget(self.chartView)
-        self.layout().addLayout(self.hBoxLayout)
+        self.layout().addLayout(hBoxLayout)
 
-        self.resetButton.clicked.connect(self._slotResetButtonClicked)
-        self.chart.dataHovered.connect(lambda v: self.logLineLabel.setText(self.load.oriData[v]))
+        self.resetButton.clicked.connect(self.updateSeries)
+        self.chart.dataHovered.connect(lambda v: self.logLineLabel.setText(self.readThread.oriData[v]))
         self.lineCheckBox.clicked.connect(self._slotLineCheckBoxClicked)
 
-    def closeEvent(self, event) -> None:
-        self.closed.emit()
-
-    def loadData(self):
-        self.load = LoadDataTread(self.readThread)
-        self.load.finished.connect(lambda: self.chart.updateSeries(self.load.data))
-        self.load.start()
-
-    def _slotResetButtonClicked(self):
+    def updateSeries(self):
         # 通过记录坐标轴数据恢复有时会有Bug数据正确但是显示不正确,改为重绘
-        if self.load and self.load.isFinished():
-            self.chart.updateSeries(self.load.data)
+        if self.readThread and self.readThread.isFinished():
+            self.chart.updateSeries(self.readThread.chartPointData)
 
     def _slotLineCheckBoxClicked(self,checked:bool):
         self.chart.isLineEnabled = checked
-        self._slotResetButtonClicked()
+        self.updateSeries()

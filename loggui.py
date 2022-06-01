@@ -38,7 +38,7 @@ from TimedLogDownloadWidget import TimedLogDownloadWidget
 from CPUPieView import CPUPieView
 from MapCheckWidget import MapCheckWidget
 from ParamWidget import ParamWidget
-from ApListWidget import ApListWidget
+from APHeatMapWidget import APHeatMapWidget
 
 class XYSelection:
     def __init__(self, num = 1):
@@ -283,9 +283,9 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.cpuPie_action.triggered.connect(self.openCPUPie)
         self.tools_menu.addAction(self.cpuPie_action)
 
-        self.apList_action = QtWidgets.QAction("&Ap信号强度", self.tools_menu, checkable=True)
-        self.apList_action.triggered.connect(self.openAplistWidget)
-        self.tools_menu.addAction(self.apList_action)
+        self.heatMap_action = QtWidgets.QAction("&网络信号热力图", self.tools_menu, checkable=True)
+        self.heatMap_action.triggered.connect(self.openHeatMapWidget)
+        self.tools_menu.addAction(self.heatMap_action)
 
         self.param_action = QtWidgets.QAction("&查看param文件",self.tools_menu, checkable=True)
         self.param_action.triggered.connect(self.openParamWidget)
@@ -432,10 +432,10 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.cpuPieView.closed.connect(lambda : self.cpuPie_action.setChecked(False))
         self.cpuPieView.hide()
 
-        self.apListWidget = ApListWidget(self.read_thread)
-        self.apListWidget.setWindowIcon(QtGui.QIcon('rbk.ico'))
-        self.apListWidget.closed.connect(lambda : self.apList_action.setChecked(False))
-        self.apListWidget.hide()
+        self.heatMapWidget = APHeatMapWidget(self.read_thread)
+        self.heatMapWidget.setWindowIcon(QtGui.QIcon('rbk.ico'))
+        self.heatMapWidget.closed.connect(lambda: self.heatMap_action.setChecked(False))
+        self.heatMapWidget.hide()
 
         self.paramWidget = ParamWidget()
         self.paramWidget.setWindowIcon(QtGui.QIcon('rbk.ico'))
@@ -1043,7 +1043,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             self.openDataView(self.data_action.isChecked())
             self.updateMap()
             self.cpuPieView.loadData()
-            self.apListWidget.loadData()
+            self.heatMapWidget.loadMap()
             self.paramWidget.readParam(self.filenames[0])
 
 
@@ -1472,11 +1472,11 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         else:
             self.cpuPieView.hide()
 
-    def openAplistWidget(self,checked):
+    def openHeatMapWidget(self,checked):
         if checked:
-            self.apListWidget.show()
+            self.heatMapWidget.show()
         else:
-            self.apListWidget.hide()
+            self.heatMapWidget.hide()
 
     def openParamWidget(self,checked):
         if checked:
@@ -1613,16 +1613,13 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             self.logDownload_widget.close()
         if self.timedLogDownload_widget:
             self.timedLogDownload_widget.close()
-        if self.cpuPieView:
-            self.cpuPieView.close()
-        if self.apListWidget:
-            self.apListWidget.close()
         if self.mapCheckWidget:
             self.mapCheckWidget.close()
-        if self.paramWidget:
-            self.paramWidget.close()
         for d in self.dataViews:
             d.close()
+        self.cpuPieView.close()
+        self.heatMapWidget.close()
+        self.paramWidget.close()
         self.targetPrecision.close()
         self.close()
 
