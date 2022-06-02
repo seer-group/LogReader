@@ -265,8 +265,9 @@ class RulerShape:
             l.set_visible(False)
 
 class RulerShapeMap(RulerShape):
-    def __init__(self):
+    def __init__(self, is_map: bool = False):
         super(RulerShapeMap, self).__init__()
+        self._is_map = is_map
 
     def update(self, ax, data):
         indx = self._axs.index(ax)
@@ -299,4 +300,7 @@ class RulerShapeMap(RulerShape):
         dydt = 0
         if abs(dt) > 1e-9:
             dydt = dy/dt
-        self._texts[indx].set_text('dY:{:.3e}\ndT:{:.3e} s\n dY/dT:{:.3e}'.format(dy, dt, dydt))
+        if self._is_map:
+            self._texts[indx].set_text('dY:{:.3e}\ndX:{:.3e}\ndY/dX:{:.3e}'.format(dy, dt, dydt))
+        else:
+            self._texts[indx].set_text('dY:{:.3e}\ndT:{:.3e} s\ndY/dT:{:.3e}'.format(dy, dt, dydt))
