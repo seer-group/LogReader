@@ -85,6 +85,8 @@ class ParamWidget(QWidget):
             self.paramFiles = [os.path.join(os.path.join(root, "params"), "robot.param")]
         self.model.removeRows(0, self.model.rowCount())
         for file in self.paramFiles:
+            if not os.path.exists(file):
+                continue
             conn = sqlite3.connect(file)
             cursor = conn.cursor()
             cursor.execute("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name")
