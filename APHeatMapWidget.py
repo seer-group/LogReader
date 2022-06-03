@@ -5,8 +5,8 @@ import json
 
 from PyQt5.QtGui import QColor, QPainter, QPen, QWheelEvent, QTransform, QRadialGradient
 from PyQt5.QtWidgets import QWidget, QGraphicsView, QGraphicsScene, QVBoxLayout, QGraphicsRectItem, QGraphicsItemGroup, \
-    QGraphicsEllipseItem, QTabWidget, QCheckBox, QHBoxLayout, QRadioButton
-from PyQt5.QtCore import Qt, QThread, pyqtSignal, QPointF
+    QGraphicsEllipseItem, QTabWidget, QCheckBox, QHBoxLayout, QRadioButton, QSpacerItem, QSizePolicy, QGraphicsItem
+from PyQt5.QtCore import Qt, QThread, pyqtSignal, QPointF, QRect
 from ApListWidget import ApListWidget
 
 
@@ -55,19 +55,27 @@ class ReadMapThread(QThread):
             return
         map = QGraphicsItemGroup()
         map.setData(0, "map")
+        if "header" in mapJS:
+            minX = mapJS["header"]["minPos"]["x"]
+            minY = mapJS["header"]["minPos"]["y"]
+            maxX = mapJS["header"]["maxPos"]["x"]
+            maxY = mapJS["header"]["maxPos"]["y"]
+            item = QGraphicsRectItem(minX * 1000, minY * 1000, maxX * 1000, maxY * 1000)
+            item.setBrush(Qt.white)
+            item.setPen(self.pointPen)
+            map.addToGroup(item)
         if "normalPosList" in mapJS:
             i = 0
             for point in mapJS["normalPosList"]:
-                # 每50个数据采样一次
-                if i % 50 != 0:
-                    i += 1
-                    continue
-                x = point["x"] if "x" in point else 0
-                y = point["y"] if "y" in point else 0
-                item = QGraphicsRectItem(x * 1000, y * 1000, 10, 10)
-                item.setBrush(Qt.black)
-                item.setPen(self.pointPen)
-                map.addToGroup(item)
+                # 每3个数据采样一次
+                if i % 3 == 0:
+                    x = point["x"] if "x" in point else 0
+                    y = point["y"] if "y" in point else 0
+                    item = QGraphicsRectItem(x * 1000, y * 1000, 10, 10)
+                    item.setBrush(Qt.black)
+                    item.setPen(self.pointPen)
+                    map.addToGroup(item)
+                i += 1
         if "rssiPosList" in mapJS:
             for point in mapJS["rssiPosList"]:
                 x = point["x"] if "x" in point else 0
@@ -103,8 +111,8 @@ class ReadMapThread(QThread):
         #             line.setPen(self.pathPen)
         #             map.addToGroup(line)
         #             continue
-        # 地图放到地图字典
         self.graphicsItems[self.mapFile] = map
+        print(len(map.childItems()))
 
     def _getHeatMapData(self):
         # 获取定位信息的生成器
@@ -133,8 +141,8 @@ class ReadMapThread(QThread):
                         break
                     # point.y()是信号强度dBm
                     strength = point.y()
-                    # 每20个数据采样一次
-                    if i % 20 == 0:
+                    # 每10个数据采样一次
+                    if i % 10 == 0:
                         # 将信号强度映射到颜色
                         r, g, b = 0, 0, 0
                         if strength < -90:
@@ -148,11 +156,8 @@ class ReadMapThread(QThread):
                         else:
                             g = 255
                         brushColor = QColor(r, g, b)
-                        gradient = QRadialGradient(x * 1000, y * 1000, 1000)
-                        gradient.setColorAt(0, QColor(r, g, b, 255))
-                        gradient.setColorAt(1, QColor(r, g, b, 100))
                         # 一个数据点的宽度2m
-                        item = QGraphicsEllipseItem(x * 1000 - 1000, y * 1000 - 1000, 2000, 2000)
+                        item = QGraphicsEllipseItem(x * 1000 - 500, y * 1000 - 500, 1000, 1000)
                         item.setBrush(brushColor)
                         item.setPen(self.pointPen)
                         # 根据信号强度设置层级
@@ -200,8 +205,6 @@ class MapView(QGraphicsView):
         wheelDeltaValue = event.angleDelta().y()
         if wheelDeltaValue > 0 and self.transform().m11() >= 1.5:
             return
-        elif True:
-            pass
         if wheelDeltaValue > 0:
             self.scale(1.2, 1.2)
         else:
@@ -217,21 +220,24 @@ class APHeatMapWidget(QWidget):
         self.setWindowTitle("网络信号热力图")
         self.readMapThread = ReadMapThread(readThread, self)
         self.scene = QGraphicsScene(self)
-        self.scene.setBackgroundBrush(Qt.white)
+        self.scene.setBackgroundBrush(QColor("#F4F4F4"))
+        # self.scene.setBackgroundBrush(Qt.white)
         self.view = MapView(self.scene, self)
         self.view.setTransform(QTransform(1, 0, 0, -1, 0, 0))
         self.view.setRenderHint(QPainter.Antialiasing)
         # openGL
         # self.view.setViewport(QOpenGLWidget(self))
+        self.hBoxLayout = QHBoxLayout()
+        self.hBoxLayout.setContentsMargins(0, 0, 0, 10)
+        self.view.setLayout(QVBoxLayout())
+        self.view.layout().addItem(QSpacerItem(0, 0, QSizePolicy.Minimum, QSizePolicy.Expanding))
+        self.view.layout().addLayout(self.hBoxLayout)
         self.apListWidget = ApListWidget(self.readMapThread, self)
         self.tabWidget = QTabWidget(self)
         self.tabWidget.addTab(self.view, "热力图")
         self.tabWidget.addTab(self.apListWidget, "信号强度")
-        self.hBoxLayout = QHBoxLayout()
         self.setLayout(QVBoxLayout())
         self.layout().addWidget(self.tabWidget)
-        self.layout().addLayout(self.hBoxLayout)
-
         self.readMapThread.finished.connect(self._slotReadFinished)
 
     def _slotReadFinished(self):
@@ -275,6 +281,7 @@ class APHeatMapWidget(QWidget):
                 q.setChecked(True)
             self.scene.addItem(v)
             i += 1
+        self.view.fitInView(self.scene.itemsBoundingRect(), Qt.KeepAspectRatio)
 
 
 if __name__ == '__main__':
