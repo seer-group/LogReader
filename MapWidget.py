@@ -673,7 +673,7 @@ class MapWidget(QtWidgets.QWidget):
         self.ax.add_line(self.trajectory_next)
         self.ax.add_line(self.odo)
         self.ax.add_line(self.odo_next)
-        self.ruler = RulerShapeMap(True)
+        self.ruler = RulerShape()
         self.ruler.add_ruler(self.ax)
         self.toolbar = MyToolBar(self.static_canvas, self, self.ruler)
         self.toolbar.update_home_callBack(self.toolbarHome)
