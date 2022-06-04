@@ -3,9 +3,10 @@ import os
 import re
 import json
 
-from PyQt5.QtGui import QColor, QPainter, QPen, QWheelEvent, QTransform, QRadialGradient
+from PyQt5.QtGui import QColor, QPainter, QPen, QWheelEvent, QTransform, QRadialGradient, QLinearGradient, QFont
 from PyQt5.QtWidgets import QWidget, QGraphicsView, QGraphicsScene, QVBoxLayout, QGraphicsRectItem, QGraphicsItemGroup, \
-    QGraphicsEllipseItem, QTabWidget, QCheckBox, QHBoxLayout, QRadioButton, QSpacerItem, QSizePolicy, QGraphicsItem
+    QGraphicsEllipseItem, QTabWidget, QCheckBox, QHBoxLayout, QRadioButton, QSpacerItem, QSizePolicy, QGraphicsItem, \
+    QBoxLayout
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, QPointF, QRect
 from ApListWidget import ApListWidget
 
@@ -194,6 +195,25 @@ class ReadMapThread(QThread):
                 index += 2
 
 
+class ColorMap(QWidget):
+    def __init__(self):
+        super().__init__()
+
+    def paintEvent(self, event):
+        p = QPainter(self)
+        gradient = QLinearGradient(0, 0, 0, self.height())
+        gradient.setColorAt(0, Qt.green)
+        gradient.setColorAt(0.5, Qt.yellow)
+        gradient.setColorAt(1, Qt.red)
+        p.setPen(Qt.NoPen)
+        p.setBrush(gradient)
+        p.drawRect(25, 0, self.width(), self.height())
+        p.setPen(Qt.gray)
+        p.setFont(QFont("Times", 8, QFont.Bold))
+        p.drawText(0, 15, "-50")
+        p.drawText(0, int(self.height()/2)+10, "-75")
+        p.drawText(0, int(self.height()), "-90")
+
 class MapView(QGraphicsView):
     def __init__(self, scene=None, parent=None):
         super(MapView, self).__init__(scene, parent)
@@ -227,10 +247,16 @@ class APHeatMapWidget(QWidget):
         self.view.setRenderHint(QPainter.Antialiasing)
         # openGL
         # self.view.setViewport(QOpenGLWidget(self))
+        self.colorMap = ColorMap()
+        self.colorMap.setFixedWidth(30)
+        self.colorMapLayout = QHBoxLayout()
+        self.colorMapLayout.setContentsMargins(0, 0, 10, 0)
+        self.colorMapLayout.addItem(QSpacerItem(0, 0,  QSizePolicy.Expanding, QSizePolicy.Minimum))
+        self.colorMapLayout.addWidget(self.colorMap)
         self.hBoxLayout = QHBoxLayout()
         self.hBoxLayout.setContentsMargins(0, 0, 0, 10)
         self.view.setLayout(QVBoxLayout())
-        self.view.layout().addItem(QSpacerItem(0, 0, QSizePolicy.Minimum, QSizePolicy.Expanding))
+        self.view.layout().addLayout(self.colorMapLayout)
         self.view.layout().addLayout(self.hBoxLayout)
         self.apListWidget = ApListWidget(self.readMapThread, self)
         self.tabWidget = QTabWidget(self)
