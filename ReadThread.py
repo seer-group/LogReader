@@ -88,6 +88,37 @@ class ReadThread(QThread):
             self.log.append("Failed to open {}".format(self.log_config))
         self.content = dict()
         content_delay = dict()
+        ###############################################################################
+        # 修改对应IO的解析方式
+        # 读取模型文件
+        root = os.path.split(os.path.split(self.filenames[0])[0])[0]
+        modelFile = os.path.join(os.path.join(root, "models"), "robot.model")
+        if os.path.exists(modelFile):
+            try:
+                with open(modelFile, "rb") as f:
+                    mjs = js.load(f)
+                for item in mjs["deviceTypes"]:
+                    if item["name"] == "DI":
+                        i = 0
+                        for di in item["devices"]:
+                            if di["isEnabled"]:
+                                self.js["DI"]["content"][i]["name"] = di["name"]
+                                self.js["DI"]["content"][i]["description"] = di["name"] + "状态"
+                                i += 1
+                        # 保留真实存在的与模型文件中一致的DI
+                        self.js["DI"]["content"] = self.js["DI"]["content"][:i]
+                    elif item["name"] == "DO":
+                        i = 0
+                        for do in item["devices"]:
+                            if do["isEnabled"]:
+                                self.js["DO"]["content"][i]["name"] = do["name"]
+                                self.js["DO"]["content"][i]["description"] = do["name"] + "状态"
+                                i += 1
+                        # 保留真实存在的与模型文件中一致的DO
+                        self.js["DO"]["content"] = self.js["DO"]["content"][:i]
+            except:
+                pass
+        ###############################################################################
         for k in self.js:
             if "type" in self.js[k] and "content" in self.js[k]:
                 if k == "LocationEachFrame" or k == "StopPoints":
@@ -98,7 +129,6 @@ class ReadThread(QThread):
                             content_delay[type] = Data(self.js[k], type)
                     elif isinstance(self.js[k]['type'], str):
                         content_delay[self.js[k]['type']] = Data(self.js[k], self.js[k]['type'])
-
         self.laser = Laser(1000.0)
         self.err = ErrorLine()
         self.war = WarningLine()
@@ -113,6 +143,7 @@ class ReadThread(QThread):
         self.rstatus = RobotStatus()
         self.tlist = []
         self.log =  []
+        self.data = {}
         self.output_fname = ""
         if self.filenames:
             self.reader = ReadLog(self.filenames)
