@@ -1053,7 +1053,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.close()
 
     def about(self):
-        QtWidgets.QMessageBox.about(self, "关于", """Log Viewer cd.1.4.1""")
+        QtWidgets.QMessageBox.about(self, "关于", """Log Viewer cd.1.4.3""")
 
     def ycombo_onActivated(self):
         curcombo = self.sender()
@@ -1061,7 +1061,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         for (ind, xy) in enumerate(self.xys):
             if xy.y_combo == curcombo:
                 index = ind
-                break; 
+                break
         text = curcombo.currentText()
         current_x_index = self.xys[index].x_combo.currentIndex()
         self.xys[index].x_combo.clear()
@@ -1536,10 +1536,10 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             motor_num = len(motor_name_list)
             num = QtWidgets.QLabel(str(motor_num))
             self.fignum_changed(num)
-            name_motorinfo = mr.getNameMotorInfoDict(self.filenames[0], motor_name_list)
-            name_motorcmd = mr.getNameMotorCmdDict(self.filenames[0], motor_name_list)
-            name_type = mr.getMotorNameTypeDict(model_name)
             try:
+                name_motorinfo = mr.getNameMotorInfoDict(self.filenames[0], motor_name_list)
+                name_motorcmd = mr.getNameMotorCmdDict(self.filenames[0], motor_name_list)
+                name_type = mr.getMotorNameTypeDict(model_name)
                 for i, name in enumerate(motor_name_list):
                     key1 = "MotorCmd." + name_motorcmd[name]
                     if name_type[name] == "steer":
@@ -1551,8 +1551,9 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                                         self.read_thread.ylabel[key1], True)
                         self.drawdata(self.axs[i], self.read_thread.getData(key2), 
                                         self.read_thread.ylabel[key2], False, False)
-            except KeyError:
-                self.log_info.append("Please choose the true model matched with log!!!")
+            except Exception as e:
+                if KeyError in e.args:
+                    self.log_info.append("Please choose the true model matched with log!!!")
             self.motor_follow_action.setChecked(False)
         else:
             self.log_info.append("Please choose the true model matched with log!!!")
