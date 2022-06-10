@@ -161,7 +161,6 @@ class TargetPrecision(QtWidgets.QWidget):
                 self.ax.set_title(m_xy[3])
         except:
             pass
-        print(map_x, map_y, map_a)
         self.map_xy.set_xdata(map_x)
         self.map_xy.set_ydata(map_y)
         self.map_x.set_xdata(self.tdata)
