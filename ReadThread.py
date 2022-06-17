@@ -99,24 +99,25 @@ class ReadThread(QThread):
                     mjs = js.load(f)
                 for item in mjs["deviceTypes"]:
                     if item["name"] == "DI":
-                        diNames = [(di["deviceParams"][0]["arrayParam"]["params"][0]["uint32Value"], di["name"]) for di in item["devices"] if di["isEnabled"]]
-                        # 对diNames进行排序,按照第一个参数排序
-                        diNames.sort(key=lambda x: x[0])
+                        diNames = [di["deviceParams"][0]["arrayParam"]["params"][0]["uint32Value"] for di in item["devices"] if di["isEnabled"]]
+                        # 对diNames进行排序
+                        diNames.sort()
                         for i, diName in enumerate(diNames):
-                            self.js["DI"]["content"][i]["name"] = diName[1]
-                            self.js["DI"]["content"][i]["description"] = diName[1] + "状态"
+                            self.js["DI"]["content"][i]["name"] = f"id{diName}"
+                            self.js["DI"]["content"][i]["description"] = f"DI.id{diName} 状态"
                         # 保留真实存在的与模型文件中一致的DI
                         self.js["DI"]["content"] = self.js["DI"]["content"][:len(diNames)]
                     elif item["name"] == "DO":
-                        doNames = [(do["deviceParams"][0]["arrayParam"]["params"][0]["uint32Value"], do["name"]) for do in item["devices"] if do["isEnabled"]]
-                        # 对doNames进行排序,按照第一个参数排序
-                        doNames.sort(key=lambda x: x[0])
+                        doNames = [do["deviceParams"][0]["arrayParam"]["params"][0]["uint32Value"] for do in item["devices"] if do["isEnabled"]]
+                        # 对doNames进行排序
+                        doNames.sort()
                         for i, doName in enumerate(doNames):
-                            self.js["DO"]["content"][i]["name"] = doName[1]
-                            self.js["DO"]["content"][i]["description"] = doName[1] + "状态"
+                            self.js["DO"]["content"][i]["name"] = f"id{doName}"
+                            self.js["DO"]["content"][i]["description"] = f"DO.id{doName} 状态"
                         # 保留真实存在的与模型文件中一致的DO
                         self.js["DO"]["content"] = self.js["DO"]["content"][:len(doNames)]
             except Exception as e:
+                print(e)
                 logging.warning("Failed to load model file: {}".format(e))
         ###############################################################################
         for k in self.js:
