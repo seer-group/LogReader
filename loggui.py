@@ -835,59 +835,62 @@ class ApplicationWindow(QtWidgets.QMainWindow):
     def keyPressEvent(self,event):
         if len(self.select_regions) < 1:
             return
-        if (event.key() == QtCore.Qt.Key_A or event.key() == QtCore.Qt.Key_D
-            or event.key() == QtCore.Qt.Key_Left or event.key() == QtCore.Qt.Key_Right):
-            cur_t = self.select_regions[0].getMidLineX()
-            if type(cur_t) is not datetime:
-                cur_t = num2date(cur_t)
-            if event.key() == QtCore.Qt.Key_A or event.key() == QtCore.Qt.Key_D:
-                self.key_laser_idx = -1
-                self.key_laser_channel = -1
-                t = np.array(self.read_thread.content['LocationEachFrame']['t'])
-                if self.key_loc_idx < 0:
-                    self.key_loc_idx = (np.abs(t-cur_t)).argmin()
-                if event.key() == QtCore.Qt.Key_A:
-                    if self.key_loc_idx > 0:
-                        self.key_loc_idx = self.key_loc_idx - 1
-                if event.key() ==  QtCore.Qt.Key_D:
-                    if self.key_loc_idx < (len(t) -1 ):
-                        self.key_loc_idx = self.key_loc_idx + 1
-                cur_t = t[self.key_loc_idx]
-            else:
-                self.key_loc_idx = -1
-                if self.key_laser_idx < 0 \
-                or self.key_laser_channel < 0:
-                    min_laser_channel = -1
-                    laser_idx = -1
-                    min_dt = None
-                    for index in self.read_thread.laser.datas.keys():
-                        t = np.array(self.read_thread.laser.t(index))
-                        if len(t) < 1:
-                            continue
-                        tmp_laser_idx = (np.abs(t-cur_t)).argmin()
-                        tmp_dt = np.min(np.abs(t-cur_t))
-                        if min_dt == None or tmp_dt < min_dt:
-                            min_laser_channel = index
-                            laser_idx = tmp_laser_idx
-                            min_dt = tmp_dt
-                    self.key_laser_idx = laser_idx
-                    self.key_laser_channel = min_laser_channel
-                    t = self.read_thread.laser.t(min_laser_channel)
-                    cur_t = t[laser_idx]
-                if event.key() == QtCore.Qt.Key_Left:
-                    self.key_laser_idx = self.key_laser_idx -1
-                    t = self.read_thread.laser.t(self.key_laser_channel)
-                    if self.key_laser_idx < 0:
-                        self.key_laser_idx = len(t) - 1
-                    cur_t = t[self.key_laser_idx]
-                if event.key() == QtCore.Qt.Key_Right:
-                    self.key_laser_idx = self.key_laser_idx + 1
-                    t = self.read_thread.laser.t(self.key_laser_channel)
-                    if self.key_laser_idx >= len(t):
-                        self.key_laser_idx = 0
-                    cur_t = t[self.key_laser_idx]
-            self.mid_line_t = cur_t
-            self.updateMap()
+        try:
+            if (event.key() == QtCore.Qt.Key_A or event.key() == QtCore.Qt.Key_D
+                or event.key() == QtCore.Qt.Key_Left or event.key() == QtCore.Qt.Key_Right):
+                cur_t = self.select_regions[0].getMidLineX()
+                if type(cur_t) is not datetime:
+                    cur_t = num2date(cur_t)
+                if event.key() == QtCore.Qt.Key_A or event.key() == QtCore.Qt.Key_D:
+                    self.key_laser_idx = -1
+                    self.key_laser_channel = -1
+                    t = np.array(self.read_thread.content['LocationEachFrame']['t'])
+                    if self.key_loc_idx < 0:
+                        self.key_loc_idx = (np.abs(t-cur_t)).argmin()
+                    if event.key() == QtCore.Qt.Key_A:
+                        if self.key_loc_idx > 0:
+                            self.key_loc_idx = self.key_loc_idx - 1
+                    if event.key() ==  QtCore.Qt.Key_D:
+                        if self.key_loc_idx < (len(t) -1 ):
+                            self.key_loc_idx = self.key_loc_idx + 1
+                    cur_t = t[self.key_loc_idx]
+                else:
+                    self.key_loc_idx = -1
+                    if self.key_laser_idx < 0 \
+                    or self.key_laser_channel < 0:
+                        min_laser_channel = -1
+                        laser_idx = -1
+                        min_dt = None
+                        for index in self.read_thread.laser.datas.keys():
+                            t = np.array(self.read_thread.laser.t(index))
+                            if len(t) < 1:
+                                continue
+                            tmp_laser_idx = (np.abs(t-cur_t)).argmin()
+                            tmp_dt = np.min(np.abs(t-cur_t))
+                            if min_dt == None or tmp_dt < min_dt:
+                                min_laser_channel = index
+                                laser_idx = tmp_laser_idx
+                                min_dt = tmp_dt
+                        self.key_laser_idx = laser_idx
+                        self.key_laser_channel = min_laser_channel
+                        t = self.read_thread.laser.t(min_laser_channel)
+                        cur_t = t[laser_idx]
+                    if event.key() == QtCore.Qt.Key_Left:
+                        self.key_laser_idx = self.key_laser_idx -1
+                        t = self.read_thread.laser.t(self.key_laser_channel)
+                        if self.key_laser_idx < 0:
+                            self.key_laser_idx = len(t) - 1
+                        cur_t = t[self.key_laser_idx]
+                    if event.key() == QtCore.Qt.Key_Right:
+                        self.key_laser_idx = self.key_laser_idx + 1
+                        t = self.read_thread.laser.t(self.key_laser_channel)
+                        if self.key_laser_idx >= len(t):
+                            self.key_laser_idx = 0
+                        cur_t = t[self.key_laser_idx]
+                self.mid_line_t = cur_t
+                self.updateMap()
+        except Exception as e:
+            logging.warning(e)
 
     def new_home(self, *args, **kwargs):
         for ax, xy in zip(self.axs, self.xys):

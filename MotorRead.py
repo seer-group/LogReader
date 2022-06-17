@@ -75,7 +75,16 @@ def getNameMotorInfoDict(file_name, motor_name_list):
         out = regex.match(line)
         if out:
             if ("MotorInfo" in out.group(2)) and (not "MotorInfoISO" in out.group(2)):
-                motor_name = out.group(3).split("|")[10]
+                # motor_name = out.group(3).split("|")[10]
+                motor_name = None
+                # 遍历如果元素在motor_name_list中，则将元素赋给motor_name
+                for i in out.group(3).split("|"):
+                    if i in motor_name_list:
+                        motor_name = i
+                        break
+                # 如果motor_name为None，则抛出异常
+                if not motor_name:
+                    raise Exception("motor name not found")
                 match_dict[motor_name] = True
                 name_motorinfo[motor_name] = out.group(2)
         all_match = True

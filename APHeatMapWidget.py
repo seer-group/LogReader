@@ -113,7 +113,6 @@ class ReadMapThread(QThread):
         #             map.addToGroup(line)
         #             continue
         self.graphicsItems[self.mapFile] = map
-        print(len(map.childItems()))
 
     def _getHeatMapData(self):
         # 获取定位信息的生成器
