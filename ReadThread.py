@@ -102,22 +102,29 @@ class ReadThread(QThread):
                         diNames = [di["deviceParams"][0]["arrayParam"]["params"][0]["uint32Value"] for di in item["devices"] if di["isEnabled"]]
                         # 对diNames进行排序
                         diNames.sort()
+                        self.js["DI"]["content"] = []
                         for i, diName in enumerate(diNames):
-                            self.js["DI"]["content"][i]["name"] = f"id{diName}"
-                            self.js["DI"]["content"][i]["description"] = f"DI.id{diName} 状态"
-                        # 保留真实存在的与模型文件中一致的DI
-                        self.js["DI"]["content"] = self.js["DI"]["content"][:len(diNames)]
+                            self.js["DI"]["content"].append({
+                                "name": f"id{diName}",
+                                "description": f"DI.id{diName} 状态",
+                                "index": i,
+                                "type": "double",
+                                "unit": ""
+                            })
                     elif item["name"] == "DO":
                         doNames = [do["deviceParams"][0]["arrayParam"]["params"][0]["uint32Value"] for do in item["devices"] if do["isEnabled"]]
                         # 对doNames进行排序
                         doNames.sort()
+                        self.js["DO"]["content"] = []
                         for i, doName in enumerate(doNames):
-                            self.js["DO"]["content"][i]["name"] = f"id{doName}"
-                            self.js["DO"]["content"][i]["description"] = f"DO.id{doName} 状态"
-                        # 保留真实存在的与模型文件中一致的DO
-                        self.js["DO"]["content"] = self.js["DO"]["content"][:len(doNames)]
+                            self.js["DO"]["content"].append({
+                                "name": f"id{doName}",
+                                "description": f"DO.id{doName} 状态",
+                                "index": i,
+                                "type": "double",
+                                "unit": ""
+                            })
             except Exception as e:
-                print(e)
                 logging.warning("Failed to load model file: {}".format(e))
         ###############################################################################
         for k in self.js:
