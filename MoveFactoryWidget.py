@@ -61,10 +61,3 @@ class MoveFactoryWidget(QWidget):
 
     def updateModel(self):
         self.createModelThread.start()
-
-
-if __name__ == '__main__':
-    app = QApplication([])
-    w = MoveFactoryWidget()
-    w.show()
-    app.exec()

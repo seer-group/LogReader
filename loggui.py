@@ -1,5 +1,8 @@
 import matplotlib
 from enum import Enum
+
+from searchWidget import SearchWidget
+
 matplotlib.use('Qt5Agg')
 matplotlib.rcParams['font.sans-serif']=['FangSong']
 matplotlib.rcParams['axes.unicode_minus'] = False
@@ -314,6 +317,14 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self._main.dropped.connect(self.dragFiles)
         self.setCentralWidget(self._main)
         self.layout = QtWidgets.QVBoxLayout(self._main)
+        self.searchWidget = SearchWidget(self.read_thread, self._main)
+        self.searchWidget.hide()
+        def moveTo(i):
+            self.info.setText(self.get_content(i))
+            self.resetMidLineProperty(i)
+            self.updateMap()
+        self.searchWidget.nextMove.connect(moveTo)
+        self.layout.addWidget(self.searchWidget)
         #Add ComboBox
         self.xys = []
         self.xy_hbox = QtWidgets.QHBoxLayout()
@@ -843,6 +854,11 @@ class ApplicationWindow(QtWidgets.QMainWindow):
     def keyPressEvent(self,event):
         if len(self.select_regions) < 1:
             return
+        if event.key() == QtCore.Qt.Key_F and event.modifiers() == QtCore.Qt.ControlModifier:
+            if self.searchWidget.isVisible():
+                self.searchWidget.hide()
+            else:
+                self.searchWidget.show()
         try:
             if (event.key() == QtCore.Qt.Key_A or event.key() == QtCore.Qt.Key_D
                 or event.key() == QtCore.Qt.Key_Left or event.key() == QtCore.Qt.Key_Right):
@@ -1065,7 +1081,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.close()
 
     def about(self):
-        QtWidgets.QMessageBox.about(self, "关于", """Log Viewer cd.1.4.4""")
+        QtWidgets.QMessageBox.about(self, "关于", """Log Viewer cd.1.5.0""")
 
     def ycombo_onActivated(self):
         curcombo = self.sender()
