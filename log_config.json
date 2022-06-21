@@ -125,10 +125,7 @@
       { "index": 0, "name": "vx", "type": "double", "description": "DSP接收到的vx", "unit":"m/s" },
       { "index": 1, "name": "vy", "type": "double", "description": "DSP接收到的vy", "unit":"m/s"  },
       { "index": 2, "name": "vw", "type": "rad", "description": "DSP接收到的vw", "unit":"degree/s"  },
-      { "index": 3, "name": "steer_angle", "type": "rad", "description": "DSP接收到的舵角", "unit":"degree"  },
-      { "index": 4, "name": "spin_speed", "type": "rad", "description": "DSP接收到托盘速度", "unit":"degree/s"  },
-      { "index": 5, "name": "jack_speed", "type": "double", "description": "DSP接收到顶升速度", "unit":"m/s"  },
-      { "index": 6, "name": "fork_speed", "type": "double", "description": "DSP接收到货叉速度", "unit":"m/s"  }
+      { "index": 3, "name": "is2move", "type": "bool", "description": "是否要启动"  }
     ]
   },
   "GDMotorCmd": {
