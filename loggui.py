@@ -1,11 +1,9 @@
 import matplotlib
 from enum import Enum
-from TargetPrecision import TargetPrecision
 matplotlib.use('Qt5Agg')
 matplotlib.rcParams['font.sans-serif']=['FangSong']
 matplotlib.rcParams['axes.unicode_minus'] = False
-from matplotlib.backends.backend_qt5agg import (
-    FigureCanvas, NavigationToolbar2QT as NavigationToolbar)
+from matplotlib.backends.backend_qt5agg import (FigureCanvas, NavigationToolbar2QT as NavigationToolbar)
 from PyQt5 import QtCore, QtWidgets,QtGui
 from matplotlib.figure import Figure
 from datetime import datetime
@@ -39,6 +37,7 @@ from CPUPieView import CPUPieView
 from MapCheckWidget import MapCheckWidget
 from ParamWidget import ParamWidget
 from APHeatMapWidget import APHeatMapWidget
+from MoveFactoryWidget import MoveFactoryWidget
 
 class XYSelection:
     def __init__(self, num = 1):
@@ -279,6 +278,10 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.precision.triggered.connect(self.openPrecision)
         self.tools_menu.addAction(self.precision)
 
+        self.moveFactory_action = QtWidgets.QAction('&MoveFactoryList', self.tools_menu, checkable = True)
+        self.moveFactory_action.triggered.connect(self.openMoveFactoryWidget)
+        self.tools_menu.addAction(self.moveFactory_action)
+
         self.cpuPie_action = QtWidgets.QAction("&CPU饼图", self.tools_menu, checkable=True)
         self.cpuPie_action.triggered.connect(self.openCPUPie)
         self.tools_menu.addAction(self.cpuPie_action)
@@ -427,6 +430,11 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.targetPrecision = TargetPrecision(self)
         self.targetPrecision.hide()
 
+        self.moveFactoryWidget = MoveFactoryWidget(self.read_thread)
+        self.moveFactoryWidget.setWindowIcon(QtGui.QIcon('rbk.ico'))
+        self.moveFactoryWidget.closed.connect(lambda: self.moveFactory_action.setChecked(False))
+        self.moveFactoryWidget.hide()
+
         self.cpuPieView = CPUPieView(self.read_thread)
         self.cpuPieView.setWindowIcon(QtGui.QIcon('rbk.ico'))
         self.cpuPieView.closed.connect(lambda : self.cpuPie_action.setChecked(False))
@@ -439,7 +447,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
         self.paramWidget = ParamWidget()
         self.paramWidget.setWindowIcon(QtGui.QIcon('rbk.ico'))
-        self.paramWidget.closed.connect(lambda : self.param_action.setChecked(False))
+        self.paramWidget.closed.connect(lambda: self.param_action.setChecked(False))
         self.paramWidget.hide()
         # dataView相关的初始化
         self.dataViewNewOne(None)
@@ -510,7 +518,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 tmp_dt = min(vdt)
                 if abs(tmp_dt - dt_min) < 2e-2:
                     contents = contents + [self.read_thread.notice.content()[0][i] for i,val in enumerate(vdt) if abs(val - dt_min) < 1e-3]
-            if self.read_thread.taskstart.t() and self.check_tstart.isChecked(): 
+            if self.read_thread.taskstart.t() and self.check_tstart.isChecked():
                 vdt = [abs((tmpt - mouse_time).total_seconds()) for tmpt in self.read_thread.taskstart.t()]
                 tmp_dt = min(vdt)
                 if abs(tmp_dt - dt_min) < 2e-2:
@@ -1050,6 +1058,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             self.cpuPieView.loadData()
             self.heatMapWidget.loadMap()
             self.paramWidget.readParam(self.filenames[0])
+            self.moveFactoryWidget.updateModel()
 
 
     def fileQuit(self):
@@ -1471,6 +1480,12 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         else:
             self.targetPrecision.hide()
 
+    def openMoveFactoryWidget(self, checked):
+        if checked:
+            self.moveFactoryWidget.show()
+        else:
+            self.moveFactoryWidget.hide()
+
     def openCPUPie(self,checked):
         if checked:
             self.cpuPieView.show()
@@ -1623,6 +1638,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             self.mapCheckWidget.close()
         for d in self.dataViews:
             d.close()
+        self.moveFactoryWidget.close()
         self.cpuPieView.close()
         self.heatMapWidget.close()
         self.paramWidget.close()

@@ -3,10 +3,11 @@ import os
 import re
 import json
 
-from PyQt5.QtGui import QColor, QPainter, QPen, QWheelEvent, QTransform, QRadialGradient, QLinearGradient, QFont
+from PyQt5.QtGui import QColor, QPainter, QPen, QWheelEvent, QTransform, QRadialGradient, QLinearGradient, QFont, \
+    QPainterPath, QPalette
 from PyQt5.QtWidgets import QWidget, QGraphicsView, QGraphicsScene, QVBoxLayout, QGraphicsRectItem, QGraphicsItemGroup, \
     QGraphicsEllipseItem, QTabWidget, QCheckBox, QHBoxLayout, QRadioButton, QSpacerItem, QSizePolicy, QGraphicsItem, \
-    QBoxLayout
+    QBoxLayout, QGraphicsPathItem, QGraphicsLineItem, QScrollArea
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, QPointF, QRect
 from ApListWidget import ApListWidget
 
@@ -56,15 +57,6 @@ class ReadMapThread(QThread):
             return
         map = QGraphicsItemGroup()
         map.setData(0, "map")
-        if "header" in mapJS:
-            minX = mapJS["header"]["minPos"]["x"]
-            minY = mapJS["header"]["minPos"]["y"]
-            maxX = mapJS["header"]["maxPos"]["x"]
-            maxY = mapJS["header"]["maxPos"]["y"]
-            item = QGraphicsRectItem(minX * 1000, minY * 1000, maxX * 1000, maxY * 1000)
-            item.setBrush(Qt.white)
-            item.setPen(self.pointPen)
-            map.addToGroup(item)
         if "normalPosList" in mapJS:
             i = 0
             for point in mapJS["normalPosList"]:
@@ -85,6 +77,7 @@ class ReadMapThread(QThread):
                 item.setBrush(Qt.red)
                 item.setPen(self.pointPen)
                 map.addToGroup(item)
+        # # 地图线路
         # if "advancedCurveList" in mapJS:
         #     for line in mapJS["advancedCurveList"]:
         #         if line["className"] == "BezierPath":
@@ -112,6 +105,11 @@ class ReadMapThread(QThread):
         #             line.setPen(self.pathPen)
         #             map.addToGroup(line)
         #             continue
+        item = QGraphicsRectItem(map.boundingRect())
+        item.setBrush(Qt.white)
+        item.setPen(self.pointPen)
+        item.setZValue(-1)
+        map.addToGroup(item)
         self.graphicsItems[self.mapFile] = map
 
     def _getHeatMapData(self):
