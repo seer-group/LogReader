@@ -1020,7 +1020,9 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         if len(self.read_thread.err.t()) > max_line:
             logging.warning("ERRORs are too much to be ploted. Max Number is " + str(max_line) + ". Current Number is " + str(len(self.read_thread.err.t())))
             self.log_info.append("ERRORs are too much to be ploted. Max Number is " + str(max_line)+". Current Number is "+str(len(self.read_thread.err.t())))
-            self.read_thread.err = ErrorLine()
+            # self.read_thread.err = ErrorLine()
+            # 这里改为超过1000条就只取前1000条
+            self.read_thread.err.data[0] = self.read_thread.err.data[0][:max_line]
         if len(self.read_thread.war.t()) > max_line:
             logging.warning("WARNINGs are too much to be ploted. Max Number is " + str(max_line) + ". Current Number is " + str(len(self.read_thread.war.t())))
             self.log_info.append("WARNINGs are too much to be ploted. Max Number is " + str(max_line) +  ". Current Number is " + str(len(self.read_thread.war.t())))
@@ -1081,7 +1083,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.close()
 
     def about(self):
-        QtWidgets.QMessageBox.about(self, "关于", """Log Viewer cd.1.5.0""")
+        QtWidgets.QMessageBox.about(self, "关于", """Log Viewer cd.1.5.1""")
 
     def ycombo_onActivated(self):
         curcombo = self.sender()

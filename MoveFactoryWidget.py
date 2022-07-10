@@ -306,6 +306,7 @@ class MoveFactoryWidget(QWidget):
         self.layout().addWidget(self.treeView)
 
         self.treeView.setModel(self.createModelThread.model)
+        self.searchLine.returnPressed.connect(self._slotSearchButtonClicked)
         self.searchButton.clicked.connect(self._slotSearchButtonClicked)
         self.allButton.clicked.connect(self._slotAllButtonClicked)
         self.treeView.customContextMenuRequested.connect(lambda: self.contextMenu.exec(QCursor.pos()))

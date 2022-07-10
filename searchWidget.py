@@ -17,6 +17,8 @@ class SearchWidget(QWidget):
         self.layout().addWidget(self.button)
         self.button.clicked.connect(self.search)
 
+        self.lineEdit.returnPressed.connect(self.search)
+
     def search(self):
         if self.lineEdit.text() == "":
             return
