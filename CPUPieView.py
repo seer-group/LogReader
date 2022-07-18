@@ -25,24 +25,17 @@ class LoadDataTread(QThread):
             temp = regex.findall(line)
             self.oriData.append(line)
             dateTime = datetime.datetime.strptime(temp[0], '[%y%m%d %H%M%S.%f]')
-            temp = temp[-1][1:-1].split("|")
-            name = ["系统", "空闲", "rbk"]
-            num = ["", "", ""]
-            ratio = [float(temp[0]), 100 - float(temp[0]) - float(temp[1]), float(temp[1])]
+            temp = temp[-1][1:-1].split("|")[2:]
+            ratio = []
+            name = []
+            num = []
             self.generalData.append([dateTime, name, num, ratio])
-            name = ["系统", "空闲"]
-            num = ["", ""]
-            ratio = [float(temp[0]), 100 - float(temp[0]) - float(temp[1])]
             index = 0
-            temp = temp[2:]
             while index < len(temp):
                 name.append(temp[index])
                 num.append(temp[index + 1])
                 ratio.append(float(temp[index + 2]))
                 index += 3
-            name.append("其他")
-            num.append("")
-            ratio.append(self.generalData[-1][-1][-1] - sum(ratio[2:]))
             self.detailedData.append([dateTime, name, num, ratio])
 
 class MyChart(QChart):
@@ -51,9 +44,7 @@ class MyChart(QChart):
         self.legend().setAlignment(Qt.AlignRight)
         self.legend().setBackgroundVisible(True)
         self.legend().setBrush(QBrush(QColor(128, 128, 128, 128)))
-        self.innerSliceLabelVisible = True
         self.outerSliceLabelVisible = True
-        self.innerSliceLabelPosition = QPieSlice.LabelInsideNormal
         self.outerSliceLabelPosition = QPieSlice.LabelOutside
 
     def _slotPieSeriesHovered(self, slice: QPieSlice, state: bool):
@@ -65,18 +56,17 @@ class MyChart(QChart):
             slice.setExploded(state)
         else:
             [s.show() for s in self.series()]
-            if (currentSeries.holeSize() and self.outerSliceLabelVisible) or \
-                    (not currentSeries.holeSize() and self.innerSliceLabelVisible):
+            if currentSeries.holeSize() and self.outerSliceLabelVisible:
                 [s.setLabelVisible(True) for s in currentSeries.slices()]
             slice.setExploded(state)
 
-    def updateSeries(self, d1, d2):
+    def updateSeries(self, d1):
         self.removeAllSeries()
         pieSeries1 = QPieSeries()
-        pieSeries2 = QPieSeries()
         pieSeries1.setPieSize(0.75)
         pieSeries1.setHoleSize(0.6)
-        pieSeries2.setPieSize(0.6)
+        d1 = [i for i in d1]
+        d1.sort(key=lambda x: x[1], reverse=False)
         for l, v in d1:
             temp = QPieSlice("%s: %.2f%%" % (l, v), v)
             temp.setBorderColor(Qt.gray)
@@ -85,20 +75,9 @@ class MyChart(QChart):
                 temp.setLabelVisible()
                 temp.setLabelPosition(self.outerSliceLabelPosition)
             pieSeries1.append(temp)
-        for l, v in d2:
-            temp = QPieSlice("%s: %.2f%%" % (l, v), v)
-            temp.setBorderColor(Qt.gray)
-            temp.setBorderWidth(2)
-            if self.innerSliceLabelVisible and v:
-                temp.setLabelVisible()
-                temp.setLabelPosition(self.innerSliceLabelPosition)
-                temp.setLabelColor(Qt.white)
-            pieSeries2.append(temp)
         self.addSeries(pieSeries1)
-        self.addSeries(pieSeries2)
 
         pieSeries1.hovered.connect(self._slotPieSeriesHovered)
-        pieSeries2.hovered.connect(self._slotPieSeriesHovered)
 
 
 class CPUPieView(QWidget):
@@ -118,15 +97,12 @@ class CPUPieView(QWidget):
         self.label.setFixedHeight(15)
         self.legendCheckBox = QCheckBox("图例")
         self.legendCheckBox.setChecked(True)
-        self.innerLabelCheckBox = QCheckBox("内部标签")
-        self.innerLabelCheckBox.setChecked(True)
-        self.outerLabelCheckBox = QCheckBox("外部标签")
+        self.outerLabelCheckBox = QCheckBox("标签")
         self.outerLabelCheckBox.setChecked(True)
         hLayout = QHBoxLayout(self)
         hLayout.addWidget(self.label)
         hLayout.addItem(QSpacerItem(0, 0, QSizePolicy.Expanding, QSizePolicy.Minimum))
         hLayout.addWidget(self.legendCheckBox)
-        hLayout.addWidget(self.innerLabelCheckBox)
         hLayout.addWidget(self.outerLabelCheckBox)
         self.layout().addWidget(self.chartView)
         self.layout().addLayout(hLayout)
@@ -136,15 +112,10 @@ class CPUPieView(QWidget):
 
         self.slider.valueChanged.connect(self.updateChart)
         self.legendCheckBox.clicked.connect(self.chart.legend().setVisible)
-        self.innerLabelCheckBox.clicked.connect(self._slotInnerLabelCheckBoxClicked)
         self.outerLabelCheckBox.clicked.connect(self._slotOuterLabelCheckBoxClicked)
 
     def closeEvent(self, a0: QCloseEvent) -> None:
         self.closed.emit()
-
-    def _slotInnerLabelCheckBoxClicked(self, v):
-        self.chart.innerSliceLabelVisible = v
-        self.updateChart(self.slider.value())
 
     def _slotOuterLabelCheckBoxClicked(self, v):
         self.chart.outerSliceLabelVisible = v
@@ -171,8 +142,7 @@ class CPUPieView(QWidget):
 
     def updateChart(self, index):
         d1 = zip(self.load.detailedData[index][1], self.load.detailedData[index][-1])
-        d2 = zip(self.load.generalData[index][1], self.load.generalData[index][-1])
-        self.chart.updateSeries(d1, d2)
+        self.chart.updateSeries(d1)
 
         self.label.setText(f"时间: {str(self.load.generalData[index][0])[:-3]}   {index + 1}/{len(self.load.generalData)}")
         self.label.setToolTip(self.load.oriData[index])
