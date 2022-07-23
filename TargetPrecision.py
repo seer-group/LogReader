@@ -67,6 +67,21 @@ class TargetPrecision(QtWidgets.QWidget):
         if 'LocationEachFrame' not in self.log_data.content:
             logging.debug("LocationEachFrame is not in the log")
             return
+        map_x = []
+        map_y = []
+        map_a = []
+        try:
+            lm_id = self.find_edit.text()
+            self.ax.set_title('')
+            if lm_id in self.robot_log.map_widget.read_map.points:
+                m_xy = self.robot_log.map_widget.read_map.points[lm_id]
+                map_x.append(m_xy[0])
+                map_y.append(m_xy[1])
+                map_a.append(m_xy[2]/math.pi *180.0)
+                self.ax.set_title(m_xy[3])
+        except:
+            pass
+
         data = self.log_data.taskfinish.content()
         valid = []
         if self.choose.currentText() == 'Localization':
@@ -76,17 +91,29 @@ class TargetPrecision(QtWidgets.QWidget):
             loc_t = np.array(self.log_data.content['LocationEachFrame']['t'])
             valid = [1.0 for _ in loc_t]
         elif self.choose.currentText() == 'pgv0':
+            map_x = [0]
+            map_y = [0]
+            map_a = [0]
             locx = self.log_data.getData('pgv0.tag_x')[0]
             locy = self.log_data.content['pgv0']['tag_y']
             loca = self.log_data.content['pgv0']['tag_angle']
             loc_t = np.array(self.log_data.content['pgv0']['t'])
             valid = self.log_data.content['pgv0']['is_DMT_detected']
         elif self.choose.currentText() == 'pgv1':
+            map_x = [0]
+            map_y = [0]
+            map_a = [0]
             locx = self.log_data.getData('pgv1.tag_x')[0]
             locy = self.log_data.content['pgv1']['tag_y']
             loca = self.log_data.content['pgv1']['tag_angle']
             loc_t = np.array(self.log_data.content['pgv1']['t'])
             valid = self.log_data.content['pgv1']['is_DMT_detected']
+        elif self.choose.currentText() == 'SimLocation':
+            locx = self.log_data.getData('SimLocation.x')[0]
+            locy = self.log_data.content['SimLocation']['y']
+            loca = self.log_data.content['SimLocation']['theta']
+            loc_t = np.array(self.log_data.content['SimLocation']['t'])
+            valid = [1.0 for _ in loc_t]
         else:
             logging.debug("source name is wrong! {}".format(self.choose.currentText()))
         last_ind = 0
@@ -147,20 +174,6 @@ class TargetPrecision(QtWidgets.QWidget):
         self.mid_a.set_xdata(self.tdata)
         self.mid_a.set_ydata(mid_a*len(self.tdata))
 
-        map_x = []
-        map_y = []
-        map_a = []
-        try:
-            lm_id = self.find_edit.text()
-            self.ax.set_title('')
-            if lm_id in self.robot_log.map_widget.read_map.points:
-                m_xy = self.robot_log.map_widget.read_map.points[lm_id]
-                map_x.append(m_xy[0])
-                map_y.append(m_xy[1])
-                map_a.append(m_xy[2]/math.pi *180.0)
-                self.ax.set_title(m_xy[3])
-        except:
-            pass
         self.map_xy.set_xdata(map_x)
         self.map_xy.set_ydata(map_y)
         self.map_x.set_xdata(self.tdata)
@@ -307,6 +320,7 @@ class TargetPrecision(QtWidgets.QWidget):
         self.choose.addItem("Localization")
         self.choose.addItem("pgv0")
         self.choose.addItem("pgv1")
+        self.choose.addItem("SimLocation")
         hbox2 = QtWidgets.QFormLayout()
         hbox2.addRow(self.choose_msg, self.choose)
 

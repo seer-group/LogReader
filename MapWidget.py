@@ -918,6 +918,7 @@ class MapWidget(QtWidgets.QWidget):
         y = datay[0][left_idx:right_idx]
         id = str(int(round(time.time()*1000)))
         l = lines.Line2D(x, y, linestyle = event[1], marker =event[3], markersize = 6, color= event[2])
+        l.set_zorder(100.)
         if id not in self.lineLists or self.lineLists[id] is None:
             self.lineLists[id] = l
             self.ax.add_line(self.lineLists[id])

@@ -104,6 +104,12 @@ class SelectRegion:
         self.select_type = SelectEnum.NoSelect
         print("init", type(self.tmid), type(self.t0), type(self.t1))
 
+    def remove(self):
+        self.select_region.remove()
+        self.left_line.remove()
+        self.right_line.remove()
+        self.mid_line.remove()
+
     def getRightT(self, t):
         if isinstance(t, float):
             return t
@@ -1457,6 +1463,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
     def resetSelect(self):
         (xmin,xmax) = self.axs[0].get_xlim()
         tmid = (xmin+xmax)/2.0 
+        for s in self.select_regions:
+            s.remove()
         self.select_regions = []
 
         self.mid_line_t = num2date(tmid)
