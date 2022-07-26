@@ -1571,10 +1571,13 @@ class MapWidget(QtWidgets.QWidget):
         map_name = None
         rstatus = self.robot_log.read_thread.rstatus
         if len(rstatus.chassis()[1]) > 0:
+
             ts = np.array(rstatus.chassis()[1])
             idx = (np.abs(ts - self.mid_line_t)).argmin()
             j = js.loads(rstatus.chassis()[0][idx])   
             map_name = j.get("CURRENT_MAP",None)
+            if not map_name:
+                map_name = j.get("debug:current_map",None)
             if map_name:
                 map_name = map_name + ".smap"
         fs = self.robot_log.filenames
