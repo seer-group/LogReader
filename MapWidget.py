@@ -971,7 +971,6 @@ class MapWidget(QtWidgets.QWidget):
         if cur_check is self.check_robot:
             self.robot_data.set_visible(cur_check.isChecked())
             self.cur_arrow.set_visible(cur_check.isChecked())
-            self.cur_arrow.set_visible(cur_check.isChecked())
         elif cur_check is self.check_map:
             self.map_data.set_visible(cur_check.isChecked())
         elif cur_check is self.check_partical:
@@ -991,12 +990,17 @@ class MapWidget(QtWidgets.QWidget):
             self.odo.set_visible(cur_check.isChecked())
             self.odo_next.set_visible(cur_check.isChecked())        
         else:
+            # 增加laser全不选时的虚框也不显示
+            isvisible = False
             for k in self.check_lasers.keys():
+                if self.check_lasers[k].isChecked():
+                    isvisible = True
                 if cur_check is self.check_lasers[k]:
                     if self.laser_index is k:
                         self.laser_data.set_visible(cur_check.isChecked())
                         self.laser_data_points.set_visible(cur_check.isChecked())
                     self.mid_line_t = None
+            self.robot_loc_data.set_visible(isvisible)
                        
         self.static_canvas.figure.canvas.draw() 
 
