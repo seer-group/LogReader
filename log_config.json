@@ -796,7 +796,7 @@
       { "index": 0, "name": "device_address", "type": "int64", "description": "设备地址", "unit":""  },
       { "index": 1, "name": "tag_x", "type": "double", "description": "x差值", "unit":""  },
       { "index": 2, "name": "tag_y", "type": "double", "description": "y差值", "unit":""  },
-      { "index": 3, "name": "tag_angle", "type": "double", "description": "angle差值", "unit":""  },
+      { "index": 3, "name": "tag_angle", "type": "rad", "description": "angle差值", "unit":"degree"  },
       { "index": 4, "name": "tag_value", "type": "int64", "description": "标签数据", "unit":""  },
       { "index": 5, "name": "is_DMT_detected", "type": "bool", "description": "是否检测到Data Matrix", "unit":""  },
       { "index": 6, "name": "warning_code", "type": "int64", "description": "报警码", "unit":""  },
@@ -812,7 +812,7 @@
       { "index": 0, "name": "device_address", "type": "int64", "description": "设备地址", "unit":""  },
       { "index": 1, "name": "tag_x", "type": "double", "description": "x差值", "unit":""  },
       { "index": 2, "name": "tag_y", "type": "double", "description": "y差值", "unit":""  },
-      { "index": 3, "name": "tag_angle", "type": "double", "description": "angle差值", "unit":""  },
+      { "index": 3, "name": "tag_angle", "type": "rad", "description": "angle差值", "unit":"degree"  },
       { "index": 4, "name": "tag_value", "type": "int64", "description": "标签数据", "unit":""  },
       { "index": 5, "name": "is_DMT_detected", "type": "bool", "description": "是否检测到Data Matrix", "unit":""  },
       { "index": 6, "name": "warning_code", "type": "int64", "description": "报警码", "unit":""  },
@@ -828,7 +828,7 @@
       { "index": 0, "name": "device_address", "type": "int64", "description": "设备地址", "unit":""  },
       { "index": 1, "name": "tag_x", "type": "double", "description": "x差值", "unit":"0.1mm"  },
       { "index": 2, "name": "tag_y", "type": "double", "description": "y差值", "unit":"0.1mm"  },
-      { "index": 3, "name": "tag_angle", "type": "double", "description": "angle差值", "unit":"0.1degree"  },
+      { "index": 3, "name": "tag_angle", "type": "rad", "description": "angle差值", "unit":"degree"  },
       { "index": 4, "name": "tag_value", "type": "int64", "description": "标签数据", "unit":""  },
       { "index": 5, "name": "is_DMT_detected", "type": "bool", "description": "是否检测到Data Matrix", "unit":""  }
     ]

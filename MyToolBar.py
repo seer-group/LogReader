@@ -43,6 +43,7 @@ class MyToolBar(NavigationToolbar2QT):
          'x/y fixes axis, CTRL fixes aspect',
          'move', 'pan'),
         ('Zoom', 'Zoom to rectangle\nx/y fixes axis', 'zoom_to_rect', 'zoom'),
+        ('Save', 'Save the figure', 'filesave', 'save_figure'),
         (None, None, None, None),
       )
     def __init__(self, canvas, parent, ruler, coordinates=True):
