@@ -41,7 +41,11 @@ class ReadMapThread(QThread):
 
     def _getMapData(self):
         chassises = self.readThread.rstatus.chassis()
-        js = json.loads(chassises[0][0])
+        try:
+            js = json.loads(chassises[0][0])
+        except:
+            self.error.emit("未获取到地图文件")
+            return
         self.mapFile = js.get("CURRENT_MAP")
         if self.mapFile is None:
             self.error.emit("未获取到地图文件")
