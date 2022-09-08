@@ -41,6 +41,12 @@
       { "index": 12, "name": "offz", "type": "LSB", "description": "陀螺仪gz零位偏置", "unit":"degree/s"  }
     ]
   },
+  "IMUState": {
+    "type": "IMUState",
+    "content": [
+      { "index": 0, "name": "state", "type": "int64","description": "陀螺仪状态", "unit":"" }
+    ]
+  },
   "SwitchDO": {
     "type": "SwitchDO",
     "content": [
@@ -870,7 +876,8 @@
       { "index": 9, "name": "encodercnt", "type": "int64", "description": "编码器", "unit":""  },
       { "index": 10, "name": "motorName", "type":"str", "description": "电机名称"},
       { "index": 11, "name": "errcode", "type": "int64", "description": "错误码", "unit":""  },
-      { "index": 12, "name": "raw_position", "type": "double", "description": "原始位置", "unit":""  }
+      { "index": 12, "name": "raw_position", "type": "double", "description": "原始位置", "unit":""  },
+      { "index": 13, "name": "calib", "type": "bool", "description": "是否标零完成", "unit":""  }
     ]
   },
   "buzzer":{
