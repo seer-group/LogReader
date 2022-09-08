@@ -1153,6 +1153,17 @@
       {"index":9, "name":"cur_vR", "type":"double"}
     ]
   },
+  "PGVfilter":{
+    "type":"PGVfilter",
+    "content":[
+      {"index":0, "name":"data_nsec", "type":"double"},
+      {"index":1, "name":"filtered_out_angle", "type":"double"},
+      {"index":2, "name":"pgv_diff_angle", "type":"double"},
+      {"index":3, "name":"org_down_angle", "type":"double"},
+      {"index":4, "name":"tag_angle", "type":"double"},
+      {"index":5, "name":"2_pi", "type":"double"}
+    ]    
+  },
   "ChargerBrandInfo":{
     "type":"ChargerBrandInfo",
     "content":[

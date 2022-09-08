@@ -43,6 +43,14 @@ class TargetPrecision(QtWidgets.QWidget):
         self.tdata = []
         self.draw_size = []
         self.xy_data = lines.Line2D([],[], marker = '.', linestyle = '', markersize=10)
+        self.map_xy = lines.Line2D([],[], marker = '*', linestyle = '', markersize=10, color='r')
+        self.map_x = lines.Line2D([],[], linestyle = '-', markersize=10, color= 'r')
+        self.map_y = lines.Line2D([],[], linestyle = '-', markersize=10, color='r')
+        self.map_a = lines.Line2D([],[], linestyle = '-', markersize=10, color='r')
+        self.mid_xy = lines.Line2D([],[], marker = 'x', linestyle = '', markersize=10, color= 'g')
+        self.mid_x = lines.Line2D([],[], linestyle = '-', markersize=10, color= 'g')
+        self.mid_y = lines.Line2D([],[], linestyle = '-', markersize=10, color='g')
+        self.mid_a = lines.Line2D([],[], linestyle = '-', markersize=10, color='g')
         self.px_data = lines.Line2D([],[], marker = '.', linestyle = '', markersize=10)
         self.py_data = lines.Line2D([],[], marker = '.', linestyle = '', markersize=10)
         self.pa_data = lines.Line2D([],[], marker = '.', linestyle = '', markersize=10)
@@ -59,6 +67,21 @@ class TargetPrecision(QtWidgets.QWidget):
         if 'LocationEachFrame' not in self.log_data.content:
             logging.debug("LocationEachFrame is not in the log")
             return
+        map_x = []
+        map_y = []
+        map_a = []
+        try:
+            lm_id = self.find_edit.text()
+            self.ax.set_title('')
+            if lm_id in self.robot_log.map_widget.read_map.points:
+                m_xy = self.robot_log.map_widget.read_map.points[lm_id]
+                map_x.append(m_xy[0])
+                map_y.append(m_xy[1])
+                map_a.append(m_xy[2]/math.pi *180.0)
+                self.ax.set_title(m_xy[3])
+        except:
+            pass
+
         data = self.log_data.taskfinish.content()
         valid = []
         if self.choose.currentText() == 'Localization':
@@ -68,17 +91,29 @@ class TargetPrecision(QtWidgets.QWidget):
             loc_t = np.array(self.log_data.content['LocationEachFrame']['t'])
             valid = [1.0 for _ in loc_t]
         elif self.choose.currentText() == 'pgv0':
+            map_x = [0]
+            map_y = [0]
+            map_a = [0]
             locx = self.log_data.getData('pgv0.tag_x')[0]
             locy = self.log_data.content['pgv0']['tag_y']
             loca = self.log_data.content['pgv0']['tag_angle']
             loc_t = np.array(self.log_data.content['pgv0']['t'])
             valid = self.log_data.content['pgv0']['is_DMT_detected']
         elif self.choose.currentText() == 'pgv1':
+            map_x = [0]
+            map_y = [0]
+            map_a = [0]
             locx = self.log_data.getData('pgv1.tag_x')[0]
             locy = self.log_data.content['pgv1']['tag_y']
             loca = self.log_data.content['pgv1']['tag_angle']
             loc_t = np.array(self.log_data.content['pgv1']['t'])
             valid = self.log_data.content['pgv1']['is_DMT_detected']
+        elif self.choose.currentText() == 'SimLocation':
+            locx = self.log_data.getData('SimLocation.x')[0]
+            locy = self.log_data.content['SimLocation']['y']
+            loca = self.log_data.content['SimLocation']['theta']
+            loc_t = np.array(self.log_data.content['SimLocation']['t'])
+            valid = [1.0 for _ in loc_t]
         else:
             logging.debug("source name is wrong! {}".format(self.choose.currentText()))
         last_ind = 0
@@ -127,25 +162,47 @@ class TargetPrecision(QtWidgets.QWidget):
         self.pa_data.set_xdata(self.tdata)
         self.pa_data.set_ydata(self.adata)
 
+        mid_x = [sum(self.xdata)*1.0/len(self.xdata)]
+        mid_y = [sum(self.ydata)*1.0/len(self.ydata)]
+        mid_a = [sum(self.adata)*1.0/len(self.adata)]
+        self.mid_xy.set_xdata(mid_x)
+        self.mid_xy.set_ydata(mid_y)
+        self.mid_x.set_xdata(self.tdata)
+        self.mid_x.set_ydata(mid_x*len(self.tdata))
+        self.mid_y.set_xdata(self.tdata)
+        self.mid_y.set_ydata(mid_y*len(self.tdata))
+        self.mid_a.set_xdata(self.tdata)
+        self.mid_a.set_ydata(mid_a*len(self.tdata))
 
+        self.map_xy.set_xdata(map_x)
+        self.map_xy.set_ydata(map_y)
+        self.map_x.set_xdata(self.tdata)
+        self.map_x.set_ydata(map_x*len(self.tdata))
+        self.map_y.set_xdata(self.tdata)
+        self.map_y.set_ydata(map_y*len(self.tdata))
+        self.map_a.set_xdata(self.tdata)
+        self.map_a.set_ydata(map_a*len(self.tdata))
+        tmpx = xdata + map_x
+        tmpy = ydata + map_y
+        tmpa = adata + map_a
         if len(xdata) < 1:
             logging.debug("cannot find target name: {}".format(self.targetName))
         else:
             xmin, ymin ,amin, tmin = 0.,0.,0.,0.
             xmax, ymax, amax, tmax = 1.,1.,1.,1.
             xrange, yrange, arange = 0., 0., 0.
-            xmin = min(xdata)
-            xmax = max(xdata)
+            xmin = min(tmpx)
+            xmax = max(tmpx)
             xrange = xmax - xmin
             if xrange < 1e-6:
                 xrange = 1e-6
-            ymin = min(ydata)
-            ymax = max(ydata)
+            ymin = min(tmpy)
+            ymax = max(tmpy)
             yrange = ymax - ymin
             if yrange < 1e-6:
                 yrange = 1e-6
-            amin = min(adata)
-            amax = max(adata)
+            amin = min(tmpa)
+            amax = max(tmpa)
             arange = amax - amin
             if arange < 1e-6:
                 arange = 1e-6
@@ -170,7 +227,6 @@ class TargetPrecision(QtWidgets.QWidget):
             self.paxs[0].set_ylim(xmin, xmax)
             self.paxs[1].set_ylim(ymin, ymax)
             self.paxs[2].set_ylim(amin, amax)
-
         self.static_canvas.figure.canvas.draw()
         self.pstatic_canvas.figure.canvas.draw()
 
@@ -181,6 +237,8 @@ class TargetPrecision(QtWidgets.QWidget):
         self.static_canvas.figure.tight_layout()
         self.ax = self.static_canvas.figure.subplots(1, 1)
         self.ax.add_line(self.xy_data)
+        self.ax.add_line(self.map_xy)
+        self.ax.add_line(self.mid_xy)
         self.ax.grid(True)
         self.ax.axis('auto')
         self.ax.set_xlabel('x (m)')
@@ -200,10 +258,16 @@ class TargetPrecision(QtWidgets.QWidget):
         self.pstatic_canvas.figure.tight_layout()
         self.paxs= self.pstatic_canvas.figure.subplots(3, 1, sharex = True)
         self.paxs[0].add_line(self.px_data)
+        self.paxs[0].add_line(self.map_x)
+        self.paxs[0].add_line(self.mid_x)
         self.paxs[0].set_ylabel('x (m)')
         self.paxs[1].add_line(self.py_data)
+        self.paxs[1].add_line(self.map_y)
+        self.paxs[1].add_line(self.mid_y)
         self.paxs[1].set_ylabel('y (m)')
         self.paxs[2].add_line(self.pa_data)
+        self.paxs[2].add_line(self.map_a)
+        self.paxs[2].add_line(self.mid_a)
         self.paxs[2].set_ylabel('theta (degree)')
         self.pruler = RulerShapeMap()
         for a in self.paxs:
@@ -256,6 +320,7 @@ class TargetPrecision(QtWidgets.QWidget):
         self.choose.addItem("Localization")
         self.choose.addItem("pgv0")
         self.choose.addItem("pgv1")
+        self.choose.addItem("SimLocation")
         hbox2 = QtWidgets.QFormLayout()
         hbox2.addRow(self.choose_msg, self.choose)
 

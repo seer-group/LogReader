@@ -187,7 +187,7 @@ class Readmap(QThread):
         self.map_y = []
         self.lines = []
         self.circles = []
-        self.points = []
+        self.points = dict()
         self.straights = []
         self.bezier_codes = [ 
             Path.MOVETO,
@@ -231,8 +231,7 @@ class Readmap(QThread):
         self.lines = []
         self.circles = []
         self.straights = []
-        self.points = []
-        self.p_names = []
+        self.points = dict()
         # print(self.js.keys())
         def addStr(startPos, endPos):
             x1 = 0
@@ -399,8 +398,7 @@ class Readmap(QThread):
                 if  'ignoreDir' in pt:
                     if pt['ignoreDir'] == True:
                         theta = None
-                self.points.append([x0,y0,theta])
-                self.p_names.append([pt['instanceName']])
+                self.points[pt['instanceName'][2::]] = [x0,y0,theta, pt['instanceName']]
         self.signal.emit(self.map_name)
 
 class PointWidget(QtWidgets.QWidget):
@@ -579,6 +577,7 @@ class MapWidget(QtWidgets.QWidget):
         self.map_data.set_zorder(12)
         self.laser_data = LineCollection([], linewidths=3, linestyle='solid')
         self.laser_data_points = PatchCollection([])
+        self.org_laser_data = [] # 激光的原始数据，用于提取出来保存
         self.laser_org_color = np.array([1,0,0,0.2])
         self.laser_color = self.laser_org_color[:]
         self.laser_point_org_color = np.array([1,0,0,0.5])
@@ -781,7 +780,46 @@ class MapWidget(QtWidgets.QWidget):
         self.check_all.setChecked(True)
         self.check_partical.setChecked(False)
         self.check_odo.setChecked(False)
+        self.static_canvas.mpl_connect('button_press_event', self.mouse_press)
         
+    def mouse_press(self, event):
+        if event.button == 3:
+            if not self.toolbar.isActive():
+                self.popMenu = QtWidgets.QMenu(self)
+                self.popMenu.addAction('&Save Laser Data',lambda:self.saveLaserData(event.inaxes))
+                cursor = QtGui.QCursor()
+                self.popMenu.exec_(cursor.pos())
+    
+    def saveLaserData(self, event):
+        if len(self.org_laser_data) < 1:
+            return
+        fname, _ = QtWidgets.QFileDialog.getSaveFileName(self,"选取log文件", "","CSV Files (*.csv);;PY Files (*.py)")
+        subffix = os.path.splitext(fname)[1]
+        isPy = subffix == ".py"
+
+        outdata = []
+        # 对数据存之前进行处理
+        if isPy:
+            x,y = [],[]
+            for c in self.org_laser_data:
+                x.append(c[0])
+                y.append(c[1])
+            xdata = 'x='+str(x)
+            ydata = 'y='+str(y)
+            outdata.append(xdata)
+            outdata.append(ydata)
+        else:
+            for c in self.org_laser_data:
+                outdata.append("{},{}".format(c[0], c[1]))
+        # 写数据
+        if fname:
+            try:
+                with open(fname, 'w') as fn:
+                    for d in outdata:
+                        fn.write(d+'\n')
+            except:
+                pass        
+
     def changeAutoMap(self):
         flag =  not self.autoMap.isChecked()
         self.smap_action.setEnabled(flag)
@@ -884,6 +922,7 @@ class MapWidget(QtWidgets.QWidget):
         y = datay[0][left_idx:right_idx]
         id = str(int(round(time.time()*1000)))
         l = lines.Line2D(x, y, linestyle = event[1], marker =event[3], markersize = 6, color= event[2])
+        l.set_zorder(100.)
         if id not in self.lineLists or self.lineLists[id] is None:
             self.lineLists[id] = l
             self.ax.add_line(self.lineLists[id])
@@ -1165,12 +1204,14 @@ class MapWidget(QtWidgets.QWidget):
                 patch.set_zorder(19)
                 self.ax.add_patch(patch)
             pr = 0.25
-            for (pt,name) in zip(self.read_map.points, self.read_map.p_names):
+            for k in self.read_map.points:
+                pt = self.read_map.points[k][0:3]
+                name = self.read_map.points[k][-1]
                 circle = patches.Circle((pt[0], pt[1]), pr, facecolor='orange',
                 edgecolor=(0, 0.8, 0.8), linewidth=3, alpha=0.5)
                 circle.set_zorder(19)
                 self.ax.add_patch(circle)
-                text_path = TextPath((pt[0],pt[1]), name[0], size = 0.2)
+                text_path = TextPath((pt[0],pt[1]), name, size = 0.2)
                 text_path = patches.PathPatch(text_path, ec="none", lw=3, fc="k")
                 text_path.set_zorder(19)
                 self.ax.add_patch(text_path)
@@ -1292,6 +1333,7 @@ class MapWidget(QtWidgets.QWidget):
                         self.laser_data.set_segments(lines)
                         self.laser_data.set_color(self.laser_color)
                         patches = []
+                        self.org_laser_data = cs
                         for c in cs:
                             circle = Circle((c[0], c[1]), 0.01)
                             patches.append(circle)
@@ -1564,6 +1606,7 @@ class MapWidget(QtWidgets.QWidget):
             self.laser_data.set_segments(lines)
             self.laser_data.set_color(self.laser_color)
             patches = []
+            self.org_laser_data = cs
             for c in cs:
                 circle = Circle((c[0], c[1]), 0.01)
                 patches.append(circle)
