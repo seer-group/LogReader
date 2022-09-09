@@ -12,6 +12,16 @@
       { "index": 7, "name": "covariance_11", "type": "double",  "description": "协方差", "unit":""}
     ]
   },
+  "LocationbySLAM": {
+    "type": "LocationbySLAM",
+    "content": [
+      { "index": 0, "name": "x", "type": "double", "description": "定位的x", "unit":"m" },
+      { "index": 1, "name": "y", "type": "double", "description": "定位的y", "unit": "m" },
+      { "index": 2, "name": "theta", "type": "double", "description": "定位的角度", "unit":"degree" },
+      { "index": 3,"name": "current_t", "type": "int64",  "description": "发布时间", "unit":""},
+      { "index": 4, "name": "timestamp", "type": "int64",  "description": "定位时间戳", "unit":"" }
+    ]
+  },
   "Vel": {
     "type": "Vel",
     "content": [

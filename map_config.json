@@ -1,0 +1,10 @@
+{
+  "lines": [
+    {
+      "name": "测试",
+      "params": {"linestyle": "","marker": "o","markersize": 5.0,"color": "r"},
+      "x": "LocationbySLAM.x",
+      "y": "LocationbySLAM.y"
+    }
+  ]
+}

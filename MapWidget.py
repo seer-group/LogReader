@@ -1,5 +1,9 @@
+import json
 from turtle import right
 import matplotlib
+
+from FlowLayout import FlowLayout
+
 matplotlib.use('Qt5Agg')
 from matplotlib.backends.backend_qt5agg import (
     FigureCanvas, NavigationToolbar2QT as NavigationToolbar)
@@ -566,6 +570,8 @@ class MapWidget(QtWidgets.QWidget):
     hiddened = pyqtSignal('PyQt_PyObject')
     def __init__(self, loggui):
         super(QtWidgets.QWidget, self).__init__()
+        self.check_other = {}
+        self.other_data = {}
         self.setWindowTitle('MapViewer')
         self.robot_log = loggui
         self.map_name = None
@@ -644,6 +650,8 @@ class MapWidget(QtWidgets.QWidget):
         self.right_line_t = None
         self.left_idx = None
         self.right_idx = None
+        # 配置文件
+        self.readMapCfg()
 
     def setupUI(self):
         self.static_canvas = FigureCanvas(Figure(figsize=(5,5)))
@@ -738,10 +746,11 @@ class MapWidget(QtWidgets.QWidget):
         self.fig_layout.addWidget(self.logt_lable)
         self.fig_layout.addWidget(self.obs_lable)
         self.fig_layout.addWidget(self.static_canvas)
+        self.static_canvas.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         self.static_canvas.mpl_connect('resize_event', self.resize_fig)
 
                 #选择消息框
-        self.hbox = QtWidgets.QHBoxLayout()
+        self.hbox = FlowLayout()
         self.check_all = QtWidgets.QCheckBox('ALL',self)
         self.check_all.setFocusPolicy(QtCore.Qt.NoFocus)
         self.check_map = QtWidgets.QCheckBox('MAP',self)
@@ -775,7 +784,7 @@ class MapWidget(QtWidgets.QWidget):
         self.check_traj.stateChanged.connect(self.changeCheckBox)
         self.check_odo.stateChanged.connect(self.changeCheckBox)
         self.check_lasers = dict()
-        self.hbox.setAlignment(QtCore.Qt.AlignLeft)
+        self.check_other = dict()
         self.fig_layout.addLayout(self.hbox)
         self.check_all.setChecked(True)
         self.check_partical.setChecked(False)
@@ -957,6 +966,12 @@ class MapWidget(QtWidgets.QWidget):
         self.check_lasers[index].stateChanged.connect(self.changeCheckBox)
         self.hbox.addWidget(self.check_lasers[index])
 
+    def add_other_check(self, index):
+        self.check_other[index] = QtWidgets.QCheckBox(index,self)
+        self.check_other[index].setFocusPolicy(QtCore.Qt.NoFocus)
+        self.check_other[index].stateChanged.connect(self.changeCheckBox)
+        self.hbox.addWidget(self.check_other[index])
+
     def changeCheckBoxAll(self):
         if self.check_all.checkState() == QtCore.Qt.Checked:
             self.check_map.setChecked(True)
@@ -968,6 +983,8 @@ class MapWidget(QtWidgets.QWidget):
             self.check_odo.setChecked(True)
             for k in self.check_lasers.keys():
                 self.check_lasers[k].setChecked(True)
+            for k in self.check_other.keys():
+                self.check_other[k].setChecked(True)
         elif self.check_all.checkState() == QtCore.Qt.Unchecked:
             self.check_map.setChecked(False)
             self.check_robot.setChecked(False)
@@ -978,28 +995,39 @@ class MapWidget(QtWidgets.QWidget):
             self.check_odo.setChecked(False)
             for k in self.check_lasers.keys():
                 self.check_lasers[k].setChecked(False)
+            for k in self.check_other.keys():
+                self.check_other[k].setChecked(False)
 
     def changeCheckBox(self):
         all_laser_check = True
         part_laser_check = False
+        all_other_check = True
+        part_other_check = False
         for k in self.check_lasers.keys():
-            if self.check_lasers[k].isChecked:
+            if self.check_lasers[k].isChecked():
                 part_laser_check = True
             else:
                 all_laser_check = False
+        for k in self.check_other.keys():
+            if self.check_other[k].isChecked():
+                part_other_check = True
+            else:
+                all_other_check = False
         if self.check_map.isChecked() and self.check_robot.isChecked() and all_laser_check\
-            and self.check_partical.isChecked()\
-                and self.check_3dHole.isChecked()\
-                    and self.check_3dObs.isChecked()\
-                        and self.check_traj.isChecked()\
-                            and self.check_odo.isChecked():
+            and all_other_check\
+                and self.check_partical.isChecked()\
+                    and self.check_3dHole.isChecked()\
+                        and self.check_3dObs.isChecked()\
+                            and self.check_traj.isChecked()\
+                                and self.check_odo.isChecked():
             self.check_all.setCheckState(QtCore.Qt.Checked)
         elif self.check_map.isChecked() or self.check_robot.isChecked() or part_laser_check\
-            or self.check_partical.isChecked()\
-                or self.check_3dObs.isChecked()\
-                    or self.check_3dHole.isChecked()\
-                        or self.check_traj.isChecked()\
-                            or self.check_odo.isChecked():
+            or part_other_check\
+                or self.check_partical.isChecked()\
+                    or self.check_3dObs.isChecked()\
+                        or self.check_3dHole.isChecked()\
+                            or self.check_traj.isChecked()\
+                                or self.check_odo.isChecked():
             self.check_all.setTristate()
             self.check_all.setCheckState(QtCore.Qt.PartiallyChecked)
         else:
@@ -1040,6 +1068,8 @@ class MapWidget(QtWidgets.QWidget):
                         self.laser_data_points.set_visible(cur_check.isChecked())
                     self.mid_line_t = None
             self.robot_loc_data.set_visible(isvisible)
+            if cur_check.text() in self.other_data:
+                self.other_data[cur_check.text()][0].set_visible(cur_check.isChecked())
                        
         self.static_canvas.figure.canvas.draw() 
 
@@ -1271,6 +1301,8 @@ class MapWidget(QtWidgets.QWidget):
                 self.check_lasers = dict()
                 for k in self.read_model.laser.keys():
                     self.add_laser_check(k)
+                for k in self.check_other.keys():
+                    self.add_other_check(k)
                 self.check_all.setChecked(True)
                 self.check_partical.setChecked(False)
                 self.check_odo.setChecked(False)
@@ -1799,6 +1831,7 @@ class MapWidget(QtWidgets.QWidget):
                 self.updateParticle()
                 self.updateLoc()
                 self.readtrajectory()
+                self.updateMapCfg()
                 if self.draw_center.isChecked():
                     (xmin, xmax) = self.ax.get_xlim()
                     (ymin, ymax) = self.ax.get_ylim()
@@ -1814,8 +1847,37 @@ class MapWidget(QtWidgets.QWidget):
                 self.readtrajectory()
                 self.redraw()
 
+
     def redraw(self):
         self.static_canvas.figure.canvas.draw()
+
+    def readMapCfg(self):
+        self.other_data = {}
+        self.check_other = {}
+        try:
+            with open("map_config.json", "r", encoding="utf-8") as f:
+                js = json.loads(f.read())
+            for i, item in enumerate(js["lines"]):
+                d = lines.Line2D([], [], **item["params"])
+                d.set_zorder(100 + i)
+                d.set_visible(False)
+                self.ax.add_line(d)
+                self.other_data[item["name"]] = (d, item["x"], item["y"])
+                self.add_other_check(item["name"])
+        except:
+            pass
+
+    def updateMapCfg(self):
+        for t in self.other_data.values():
+            try:
+                x = self.robot_log.read_thread.getData(t[1])[0]
+                x = np.array(x)
+                y = self.robot_log.read_thread.getData(t[2])[0]
+                y = np.array(y)
+                t[0].set_xdata(x)
+                t[0].set_ydata(y)
+            except:
+                pass
 
 
 if __name__ == '__main__':
