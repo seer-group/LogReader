@@ -1,19 +1,21 @@
 from PyQt5 import QtGui
 from PyQt5.QtWidgets import QApplication, QWidget, QPlainTextEdit, QVBoxLayout, QHBoxLayout
-from PyQt5 import QtGui, QtCore,QtWidgets
+from PyQt5 import QtGui, QtCore, QtWidgets
 import gzip
 import re
 from loglibPlus import rbktimetodate
 
+
 class LogViewer(QWidget):
     hiddened = QtCore.pyqtSignal('PyQt_PyObject')
     moveHereSignal = QtCore.pyqtSignal('PyQt_PyObject')
+
     def __init__(self):
         super().__init__()
         self.lines = []
         self.title = "LogViewer"
         self.InitWindow()
-        self.resize(600,800)
+        self.resize(600, 800)
         self.moveHere_flag = False
 
     def InitWindow(self):
@@ -27,7 +29,7 @@ class LogViewer(QWidget):
         self.plainText.setBackgroundVisible(True)
         self.plainText.ensureCursorVisible()
         self.plainText.contextMenuEvent = self.contextMenuEvent
-        
+
         hbox = QHBoxLayout()
         self.find_edit = QtWidgets.QLineEdit()
         self.find_up = QtWidgets.QPushButton("Up")
@@ -43,7 +45,7 @@ class LogViewer(QWidget):
         filter_btn = QtWidgets.QPushButton("Filter")
         filter_btn.clicked.connect(self.filterlines)
         all_btn = QtWidgets.QPushButton("All")
-        all_btn.clicked.connect(lambda x: self.setText(self.lines))
+        all_btn.clicked.connect(lambda: self.plainText.setPlainText(''.join(self.lines)))
         hbox = QHBoxLayout()
         hbox.addWidget(self.filter_edit)
         hbox.addWidget(filter_btn)
@@ -59,48 +61,53 @@ class LogViewer(QWidget):
 
     def filterlines(self):
         if self.filter_edit.text():
-            self.plainText.setPlainText(''.join(filter(lambda x: self.filter_edit.text().lower() in x.lower(), self.lines)))
+            self.plainText.setPlainText(
+                ''.join(filter(lambda x: self.filter_edit.text().lower() in x.lower(), self.lines)))
 
     def setText(self, lines):
         self.lines = lines
-        self.plainText.setPlainText(''.join(lines))     
+        self.plainText.setPlainText(''.join(lines))
+
     def setLineNum(self, ln):
         if not self.moveHere_flag:
             cursor = QtGui.QTextCursor(self.plainText.document().findBlockByLineNumber(ln))
             self.plainText.setTextCursor(cursor)
         else:
             self.moveHere_flag = False
-    def closeEvent(self,event):
+
+    def closeEvent(self, event):
         self.hide()
-        self.hiddened.emit(True)    
-    def readFilies(self,files):
+        self.hiddened.emit(True)
+
+    def readFilies(self, files):
         for file in files:
             if os.path.exists(file):
                 if file.endswith(".log"):
                     try:
-                        with open(file,'rb') as f:
-                            self.readData(f,file)
+                        with open(file, 'rb') as f:
+                            self.readData(f, file)
                     except:
                         continue
                 else:
                     try:
-                        with gzip.open(file,'rb') as f:
-                            self.readData(f, file) 
+                        with gzip.open(file, 'rb') as f:
+                            self.readData(f, file)
                     except:
                         continue
-        self.setText(self.lines)  
+        self.setText(self.lines)
 
-    # def mousePressEvent(self, event):
+        # def mousePressEvent(self, event):
+
     #     self.popMenu = self.plainText.createStandardContextMenu()
     #     self.popMenu.addAction('&Move Here',self.moveHere)
     #     cursor = QtGui.QCursor()
     #     self.popMenu.exec_(cursor.pos())   
-    
+
     def contextMenuEvent(self, event):
         popMenu = self.plainText.createStandardContextMenu()
-        popMenu.addAction('&Move Here',self.moveHere)
+        popMenu.addAction('&Move Here', self.moveHere)
         cursor = QtGui.QCursor()
-        popMenu.exec_(cursor.pos()) 
+        popMenu.exec_(cursor.pos())
 
     def moveHere(self):
         cur_cursor = self.plainText.textCursor()
@@ -114,16 +121,16 @@ class LogViewer(QWidget):
             self.moveHereSignal.emit(mtime)
 
     def readData(self, f, file):
-        for line in f.readlines(): 
+        for line in f.readlines():
             try:
                 line = line.decode('utf-8')
             except UnicodeDecodeError:
                 try:
                     line = line.decode('gbk')
                 except UnicodeDecodeError:
-                    print("{} {}:{}".format(file,"Skipped due to decoding failure!", line))
+                    print("{} {}:{}".format(file, "Skipped due to decoding failure!", line))
                     continue
-            self.lines.append(line)        
+            self.lines.append(line)
 
     def findUp(self):
         searchStr = self.find_edit.text()
@@ -132,16 +139,16 @@ class LogViewer(QWidget):
             cur_highlightCursor = self.plainText.textCursor()
             if self.find_cursor:
                 if self.find_set_cursor and \
-                    self.find_set_cursor.position() == cur_highlightCursor.position():
+                        self.find_set_cursor.position() == cur_highlightCursor.position():
                     cur_highlightCursor = QtGui.QTextCursor(self.find_cursor)
-                    cur_highlightCursor.setPosition(cur_highlightCursor.anchor())                   
-                
+                    cur_highlightCursor.setPosition(cur_highlightCursor.anchor())
+
             cur_highlightCursor = doc.find(searchStr, cur_highlightCursor, QtGui.QTextDocument.FindBackward)
             if cur_highlightCursor.position() >= 0:
                 if self.find_cursor:
                     fmt = QtGui.QTextCharFormat()
                     self.find_cursor.setCharFormat(fmt)
-                cur_highlightCursor.movePosition(QtGui.QTextCursor.NoMove,QtGui.QTextCursor.KeepAnchor)
+                cur_highlightCursor.movePosition(QtGui.QTextCursor.NoMove, QtGui.QTextCursor.KeepAnchor)
                 cur_highlightCursor.mergeCharFormat(self.highlightFormat)
                 self.find_cursor = QtGui.QTextCursor(cur_highlightCursor)
                 cur_highlightCursor.setPosition(cur_highlightCursor.anchor())
@@ -155,25 +162,25 @@ class LogViewer(QWidget):
             cur_highlightCursor = self.plainText.textCursor()
             if self.find_cursor:
                 if self.find_set_cursor and \
-                    cur_highlightCursor.position() == self.find_set_cursor.position():
+                        cur_highlightCursor.position() == self.find_set_cursor.position():
                     cur_highlightCursor = QtGui.QTextCursor(self.find_cursor)
                     cur_highlightCursor.clearSelection()
 
             cur_highlightCursor = doc.find(searchStr, cur_highlightCursor)
-            if cur_highlightCursor.position()>=0:
+            if cur_highlightCursor.position() >= 0:
                 if self.find_cursor:
                     fmt = QtGui.QTextCharFormat()
                     self.find_cursor.setCharFormat(fmt)
-                cur_highlightCursor.movePosition(QtGui.QTextCursor.NoMove,QtGui.QTextCursor.KeepAnchor)
+                cur_highlightCursor.movePosition(QtGui.QTextCursor.NoMove, QtGui.QTextCursor.KeepAnchor)
                 cur_highlightCursor.setCharFormat(self.highlightFormat)
                 self.find_cursor = QtGui.QTextCursor(cur_highlightCursor)
                 cur_highlightCursor.clearSelection()
                 self.find_set_cursor = cur_highlightCursor
                 self.plainText.setTextCursor(cur_highlightCursor)
-                
+
     def cursorChanged(self):
 
-        fmt= QtGui.QTextBlockFormat()
+        fmt = QtGui.QTextBlockFormat()
         fmt.setBackground(QtGui.QColor("light blue"))
         cur_cursor = self.plainText.textCursor()
         cur_cursor.select(QtGui.QTextCursor.LineUnderCursor)
@@ -182,16 +189,17 @@ class LogViewer(QWidget):
             if cur_cursor.blockNumber() != self.last_cursor.blockNumber():
                 fmt = QtGui.QTextBlockFormat()
                 self.last_cursor.select(QtGui.QTextCursor.LineUnderCursor)
-                self.last_cursor.setBlockFormat(fmt)          
+                self.last_cursor.setBlockFormat(fmt)
         self.last_cursor = self.plainText.textCursor()
+
 
 if __name__ == "__main__":
     import sys
     import os
+
     app = QApplication(sys.argv)
     view = LogViewer()
     filenames = ["test1.log"]
     view.readFilies(filenames)
     view.show()
     app.exec_()
-
