@@ -39,6 +39,16 @@ class LogViewer(QWidget):
         hbox.addWidget(self.find_down)
         vbox.addWidget(self.plainText)
         vbox.addLayout(hbox)
+        self.filter_edit = QtWidgets.QLineEdit()
+        filter_btn = QtWidgets.QPushButton("Filter")
+        filter_btn.clicked.connect(self.filterlines)
+        all_btn = QtWidgets.QPushButton("All")
+        all_btn.clicked.connect(lambda x: self.setText(self.lines))
+        hbox = QHBoxLayout()
+        hbox.addWidget(self.filter_edit)
+        hbox.addWidget(filter_btn)
+        hbox.addWidget(all_btn)
+        vbox.addLayout(hbox)
         self.setLayout(vbox)
         self.find_cursor = None
         self.find_set_cursor = None
@@ -46,7 +56,13 @@ class LogViewer(QWidget):
         self.highlightFormat.setForeground(QtGui.QColor("red"))
         self.plainText.cursorPositionChanged.connect(self.cursorChanged)
         self.last_cursor = None
+
+    def filterlines(self):
+        if self.filter_edit.text():
+            self.plainText.setPlainText(''.join(filter(lambda x: self.filter_edit.text().lower() in x.lower(), self.lines)))
+
     def setText(self, lines):
+        self.lines = lines
         self.plainText.setPlainText(''.join(lines))     
     def setLineNum(self, ln):
         if not self.moveHere_flag:
