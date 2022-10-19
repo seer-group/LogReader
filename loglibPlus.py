@@ -308,7 +308,8 @@ class Data:
                 out = self.regex2.match(line)
             if out:
                 datas = out.groups()
-                values = datas[1].split('|')
+                # robokit #1448 料箱车日志多‘]’无法解析最后一个值
+                values = datas[1].strip("]").split('|')
                 self.data['t'].append(rbktimetodate(datas[0]))
                 for tmp in self.info:
                     if 'type' in tmp and 'index' in tmp and 'name' in tmp:
