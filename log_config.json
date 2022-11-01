@@ -1205,5 +1205,17 @@
       {"index":0, "name":"plan_mode", "type":"int"},
       {"index":1, "name":"plan_state", "type":"int"}
     ]
+  },
+  "Gripper": {
+    "type": "Gripper0",
+    "content": [
+      { "index": 0, "name": "name", "type": "str", "description": "夹爪名称", "unit":""  },
+      { "index": 1, "name": "grip_status", "type": "int64", "description": "夹爪运动状态", "unit":"" },
+      { "index": 2, "name": "position", "type": "double", "description": "夹爪当前位置", "unit":""  },
+      { "index": 3, "name": "handle_status", "type": "int64", "description": "档杆实际位置", "unit":"degree"  },
+      { "index": 4, "name": "timestamp", "type": "int64", "description": "时间戳", "unit":""  },
+      { "index": 5, "name": "recv_position", "type": "int64", "description": "夹爪接收位置", "unit":""  },
+      { "index": 6, "name": "handleAction", "type": "bool", "description": "档杆当前状态", "unit":""  }
+    ]
   }
 }
