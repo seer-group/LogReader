@@ -56,7 +56,15 @@
       { "index": 1, "name": "running_status", "type": "double"},
       { "index": 2, "name": "blocked", "type": "bool"},
       { "index": 3, "name": "taskstatus", "type": "double"},
-      { "index": 8, "name": "percentage", "type": "double"}
+      { "index": 4, "name": "task_type", "type": "double"},
+      { "index": 5, "name": "closest_target", "type": "str"},
+      { "index": 6, "name": "cur_source_name", "type": "str"},
+      { "index": 7, "name": "cur_target_name", "type": "str"},
+      { "index": 8, "name": "percentage", "type": "double"},
+      { "index": 9, "name": "dist2path", "type": "double"},
+      { "index": 24, "name": "locx", "type": "double"},
+      { "index": 25, "name": "locy", "type": "double"},
+      { "index": 26, "name": "loc_angle", "type": "rad"}
     ]
   },
   "Odometer": {
@@ -1174,5 +1182,27 @@
       {"index":0, "name":"plan_mode", "type":"int"},
       {"index":1, "name":"plan_state", "type":"int"}
     ]    
+  },
+  "ArmS":{
+    "type":"ArmS",
+    "content":[
+      {"index":0, "name":"taskId", "type":"double"},
+      {"index":1, "name":"task_status", "type":"double"},
+      {"index":2, "name":"status", "type":"double"},
+      {"index":3, "name":"cost_time", "type":"double"}
+    ]        
+  },
+  "armstatus":{
+    "type":"armstatus",
+    "content":[
+      {"index":0, "name":"taskId", "type":"double"},
+      {"index":1, "name":"task_status", "type":"double"},
+      {"index":2, "name":"minObjx", "type":"double"},
+      {"index":3, "name":"minObjy", "type":"double"},
+      {"index":4, "name":"dis", "type":"double"},
+      {"index":5, "name":"radius", "type":"double"},
+      {"index":6, "name":"tempStatus", "type":"double"},
+      {"index":7, "name":"timescount", "type":"double"}
+    ]        
   }
 }

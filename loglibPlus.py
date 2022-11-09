@@ -246,7 +246,11 @@ class Data:
             try:
                 self.data[tmp['name']].append(float(values[ind]))
             except:
-                self.data[tmp['name']].append(0.0)
+                try:
+                    d = "".join([i for i in values[ind] if i.isdigit() or i == "."])
+                    self.data[tmp['name']].append(float(d))
+                except:
+                    self.data[tmp['name']].append(0.0)
         elif tmp['type'] == 'mm':
             try:
                 self.data[tmp['name']].append(float(values[ind])/1000.0)
