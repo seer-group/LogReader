@@ -800,9 +800,11 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             t = [self.read_thread.getData(xy.y_combo.currentText())[1][0] + tmp for tmp in dt]
             tmpdata = [self.read_thread.getData(xy.y_combo.currentText())[0], t]
             self.drawdata(cur_ax, tmpdata, self.read_thread.ylabel[xy.y_combo.currentText()], False)
+            cur_ax.y_range = cur_ax.get_ylim()
         else:
             tmpdata = self.read_thread.getData(xy.y_combo.currentText())
             self.drawdata(cur_ax, tmpdata,  self.read_thread.ylabel[xy.y_combo.currentText()], False)
+            cur_ax.y_range = cur_ax.get_ylim()
 
     def diffData(self, cur_ax):
         indx = self.axs.tolist().index(cur_ax)
@@ -826,6 +828,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         try:
             dv_dt = [a/b if abs(b) > 1e-12 else np.nan for a, b in zip(dvs, dts)]
             self.drawdata(cur_ax, (dv_dt, list_tmpdata[1::]), 'diff_'+self.read_thread.ylabel[xy.y_combo.currentText()], False)
+            cur_ax.y_range = cur_ax.get_ylim()
         except ZeroDivisionError:
             pass
 
@@ -840,10 +843,12 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             tmpdata = [self.read_thread.getData(xy.y_combo.currentText())[0], t]
             tmpdata[0] = [-a for a in tmpdata[0]]
             self.drawdata(cur_ax, (tmpdata[0], tmpdata[1]), '-'+self.read_thread.ylabel[xy.y_combo.currentText()], False)
+            cur_ax.y_range = cur_ax.get_ylim()
         else:
             tmpdata = self.read_thread.getData(xy.y_combo.currentText())
             data = [-a for a in tmpdata[0]]
             self.drawdata(cur_ax, (data, tmpdata[1]), '-'+self.read_thread.ylabel[xy.y_combo.currentText()], False)
+            cur_ax.y_range = cur_ax.get_ylim()
 
     def addData(self, cur_ax):
         keys = list(self.read_thread.data.keys())
@@ -855,7 +860,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         current_text = event[1]
         tmpdata = self.read_thread.getData(current_text)
         self.drawdata(cur_ax, tmpdata, self.read_thread.ylabel[current_text], False, False)
-        
+        cur_ax.y_range = cur_ax.get_ylim()
 
     def keyPressEvent(self,event):
         if len(self.select_regions) < 1:
@@ -928,13 +933,15 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             if text in self.read_thread.data:
                 data = self.read_thread.getData(text)[0]
                 if data:
-                    tmpd = np.array(data)
-                    tmpd = tmpd[~np.isnan(tmpd)]
-                    if len(tmpd) > 0:
+                    # tmpd = np.array(data)
+                    # tmpd = tmpd[~np.isnan(tmpd)]
+                    if len(data) > 0:
+                        #  #测试中心1908, 包含None 或者Y为str时也会崩溃，改为drawData时记录y_lim用于点击home时复原
                         # 这里用1e-6会有问题
                         # max_range = max(max(tmpd) - min(tmpd), 1e-6)
-                        max_range = max(max(tmpd) - min(tmpd), 1)
-                        ax.set_ylim(min(tmpd) - 0.05 * max_range, max(tmpd) + 0.05 * max_range)
+                        # max_range = max(max(tmpd) - min(tmpd), 1)
+                        # ax.set_ylim(min(tmpd) - 0.05 * max_range, max(tmpd) + 0.05 * max_range)
+                        ax.set_ylim(ax.y_range)
                         ax.set_xlim(self.read_thread.tlist[0], self.read_thread.tlist[-1])
         self.static_canvas.figure.canvas.draw()
 
@@ -1070,6 +1077,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                         xy.x_combo.addItems(['timestamp'])
                 self.drawdata(ax, self.read_thread.getData(xy.y_combo.currentText()),
                                 self.read_thread.ylabel[xy.y_combo.currentText()], True)
+                ax.y_range = ax.get_ylim()
             for d in self.dataViews:
                 self.initDataView(d)
             self.key_laser_channel = -1
@@ -1091,7 +1099,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.close()
 
     def about(self):
-        QtWidgets.QMessageBox.about(self, "关于", """Log Viewer cd.1.6.4""")
+        QtWidgets.QMessageBox.about(self, "关于", """Log Viewer cd.1.6.5""")
 
     def ycombo_onActivated(self):
         curcombo = self.sender()
@@ -1113,6 +1121,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         if self.xys[index].x_combo.count() == 1 or current_x_index == 0:
             logging.info('Fig.' + str(index+1) + ' : ' + text + ' ' + 't')
             self.drawdata(ax, self.read_thread.getData(text), self.read_thread.ylabel[text], False)
+            ax.y_range = ax.get_ylim()
         else:
             logging.info('Fig.' + str(index+1) + ' : ' + text + ' ' + 'timestamp')
             org_t = self.read_thread.getData(group_name + '.timestamp')[0]
@@ -1120,7 +1129,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             dt = [timedelta(seconds = (tmp_t/1e9 - org_t[0]/1e9)) for tmp_t in org_t]
             t = [self.read_thread.getData(text)[1][0] + tmp for tmp in dt]
             self.drawdata(ax, (self.read_thread.getData(text)[0], t), self.read_thread.ylabel[text], False)
-
+            ax.y_range = ax.get_ylim()
 
     def xcombo_onActivated(self):
         curcombo = self.sender()
@@ -1135,6 +1144,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         logging.info('Fig.' + str(index+1) + ' : ' + y_label + ' ' + text)
         if text == 't':
             self.drawdata(ax, self.read_thread.getData(y_label), self.read_thread.ylabel[y_label], False)
+            ax.y_range = ax.get_ylim()
         elif text == 'timestamp':
             group_name = y_label.split('.')[0]
             org_t = self.read_thread.getData(group_name + '.timestamp')[0]
@@ -1142,6 +1152,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             dt = [timedelta(seconds = (tmp_t/1e9 - org_t[0]/1e9)) for tmp_t in org_t]
             t = [self.read_thread.getData(y_label)[1][0] + tmp for tmp in dt]
             self.drawdata(ax, (self.read_thread.getData(y_label)[0], t), self.read_thread.ylabel[y_label], False)
+            ax.y_range = ax.get_ylim()
 
     def cpunum_changed(self, action):
         self.read_thread.cpu_num = int(action.text())
@@ -1196,6 +1207,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                     if xy.x_combo.currentText() == 't':
                         self.drawdata(ax, self.read_thread.getData(xy.y_combo.currentText()),
                                    self.read_thread.ylabel[xy.y_combo.currentText()], False)
+                        ax.y_range = ax.get_ylim()
                     elif xy.x_combo.currentText() == 'timestamp':
                         org_t = self.read_thread.getData(group_name + '.timestamp')[0]
                         t = []
@@ -1204,6 +1216,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                         data = (self.read_thread.getData(xy.y_combo.currentText())[0], t)
                         self.drawdata(ax, data,
                                     self.read_thread.ylabel[xy.y_combo.currentText()], False)
+                        ax.y_range = ax.get_ylim()
                 self.resetSelect()
         self.static_canvas.figure.canvas.draw()
 
@@ -1595,6 +1608,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                                         self.read_thread.ylabel[key1], True)
                         self.drawdata(self.axs[i], self.read_thread.getData(key2), 
                                         self.read_thread.ylabel[key2], False, False)
+                        self.axs[i].y_range = self.axs[i].get_ylim()
             except Exception as e:
                 if KeyError in e.args:
                     self.log_info.append("Please choose the true model matched with log!!!")
