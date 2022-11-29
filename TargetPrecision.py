@@ -67,23 +67,26 @@ class TargetPrecision(QtWidgets.QWidget):
         if 'LocationEachFrame' not in self.log_data.content:
             logging.debug("LocationEachFrame is not in the log")
             return
-        map_x = []
-        map_y = []
-        map_a = []
+        map_x = None
+        map_y = None
+        map_a = None
         try:
             lm_id = self.find_edit.text()
             self.ax.set_title('')
             if lm_id in self.robot_log.map_widget.read_map.points:
                 m_xy = self.robot_log.map_widget.read_map.points[lm_id]
-                map_x.append(m_xy[0])
-                map_y.append(m_xy[1])
-                map_a.append(m_xy[2]/math.pi *180.0)
+                map_x = [m_xy[0]]
+                map_y = [m_xy[1]]
+                map_a = [m_xy[2]/math.pi *180.0]
                 self.ax.set_title(m_xy[3])
         except:
             pass
 
         data = self.log_data.taskfinish.content()
         valid = []
+        vx = self.log_data.getData('Speed2DSP.vx')[0]
+        vy = self.log_data.content['Speed2DSP']['vy']
+        vt = np.array(self.log_data.content['Speed2DSP']['t'])
         if self.choose.currentText() == 'Localization':
             locx = self.log_data.content['LocationEachFrame']['x']
             locy = self.log_data.content['LocationEachFrame']['y']
@@ -134,60 +137,77 @@ class TargetPrecision(QtWidgets.QWidget):
             # 如果左边大于右边则忽略
             tl = None
             tr = None
+        print(len(data[1]), len(data[0]))
         for ind, t in enumerate(data[1]):
             if self.targetName in data[0][ind]:
                 t = t + sleepTime
                 if tl is not None and tr is not None:
                     if t < tl or t > tr:
                         continue
+                # 如果到点的速度很大表示，这个是中间点
+                v_idx = (np.abs(vt - t)).argmin()
+                if v_idx + 1 < len(vt):
+                    v_idx += 1
+                print(vx[v_idx], vy[v_idx], v_idx)
+                if abs(vx[v_idx]) > 0.0001 or abs(vy[v_idx]) > 0.0001:
+                    continue
                 loc_idx = (np.abs(loc_t - t)).argmin()
-                if loc_idx < len(loc_t):
+                if loc_idx+1 < len(loc_t):
                     loc_idx += 1
                 if valid[loc_idx] > 0.1:
                     xdata.append(locx[loc_idx])
                     ydata.append(locy[loc_idx])
                     adata.append(loca[loc_idx])
                     tdata.append(loc_t[loc_idx])
-        self.xdata = xdata
-        self.ydata = ydata
-        self.adata = adata
-        self.tdata = tdata
-        self.xy_data.set_xdata(self.xdata)
-        self.xy_data.set_ydata(self.ydata)
-
-        self.px_data.set_xdata(self.tdata)
-        self.px_data.set_ydata(self.xdata)
-        self.py_data.set_xdata(self.tdata)
-        self.py_data.set_ydata(self.ydata)
-        self.pa_data.set_xdata(self.tdata)
-        self.pa_data.set_ydata(self.adata)
-
-        mid_x = [sum(self.xdata)*1.0/len(self.xdata)]
-        mid_y = [sum(self.ydata)*1.0/len(self.ydata)]
-        mid_a = [sum(self.adata)*1.0/len(self.adata)]
-        self.mid_xy.set_xdata(mid_x)
-        self.mid_xy.set_ydata(mid_y)
-        self.mid_x.set_xdata(self.tdata)
-        self.mid_x.set_ydata(mid_x*len(self.tdata))
-        self.mid_y.set_xdata(self.tdata)
-        self.mid_y.set_ydata(mid_y*len(self.tdata))
-        self.mid_a.set_xdata(self.tdata)
-        self.mid_a.set_ydata(mid_a*len(self.tdata))
-
-        self.map_xy.set_xdata(map_x)
-        self.map_xy.set_ydata(map_y)
-        self.map_x.set_xdata(self.tdata)
-        self.map_x.set_ydata(map_x*len(self.tdata))
-        self.map_y.set_xdata(self.tdata)
-        self.map_y.set_ydata(map_y*len(self.tdata))
-        self.map_a.set_xdata(self.tdata)
-        self.map_a.set_ydata(map_a*len(self.tdata))
-        tmpx = xdata + map_x
-        tmpy = ydata + map_y
-        tmpa = adata + map_a
         if len(xdata) < 1:
-            logging.debug("cannot find target name: {}".format(self.targetName))
+            title = "cannot find target name: {}".format(lm_id)
+            logging.debug("cannot find target name: {}".format(lm_id))
+            self.ax.set_title(title)
         else:
+            self.ax.set_title(lm_id)
+            self.xdata = xdata
+            self.ydata = ydata
+            self.adata = adata
+            self.tdata = tdata
+            self.xy_data.set_xdata(self.xdata)
+            self.xy_data.set_ydata(self.ydata)
+
+            self.px_data.set_xdata(self.tdata)
+            self.px_data.set_ydata(self.xdata)
+            self.py_data.set_xdata(self.tdata)
+            self.py_data.set_ydata(self.ydata)
+            self.pa_data.set_xdata(self.tdata)
+            self.pa_data.set_ydata(self.adata)
+
+            mid_x = [sum(self.xdata)*1.0/len(self.xdata)]
+            mid_y = [sum(self.ydata)*1.0/len(self.ydata)]
+            mid_a = [sum(self.adata)*1.0/len(self.adata)]
+            self.mid_xy.set_xdata(mid_x)
+            self.mid_xy.set_ydata(mid_y)
+            self.mid_x.set_xdata(self.tdata)
+            self.mid_x.set_ydata(mid_x*len(self.tdata))
+            self.mid_y.set_xdata(self.tdata)
+            self.mid_y.set_ydata(mid_y*len(self.tdata))
+            self.mid_a.set_xdata(self.tdata)
+            self.mid_a.set_ydata(mid_a*len(self.tdata))
+
+            if map_x != None and map_y != None and map_a != None:
+                self.map_xy.set_xdata(map_x)
+                self.map_xy.set_ydata(map_y)
+                self.map_x.set_xdata(self.tdata)
+                self.map_x.set_ydata(map_x*len(self.tdata))
+                self.map_y.set_xdata(self.tdata)
+                self.map_y.set_ydata(map_y*len(self.tdata))
+                self.map_a.set_xdata(self.tdata)
+                self.map_a.set_ydata(map_a*len(self.tdata))
+                tmpx = xdata + map_x
+                tmpy = ydata + map_y
+                tmpa = adata + map_a
+            else:
+                tmpx = xdata
+                tmpy = ydata
+                tmpa = adata              
+
             xmin, ymin ,amin, tmin = 0.,0.,0.,0.
             xmax, ymax, amax, tmax = 1.,1.,1.,1.
             xrange, yrange, arange = 0., 0., 0.
