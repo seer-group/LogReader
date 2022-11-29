@@ -794,7 +794,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         cur_ax = event[0]
         current_text = event[1]
         tmpdata = self.read_thread.getData(current_text)
-        self.drawdata(cur_ax, tmpdata, self.read_thread.ylabel[current_text], False, False)
+        if current_text in self.read_thread.ylabel:
+            self.drawdata(cur_ax, tmpdata, self.read_thread.ylabel[current_text], False, False)
         
 
     def keyPressEvent(self,event):
