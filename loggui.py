@@ -556,6 +556,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                     self.popMenu.addAction('&Diff Time', lambda:self.diffData(event.inaxes))
                     self.popMenu.addAction('&- Data', lambda:self.negData(event.inaxes))
                     self.popMenu.addAction('& Rad2Deg', lambda:self.rad2Deg(event.inaxes))
+                    self.popMenu.addAction('& Deg2Rad', lambda:self.deg2Rad(event.inaxes))
                     self.popMenu.addAction('&Add Data', lambda:self.addData(event.inaxes))
                     cursor = QtGui.QCursor()
                     self.popMenu.exec_(cursor.pos())
@@ -719,14 +720,15 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         xy = self.xys[indx]        
         group_name = xy.y_combo.currentText().split('.')[0]
         org_t = self.read_thread.getData(group_name + '.timestamp')[0]
-        if len(org_t) > 0:
-            dt = [timedelta(seconds = (tmp_t/1e9 - org_t[0]/1e9)) for tmp_t in org_t]
-            t = [self.read_thread.getData(xy.y_combo.currentText())[1][0] + tmp for tmp in dt]
-            tmpdata = [self.read_thread.getData(xy.y_combo.currentText())[0], t]
-            self.drawdata(cur_ax, tmpdata, self.read_thread.ylabel[xy.y_combo.currentText()], False)
-        else:
-            tmpdata = self.read_thread.getData(xy.y_combo.currentText())
-            self.drawdata(cur_ax, tmpdata,  self.read_thread.ylabel[xy.y_combo.currentText()], False)
+        if xy.x_combo.currentText() == 'timestamp':
+            if len(org_t) > 0:
+                dt = [timedelta(seconds = (tmp_t/1e9 - org_t[0]/1e9)) for tmp_t in org_t]
+                t = [self.read_thread.getData(xy.y_combo.currentText())[1][0] + tmp for tmp in dt]
+                tmpdata = [self.read_thread.getData(xy.y_combo.currentText())[0], t]
+                self.drawdata(cur_ax, tmpdata, self.read_thread.ylabel[xy.y_combo.currentText()], False)
+                return
+        tmpdata = self.read_thread.getData(xy.y_combo.currentText())
+        self.drawdata(cur_ax, tmpdata,  self.read_thread.ylabel[xy.y_combo.currentText()], False)
 
     def diffData(self, cur_ax):
         indx = self.axs.tolist().index(cur_ax)
@@ -757,33 +759,52 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         indx = self.axs.tolist().index(cur_ax)
         xy = self.xys[indx]        
         group_name = xy.y_combo.currentText().split('.')[0]
-        org_t = self.read_thread.getData(group_name + '.timestamp')[0]
-        if len(org_t) > 0:
-            dt = [timedelta(seconds = (tmp_t/1e9 - org_t[0]/1e9)) for tmp_t in org_t]
-            t = [self.read_thread.getData(xy.y_combo.currentText())[1][0] + tmp for tmp in dt]
-            tmpdata = [self.read_thread.getData(xy.y_combo.currentText())[0], t]
-            tmpdata[0] = [-a for a in tmpdata[0]]
-            self.drawdata(cur_ax, (tmpdata[0], tmpdata[1]), '-'+self.read_thread.ylabel[xy.y_combo.currentText()], False)
-        else:
-            tmpdata = self.read_thread.getData(xy.y_combo.currentText())
-            data = [-a for a in tmpdata[0]]
-            self.drawdata(cur_ax, (data, tmpdata[1]), '-'+self.read_thread.ylabel[xy.y_combo.currentText()], False)
+        if xy.x_combo.currentText() == 'timestamp':
+            org_t = self.read_thread.getData(group_name + '.timestamp')[0]
+            if len(org_t) > 0:
+                dt = [timedelta(seconds = (tmp_t/1e9 - org_t[0]/1e9)) for tmp_t in org_t]
+                t = [self.read_thread.getData(xy.y_combo.currentText())[1][0] + tmp for tmp in dt]
+                tmpdata = [self.read_thread.getData(xy.y_combo.currentText())[0], t]
+                tmpdata[0] = [-a for a in tmpdata[0]]
+                self.drawdata(cur_ax, (tmpdata[0], tmpdata[1]), '-'+self.read_thread.ylabel[xy.y_combo.currentText()], False)
+                return
+        tmpdata = self.read_thread.getData(xy.y_combo.currentText())
+        data = [-a for a in tmpdata[0]]
+        self.drawdata(cur_ax, (data, tmpdata[1]), '-'+self.read_thread.ylabel[xy.y_combo.currentText()], False)
 
     def rad2Deg(self, cur_ax):
         indx = self.axs.tolist().index(cur_ax)
         xy = self.xys[indx]        
         group_name = xy.y_combo.currentText().split('.')[0]
-        org_t = self.read_thread.getData(group_name + '.timestamp')[0]
-        if len(org_t) > 0:
-            dt = [timedelta(seconds = (tmp_t/1e9 - org_t[0]/1e9)) for tmp_t in org_t]
-            t = [self.read_thread.getData(xy.y_combo.currentText())[1][0] + tmp for tmp in dt]
-            tmpdata = [self.read_thread.getData(xy.y_combo.currentText())[0], t]
-            tmpdata[0] = [a/np.pi*180.0 for a in tmpdata[0]]
-            self.drawdata(cur_ax, (tmpdata[0], tmpdata[1]), self.read_thread.ylabel[xy.y_combo.currentText()]+" deg", False)
-        else:
-            tmpdata = self.read_thread.getData(xy.y_combo.currentText())
-            data = [a/np.pi*180.0 for a in tmpdata[0]]
-            self.drawdata(cur_ax, (data, tmpdata[1]), self.read_thread.ylabel[xy.y_combo.currentText()]+" deg", False)
+        if xy.x_combo.currentText() == 'timestamp':
+            org_t = self.read_thread.getData(group_name + '.timestamp')[0]
+            if len(org_t) > 0:
+                dt = [timedelta(seconds = (tmp_t/1e9 - org_t[0]/1e9)) for tmp_t in org_t]
+                t = [self.read_thread.getData(xy.y_combo.currentText())[1][0] + tmp for tmp in dt]
+                tmpdata = [self.read_thread.getData(xy.y_combo.currentText())[0], t]
+                tmpdata[0] = [a/np.pi*180.0 for a in tmpdata[0]]
+                self.drawdata(cur_ax, (tmpdata[0], tmpdata[1]), self.read_thread.ylabel[xy.y_combo.currentText()]+" deg", False)
+                return
+        tmpdata = self.read_thread.getData(xy.y_combo.currentText())
+        data = [a/np.pi*180.0 for a in tmpdata[0]]
+        self.drawdata(cur_ax, (data, tmpdata[1]), self.read_thread.ylabel[xy.y_combo.currentText()]+" deg", False)
+
+    def deg2Rad(self, cur_ax):
+        indx = self.axs.tolist().index(cur_ax)
+        xy = self.xys[indx]        
+        group_name = xy.y_combo.currentText().split('.')[0]
+        if xy.x_combo.currentText() == 'timestamp':
+            org_t = self.read_thread.getData(group_name + '.timestamp')[0]
+            if len(org_t) > 0:
+                dt = [timedelta(seconds = (tmp_t/1e9 - org_t[0]/1e9)) for tmp_t in org_t]
+                t = [self.read_thread.getData(xy.y_combo.currentText())[1][0] + tmp for tmp in dt]
+                tmpdata = [self.read_thread.getData(xy.y_combo.currentText())[0], t]
+                tmpdata[0] = [a/180.0*np.pi for a in tmpdata[0]]
+                self.drawdata(cur_ax, (tmpdata[0], tmpdata[1]), self.read_thread.ylabel[xy.y_combo.currentText()]+" rad", False)
+                return
+        tmpdata = self.read_thread.getData(xy.y_combo.currentText())
+        data = [a/180.0*np.pi for a in tmpdata[0]]
+        self.drawdata(cur_ax, (data, tmpdata[1]), self.read_thread.ylabel[xy.y_combo.currentText()]+" rad", False)
 
     def addData(self, cur_ax):
         keys = list(self.read_thread.data.keys())
