@@ -606,8 +606,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         (xmin,xmax) = self.axs[0].get_xlim()
         tmid = (xmin+xmax)/2.0
         dx = xmax - xmin
-        self.setSelectLeft(num2date(xmin + dx * 0.1))
-        self.setSelectRight(num2date(xmax - dx * 0.1))     
+        self.setSelectionLR(num2date(xmin + dx * 0.1), num2date(xmax - dx * 0.1))
 
     def setSelectLeft(self, t):
         if t < self.right_line_t:
@@ -622,6 +621,14 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             for s in self.select_regions:
                 s.setRegion(self.left_line_t, self.right_line_t)
             self.static_canvas.figure.canvas.draw()
+    
+    def setSelectionLR(self, tl, tr):
+        if tl < tr:
+            self.left_line_t = tl
+            self.right_line_t = tr
+            for s in self.select_regions:
+                s.setRegion(self.left_line_t, self.right_line_t)
+            self.static_canvas.figure.canvas.draw()            
 
     def setSelectRegion(self, midx):
 
