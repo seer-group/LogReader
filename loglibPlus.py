@@ -76,7 +76,12 @@ class ReadLog:
                     continue
             out = self.regex.match(line)
             if out:
-                return rbktimetodate(out.group(1))
+                try:
+                    tm = rbktimetodate(out.group(1))
+                except:
+                    pass
+                else:
+                    return rbktimetodate(out.group(1))
         return None
 
     def _readData(self, f, file):
@@ -94,7 +99,10 @@ class ReadLog:
         for line in lines:
             out = self.regex.match(line)
             if out:
-                t = rbktimetodate(out.group(1))
+                try:
+                    t = rbktimetodate(out.group(1))
+                except:
+                    continue
                 if self.tmin is None:
                     self.tmin = t
                 elif self.tmin > t:
@@ -103,7 +111,10 @@ class ReadLog:
         for line in reversed(lines):
             out = self.regex.match(line)
             if out:
-                t = rbktimetodate(out.group(1))
+                try:
+                    t = rbktimetodate(out.group(1))
+                except:
+                    continue
                 if self.tmax is None:
                     self.tmax = t
                 elif self.tmax < t:
