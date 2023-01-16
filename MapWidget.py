@@ -292,6 +292,11 @@ class Readmap(QThread):
                     y2 = 0
                     x3 = 0
                     y3 = 0
+                    ok = False
+                    if 'controlPos1' in line and 'controlPos2' in line:
+                        ok = True
+                    if ok == False:
+                        continue
                     if 'x' in line['startPos']['pos']:
                         x0 = line['startPos']['pos']['x']
                     if 'y' in line['startPos']['pos']:
