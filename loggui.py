@@ -821,9 +821,51 @@ class ApplicationWindow(QtWidgets.QMainWindow):
     def addNewData(self, event):
         cur_ax = event[0]
         current_text = event[1]
-        tmpdata = self.read_thread.getData(current_text)
+        current_text = current_text.replace(" ", "")
+        tmpdata = None
+        if "+" in current_text or "-" in current_text:
+            if "+" in current_text:
+                result = current_text.split("+")
+                # print(result, len(result))
+                if len(result) == 2:
+                    data0 = self.read_thread.getData(result[0])
+                    data1 = self.read_thread.getData(result[1])
+                    if len(data0[0]) == len(data1[0]):
+                        # 时间长度一样
+                        tmpdata = [[],[]]
+                        tmpdata[1] = data0[1] # 时间在 1 号元素中
+                        for (d0, d1) in zip(data0[0], data1[0]):
+                            if type(d0) is float and type(d1) is float:
+                                tmpdata[0].append(d0 + d1)
+                            else:
+                                # print("error", type(d0),type(d1))
+                                tmpdata[0].append(0)
+                        print("-",len(tmpdata), len(tmpdata[0]), len(tmpdata[1]), len(data0[0]), len(data1[1]))
+            elif "-" in current_text:
+                result = current_text.split("-")
+                print(result)
+                if len(result) == 2:
+                    data0 = self.read_thread.getData(result[0])
+                    data1 = self.read_thread.getData(result[1])
+                    # print(len(data0[0]), len(data1[0]))
+                    if len(data0[0]) == len(data1[0]):
+                        # 时间长度一样
+                        tmpdata = [[],[]]
+                        tmpdata[1] = data0[1] # 时间在 1 号元素中
+                        for (d0, d1) in zip(data0[0], data1[0]):
+                            if type(d0) is float and type(d1) is float:
+                                tmpdata[0].append(d0 - d1)
+                            else:
+                                # print("error", type(d0),type(d1))
+                                tmpdata[0].append(0)
+                        print("-",len(tmpdata), len(tmpdata[0]), len(tmpdata[1]), len(data0[0]), len(data1[1]))
+        else :
+            tmpdata = self.read_thread.getData(current_text)
+        # print(len(tmpdata), len(tmpdata[0]), len(tmpdata[1]), current_text in self.read_thread.ylabel)
         if current_text in self.read_thread.ylabel:
             self.drawdata(cur_ax, tmpdata, self.read_thread.ylabel[current_text], False, False)
+        else:
+            self.drawdata(cur_ax, tmpdata, "", False, False)
         
 
     def keyPressEvent(self,event):
