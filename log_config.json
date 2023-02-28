@@ -142,16 +142,15 @@
   "GDMotorCmd": {
     "type": "GDMotorCmd",
     "content": [
-      { "index": 0, "name": "motor1", "type": "double", "description": "底层下发的电机1速度", "unit":"m/s" },
-      { "index": 1, "name": "motor2", "type": "double", "description": "底层下发的电机2速度", "unit":"m/s"  },
-      { "index": 2, "name": "motor3", "type": "double", "description": "底层下发的电机3速度", "unit":"m/s" },
-      { "index": 3, "name": "motor4", "type": "double", "description": "底层下发的电机4速度", "unit":"m/s"  },
-      { "index": 4, "name": "motor5", "type": "double", "description": "底层下发的电机5速度", "unit":"m/s" },
-      { "index": 5, "name": "motor6", "type": "double", "description": "底层下发的电机6速度", "unit":"m/s"  },
-      { "index": 6, "name": "motor7", "type": "double", "description": "底层下发的电机7速度", "unit":"m/s"  }
+      { "index": 0, "name": "motor1", "type": "double"},
+      { "index": 1, "name": "motor2", "type": "double"},
+      { "index": 2, "name": "motor3", "type": "double"},
+      { "index": 3, "name": "motor4", "type": "double"},
+      { "index": 4, "name": "motor5", "type": "double"},
+      { "index": 5, "name": "motor6", "type": "double"},
+      { "index": 6, "name": "motor7", "type": "double"}
     ]
-  },
-  
+  },  
   "RTMotorCmd": {
     "type": "RTMotorCmd",
     "content": [
@@ -747,14 +746,15 @@
       { "index": 9, "name": "motor4", "type": "double", "description": 8, "unit":""},
       { "index": 11, "name": "motor5", "type": "double", "description": 10, "unit":""},
       { "index": 13, "name": "motor6", "type": "double", "description": 12, "unit":""},
-      { "index": 15, "name": "motor7", "type": "double", "description": 14, "unit":""}
+      { "index": 15, "name": "motor7", "type": "double", "description": 14, "unit":""},
+      { "index": 17, "name": "motor8", "type": "double", "description": 16, "unit":""}
     ]
   },
 
   "ProbeCpu": {
     "type": "ProbeCpu",
     "content": [
-      { "index": 0, "name": "totalcpu", "type": "double"},
+      { "index": 0, "name": "totalcpu", "type": "double", "description": "系统cpu占用率", "unit":""},
       { "index": 1, "name": "total_proc", "type": "double", "description": "rbk线程占用率", "unit":""},   
       { "index": 4, "name": "tid1", "type": "double", "description": 2, "unit":""},
       { "index": 7, "name": "tid2", "type": "double", "description": 5, "unit":""},
@@ -782,7 +782,8 @@
       { "index": 9, "name": "motor4", "type": "double", "description": 8, "unit":""},
       { "index": 11, "name": "motor5", "type": "double", "description": 10, "unit":""},
       { "index": 13, "name": "motor6", "type": "double", "description": 12, "unit":""},
-      { "index": 15, "name": "motor7", "type": "double", "description": 14, "unit":""}
+      { "index": 15, "name": "motor7", "type": "double", "description": 14, "unit":""},
+      { "index": 17, "name": "motor8", "type": "double", "description": 16, "unit":""}
     ]
   },
   "MotorGet": {
@@ -1174,7 +1175,7 @@
   "PGVfilter":{
     "type":"PGVfilter",
     "content":[
-      {"index":0, "name":"data_nsec", "type":"double"},
+      {"index":0, "name":"data_nsec", "type":"double","unit":"rad"},
       {"index":1, "name":"filtered_out_angle", "type":"double"},
       {"index":2, "name":"pgv_diff_angle", "type":"double"},
       {"index":3, "name":"org_down_angle", "type":"double"},
