@@ -42,7 +42,8 @@ class TargetPrecision(QtWidgets.QWidget):
         self.adata = []
         self.tdata = []
         self.draw_size = []
-        self.xy_data = lines.Line2D([],[], marker = '.', linestyle = '', markersize=10)
+        self.xy_data_old = lines.Line2D([],[], marker = '.', linestyle = '', markersize=10, color= 'darkblue') # 当前时间线之前的数据
+        self.xy_data_new = lines.Line2D([],[], marker = '.', linestyle = '', markersize=10, color= 'skyblue') # 当前时间线之后的数据
         self.map_xy = lines.Line2D([],[], marker = '*', linestyle = '', markersize=10, color='r')
         self.map_x = lines.Line2D([],[], linestyle = '-', markersize=10, color= 'r')
         self.map_y = lines.Line2D([],[], linestyle = '-', markersize=10, color='r')
@@ -120,6 +121,8 @@ class TargetPrecision(QtWidgets.QWidget):
         else:
             logging.debug("source name is wrong! {}".format(self.choose.currentText()))
         last_ind = 0
+        mid_t = self.robot_log.mid_line_t # 中间线的时间
+        tmid = None # 对应的序号
         xdata = []
         ydata = []
         adata = []
@@ -144,6 +147,8 @@ class TargetPrecision(QtWidgets.QWidget):
                 if tl is not None and tr is not None:
                     if t < tl or t > tr:
                         continue
+                if tmid == None and mid_t != None and t > mid_t:
+                    tmid = len(xdata) # 中间线的序号
                 # 如果到点的速度很大表示，这个是中间点
                 v_idx = (np.abs(vt - t)).argmin()
                 if v_idx + 1 < len(vt):
@@ -169,9 +174,16 @@ class TargetPrecision(QtWidgets.QWidget):
             self.ydata = ydata
             self.adata = adata
             self.tdata = tdata
-            self.xy_data.set_xdata(self.xdata)
-            self.xy_data.set_ydata(self.ydata)
-
+            if tmid == None:
+                self.xy_data_old.set_xdata(self.xdata)
+                self.xy_data_old.set_ydata(self.ydata)
+                self.xy_data_new.set_xdata([])
+                self.xy_data_new.set_ydata([])
+            else:
+                self.xy_data_old.set_xdata(self.xdata[:tmid])
+                self.xy_data_old.set_ydata(self.ydata[:tmid])
+                self.xy_data_new.set_xdata(self.xdata[tmid:])
+                self.xy_data_new.set_ydata(self.ydata[tmid:])
             self.px_data.set_xdata(self.tdata)
             self.px_data.set_ydata(self.xdata)
             self.py_data.set_xdata(self.tdata)
@@ -256,7 +268,8 @@ class TargetPrecision(QtWidgets.QWidget):
         self.static_canvas.figure.subplots_adjust(left = 0.1, right = 0.95, bottom = 0.1, top = 0.95)
         self.static_canvas.figure.tight_layout()
         self.ax = self.static_canvas.figure.subplots(1, 1)
-        self.ax.add_line(self.xy_data)
+        self.ax.add_line(self.xy_data_old)
+        self.ax.add_line(self.xy_data_new)
         self.ax.add_line(self.map_xy)
         self.ax.add_line(self.mid_xy)
         self.ax.grid(True)
