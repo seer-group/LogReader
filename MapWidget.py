@@ -1,4 +1,3 @@
-from turtle import right
 import matplotlib
 matplotlib.use('Qt5Agg')
 from matplotlib.backends.backend_qt5agg import (
@@ -8,6 +7,7 @@ import matplotlib.lines as lines
 from matplotlib.patches import Circle, Polygon
 from PyQt5 import QtGui, QtCore,QtWidgets
 from PyQt5.QtCore import QThread, pyqtSignal, pyqtSlot
+from PyQt5.QtCore import *
 import numpy as np
 import json as js
 import os
@@ -23,6 +23,7 @@ from matplotlib.collections import LineCollection
 from matplotlib.patches import Circle
 from matplotlib.collections import PatchCollection
 import zipfile
+from ExtendedComboBox import ExtendedComboBox
 
 def GetGlobalPos(p2b, b2g):
     x = p2b[0] * np.cos(b2g[2]) - p2b[1] * np.sin(b2g[2])
@@ -184,6 +185,8 @@ class Readmap(QThread):
         self.lines = []
         self.circles = []
         self.points = dict()
+        self.p_names = dict()
+        self.bin = dict()
         self.straights = []
         self.bezier_codes = [ 
             Path.MOVETO,
@@ -228,6 +231,8 @@ class Readmap(QThread):
         self.circles = []
         self.straights = []
         self.points = dict()
+        self.p_names = dict()
+        self.bin = dict()
         # print(self.js.keys())
         def addStr(startPos, endPos):
             x1 = 0
@@ -400,6 +405,12 @@ class Readmap(QThread):
                     if pt['ignoreDir'] == True:
                         theta = None
                 self.points[pt['instanceName'][2::]] = [x0,y0,theta, pt['instanceName']]
+                self.p_names[pt['instanceName']] = pt['instanceName'][2::]
+        if 'binLocationsList' in self.js:
+            for bs in self.js['binLocationsList']:
+                for b in bs['binLocationList']:
+                    if 'pointName' in b and 'instanceName' in b:
+                        self.bin[b['instanceName']] = b['pointName']
         self.signal.emit(self.map_name)
 
 class PointWidget(QtWidgets.QWidget):
@@ -431,6 +442,53 @@ class PointWidget(QtWidgets.QWidget):
             y = float(self.y_edit.text())
             self.hide()
             self.getdata.emit([x,y])
+        except:
+            pass
+
+class RobotWidget(QtWidgets.QWidget):
+    getdata = pyqtSignal('PyQt_PyObject')
+    def __init__(self):
+        super(QtWidgets.QWidget, self).__init__()
+        self.x_label = QtWidgets.QLabel('x(m)')
+        self.y_label = QtWidgets.QLabel('y(m)')
+        self.theta_label = QtWidgets.QLabel('theta(deg)')
+        valid = QtGui.QDoubleValidator()
+        self.x_edit = QtWidgets.QLineEdit()
+        self.x_edit.setValidator(valid)
+        self.y_edit = QtWidgets.QLineEdit()
+        self.y_edit.setValidator(valid)
+        self.theta_edit = QtWidgets.QLineEdit()
+        self.theta_edit.setValidator(valid)        
+        self.x_input = QtWidgets.QFormLayout()
+        self.x_input.addRow(self.x_label,self.x_edit)
+        self.y_input = QtWidgets.QFormLayout()
+        self.y_input.addRow(self.y_label,self.y_edit)
+        self.theta_input = QtWidgets.QFormLayout()
+        self.theta_input.addRow(self.theta_label,self.theta_edit)
+
+        self.c_msg = QtWidgets.QLabel("color:")
+        self.c = QtWidgets.QComboBox(self)
+        self.c.addItems(["b", "g", "r", "c", "m", "y"])
+        hbox2 = QtWidgets.QFormLayout()
+        hbox2.addRow(self.c_msg, self.c)
+
+        self.btn = QtWidgets.QPushButton("Yes")
+        self.btn.clicked.connect(self.getData)
+        vbox = QtWidgets.QVBoxLayout(self)
+        vbox.addLayout(self.x_input)
+        vbox.addLayout(self.y_input)
+        vbox.addLayout(self.theta_input)
+        vbox.addLayout(hbox2)
+        vbox.addWidget(self.btn)
+        self.setWindowTitle("Robot Input")
+
+    def getData(self):
+        try:
+            x = float(self.x_edit.text())
+            y = float(self.y_edit.text())
+            theta = float(self.theta_edit.text())
+            self.hide()
+            self.getdata.emit([x,y,theta, self.c.currentText()])
         except:
             pass
 
@@ -562,6 +620,40 @@ class DataWidget(QtWidgets.QWidget):
         self.ls.currentText(),
         self.c.currentText(),
         self.m.currentText()])
+
+class FindElement(QtWidgets.QWidget):
+    """查找图元的对话窗口
+
+    Args:
+        QtWidgets (_type_): _description_
+    """
+    getdata = pyqtSignal('PyQt_PyObject')
+    def __init__(self, parent = None):
+        super(QtWidgets.QWidget, self).__init__(parent)
+        self.car_combo = ExtendedComboBox()
+        self.car_label = QtWidgets.QLabel('Element')
+        car_form = QtWidgets.QFormLayout()
+        car_form.addRow(self.car_label,self.car_combo)
+        self.btn = QtWidgets.QPushButton("Yes")
+        self.btn.clicked.connect(self.getData)
+        vbox = QtWidgets.QVBoxLayout(self)
+        vbox.addLayout(car_form)
+        vbox.addWidget(self.btn)
+        self.setWindowTitle("FindElement")
+        self.resize(300, 40)
+    def addItems(self,names):
+        self.car_combo.addItems(names)
+    def getData(self):
+        """
+        """
+        try:
+            text = self.car_combo.currentText()
+            self.hide()
+            self.getdata.emit([text])
+        except Exception as err:
+            print(err.args)
+            pass
+
 class MapWidget(QtWidgets.QWidget):
     dropped = pyqtSignal('PyQt_PyObject')
     hiddened = pyqtSignal('PyQt_PyObject')
@@ -692,6 +784,8 @@ class MapWidget(QtWidgets.QWidget):
         self.draw_point.triggered.connect(self.addPoint)
         self.draw_line = QtWidgets.QAction("LINE", self.userToolbar)
         self.draw_line.triggered.connect(self.addLine)
+        self.draw_rpos = QtWidgets.QAction("ROBOT", self.userToolbar)
+        self.draw_rpos.triggered.connect(self.addRobotPos)
         self.draw_curve = QtWidgets.QAction("CURVE", self.userToolbar)
         self.draw_curve.triggered.connect(self.addCurve)
         self.draw_data = QtWidgets.QAction("DATA", self.userToolbar) # 依据selection参数的XY
@@ -704,9 +798,16 @@ class MapWidget(QtWidgets.QWidget):
         self.draw_center.setChecked(False)
         self.userToolbar.addActions([self.autoMap, self.smap_action, self.model_action, self.cp_action])
         self.userToolbar.addSeparator()
-        self.userToolbar.addActions([self.draw_point, self.draw_line, self.draw_curve, self.draw_data, self.draw_clear])
+        self.userToolbar.addActions([self.draw_point, self.draw_rpos, self.draw_line, self.draw_curve, self.draw_data, self.draw_clear])
         self.userToolbar.addSeparator()
-        self.userToolbar.addActions([self.draw_center])
+        self.find_element_bar = QtWidgets.QAction("FindElement", self.userToolbar)
+        self.find_element_bar.triggered.connect(self.findElement)
+        self.userToolbar.addActions([self.draw_center, self.find_element_bar])
+
+        self.find_element = FindElement(self)
+        self.find_element.getdata.connect(self.getElement)
+        self.find_element.hide()
+        self.find_element.setWindowFlags(Qt.Window)
 
         self.getPoint = PointWidget()
         self.getPoint.getdata.connect(self.getPointData)
@@ -714,6 +815,9 @@ class MapWidget(QtWidgets.QWidget):
         self.getLine = LineWidget()
         self.getLine.getdata.connect(self.getLineData)
         self.getLine.hide()
+        self.getRobot = RobotWidget()
+        self.getRobot.getdata.connect(self.getRobotPosData)
+        self.getRobot.hide()
         self.getCurve = CurveWidget()
         self.getCurve.getdata.connect(self.getCurveData)
         self.getCurve.hide()
@@ -865,6 +969,10 @@ class MapWidget(QtWidgets.QWidget):
         self.getLine.hide()
         self.getLine.show()
     
+    def addRobotPos(self):
+        self.getRobot.hide()
+        self.getRobot.show()
+
     def addCurve(self):
         self.getCurve.hide()
         self.getCurve.show()
@@ -872,6 +980,37 @@ class MapWidget(QtWidgets.QWidget):
     def addDATAXY(self):
         self.getDataXY.hide()
         self.getDataXY.show()
+
+    def findElement(self):
+        self.find_element.show()
+
+    def getElement(self, event:list):
+        """ 回调函数，查找图元所在位置
+
+        Args:
+            event (list): 消息，第一个为图元名称
+        """
+        name = event[0] # 点位名称或者库位名称
+        point = []
+        if name in self.read_map.bin:
+            name = self.read_map.bin[name]
+        
+        if name in self.read_map.p_names:
+            p = self.read_map.points[self.read_map.p_names[name]]
+            point.append(p[0])
+            point.append(p[1])
+        # 设置查看的范围
+        if len(point) == 2:
+            x0 = p[0]
+            y0 = p[1]
+            xmax = x0 + 1
+            xmin = x0 - 1
+            ymax = y0 + 1
+            ymin = y0 - 1
+            self.draw_size = [xmin,xmax, ymin, ymax]
+            self.ax.set_xlim(xmin, xmax)
+            self.ax.set_ylim(ymin, ymax)
+            self.static_canvas.figure.canvas.draw()
 
     def getPointData(self, event):
         point = lines.Line2D([],[], linestyle = '', marker = 'x', markersize = 8.0, color='r')
@@ -884,6 +1023,31 @@ class MapWidget(QtWidgets.QWidget):
             self.ax.add_line(self.pointLists[id])
             self.static_canvas.figure.canvas.draw() 
 
+    def getRobotPosData(self, event):
+        """回调函数，绘制机器人形状
+
+        Args:
+            event (_type_): [x,y,theta,color]
+        """
+        if len(event) != 4:
+            return
+        robot_pos = [event[0], event[1], event[2]/180.0*math.pi]
+        if self.read_model.tail and self.read_model.head and self.read_model.width:
+            xdata = [-self.read_model.tail, -self.read_model.tail, self.read_model.head, self.read_model.head, -self.read_model.tail]
+            ydata = [self.read_model.width/2, -self.read_model.width/2, -self.read_model.width/2, self.read_model.width/2, self.read_model.width/2]
+            robot_shape = np.array([xdata, ydata])
+
+            robot_shape = GetGlobalPos(robot_shape,robot_pos)
+            l = lines.Line2D([],[], linestyle = '--', marker = '.', markersize = 6.0, color=event[3])
+            l.set_xdata(robot_shape[0])
+            l.set_ydata(robot_shape[1])
+            l.set_zorder(30)
+            id = str(int(round(time.time()*1000)))
+            if id not in self.lineLists or self.lineLists[id] is None:
+                self.lineLists[id] = l
+                self.ax.add_line(self.lineLists[id])
+                self.static_canvas.figure.canvas.draw()         
+
     def getLineData(self, event):
         l = lines.Line2D([],[], linestyle = '--', marker = '.', markersize = 6.0, color='r')
         l.set_xdata([event[0][0],event[1][0]])
@@ -894,6 +1058,7 @@ class MapWidget(QtWidgets.QWidget):
             self.lineLists[id] = l
             self.ax.add_line(self.lineLists[id])
             self.static_canvas.figure.canvas.draw() 
+    
 
     def getCurveData(self, event):
         l = lines.Line2D([],[], linestyle = event[2], marker = event[3], markersize = event[4], color=event[5])
@@ -1222,6 +1387,9 @@ class MapWidget(QtWidgets.QWidget):
             font.setBold(True)
             self.smap_action.setFont(font)
             self.mid_line_t = None
+            elements = list(self.read_map.p_names.keys())
+            elements.extend(list(self.read_map.bin.keys()))
+            self.find_element.addItems(set(elements))
 
     def readModelFinished(self, result):
         self.readingModelFlag = True

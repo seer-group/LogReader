@@ -74,6 +74,8 @@ class TargetPrecision(QtWidgets.QWidget):
         try:
             lm_id = self.find_edit.text()
             self.ax.set_title('')
+            if lm_id in self.robot_log.map_widget.read_map.p_names:
+                lm_id = self.robot_log.map_widget.read_map.p_names[lm_id]
             if lm_id in self.robot_log.map_widget.read_map.points:
                 m_xy = self.robot_log.map_widget.read_map.points[lm_id]
                 map_x = [m_xy[0]]

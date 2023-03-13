@@ -492,7 +492,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             if map_name:
                 map_name = map_name + ".smap"
             if self.sts_widget:
-                if idx < len(self.read_thread.rstatus.version()[0]):
+                if idx < len(self.read_thread.rstatus.version()[0]) and  "ROBOKIT_VERSION_REDISTRIBUTE" in j:
                     j["ROBOKIT_VERSION_REDISTRIBUTE"] = "{}.{}".format(self.read_thread.rstatus.version()[0][idx],
                                                                         j["ROBOKIT_VERSION_REDISTRIBUTE"])
                 if idx < len(self.read_thread.rstatus.fatalNum()[0]):

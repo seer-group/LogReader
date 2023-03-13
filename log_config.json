@@ -1219,5 +1219,14 @@
       {"index":6, "name":"tempStatus", "type":"double"},
       {"index":7, "name":"timescount", "type":"double"}
     ]        
+  },
+  "chargeOff":{
+    "type":"chargeOff",
+    "content":[
+      {"index":0, "name":"charger_name", "type":"str","description": "充电桩名称", "unit":"" },
+      {"index":1, "name":"action_time", "type":"double","description": "最大持续时间", "unit":"s"},
+      {"index":2, "name":"count", "type":"double","description": "当前持续时间", "unit":"s"},
+      {"index":3, "name":"charge_status", "type":"double","description": "充电桩状态, \n ,-2充电桩错误,-1网络错误, 0待机, 1准备充电, 2正在充电中", "unit":""}
+    ]        
   }
 }
