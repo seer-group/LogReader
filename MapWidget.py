@@ -1033,8 +1033,14 @@ class MapWidget(QtWidgets.QWidget):
             return
         robot_pos = [event[0], event[1], event[2]/180.0*math.pi]
         if self.read_model.tail and self.read_model.head and self.read_model.width:
-            xdata = [-self.read_model.tail, -self.read_model.tail, self.read_model.head, self.read_model.head, -self.read_model.tail]
-            ydata = [self.read_model.width/2, -self.read_model.width/2, -self.read_model.width/2, self.read_model.width/2, self.read_model.width/2]
+            xdata = [-self.read_model.tail,   -self.read_model.tail,     self.read_model.head,  
+                     self.read_model.head, -self.read_model.tail, self.read_model.head, 
+                     0.0,self.read_model.head,0.0,self.read_model.head,
+                     self.read_model.head, -self.read_model.tail]
+            ydata = [self.read_model.width/2, -self.read_model.width/2, -self.read_model.width/2, 
+                     0.0, 0.0, 0.0, 
+                     -self.read_model.width/2, 0.0,self.read_model.width/2,0.0,
+                     self.read_model.width/2, self.read_model.width/2]
             robot_shape = np.array([xdata, ydata])
 
             robot_shape = GetGlobalPos(robot_shape,robot_pos)
