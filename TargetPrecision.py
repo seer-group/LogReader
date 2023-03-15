@@ -7,7 +7,7 @@ from matplotlib.figure import Figure
 import matplotlib.lines as lines
 from matplotlib.patches import Circle, Polygon
 from PyQt5 import QtGui, QtCore,QtWidgets
-from PyQt5.QtCore import QThread, pyqtSignal, pyqtSlot
+from PyQt5.QtCore import QThread, pyqtSignal, pyqtSlot,Qt
 import numpy as np
 import json as js
 import os
@@ -73,6 +73,7 @@ class TargetPrecision(QtWidgets.QWidget):
         map_a = None
         try:
             lm_id = self.find_edit.text()
+            lm_name = ""
             self.ax.set_title('')
             if lm_id in self.robot_log.map_widget.read_map.p_names:
                 lm_id = self.robot_log.map_widget.read_map.p_names[lm_id]
@@ -81,7 +82,8 @@ class TargetPrecision(QtWidgets.QWidget):
                 map_x = [m_xy[0]]
                 map_y = [m_xy[1]]
                 map_a = [m_xy[2]/math.pi *180.0]
-                self.ax.set_title(m_xy[3])
+                lm_name = m_xy[3]
+                self.ax.set_title(lm_name)
         except:
             pass
 
@@ -171,7 +173,38 @@ class TargetPrecision(QtWidgets.QWidget):
             logging.debug("cannot find target name: {}".format(lm_id))
             self.ax.set_title(title)
         else:
-            self.ax.set_title(lm_id)
+            out_xmin = min(xdata)
+            out_xmax = max(xdata)
+            out_xrange = (out_xmax - out_xmin) *1000
+            out_xmid = 0
+            if len(xdata) > 0:
+                out_xmid = sum(xdata)/len(xdata)
+            out_x_off = 0
+            if map_x != None:
+                out_x_off = (map_x[0] - out_xmid)*1000
+
+            out_ymin = min(ydata)
+            out_ymax = max(ydata)
+            out_yrange = (out_ymax-out_ymin)*1000
+            out_ymid = 0
+            if len(ydata) > 0:
+                out_ymid = sum(ydata)/len(ydata)
+            out_y_off = 0
+            if map_y != None:
+                out_y_off = (map_y[0] - out_ymid)*1000
+            
+            out_amin = min(adata)
+            out_amax = max(adata)
+            out_arange = out_amax - out_amin
+            out_amid = 0
+            if len(adata) > 0:
+                out_amid = sum(adata)/len(adata)
+            out_a_off = 0
+            if map_a != None:
+                out_a_off = map_a[0] - out_amid
+            self.result_label.setText("{}次到点{}\n 重复到点误差 x = {:4.1f} mm, y= {:4.1f} mm, theta = {:4.1f} ° \n 绝对到点误差 x = {:4.1f} mm, y= {:4.1f} mm, theta = {:4.1f} °".format\
+                              (len(xdata), lm_name, out_xrange, out_yrange, out_arange,out_x_off, out_y_off, out_a_off))
+
             self.xdata = xdata
             self.ydata = ydata
             self.adata = adata
@@ -265,7 +298,7 @@ class TargetPrecision(QtWidgets.QWidget):
         self.pstatic_canvas.figure.canvas.draw()
 
     def setupUI(self):
-        self.static_canvas = FigureCanvas(Figure(figsize=(6,6)))
+        self.static_canvas = FigureCanvas(Figure(figsize=(4,4)))
         self.static_canvas.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
         self.static_canvas.figure.subplots_adjust(left = 0.1, right = 0.95, bottom = 0.1, top = 0.95)
         self.static_canvas.figure.tight_layout()
@@ -359,17 +392,26 @@ class TargetPrecision(QtWidgets.QWidget):
         hbox2 = QtWidgets.QFormLayout()
         hbox2.addRow(self.choose_msg, self.choose)
 
+        self.result_label = QtWidgets.QLabel()
+        self.result_label.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
+        self.result_label.setFixedHeight(60)
+        self.result_label.setAlignment(Qt.AlignCenter)
+        font = QtGui.QFont()
+        font.setPointSize(12)
+        self.result_label.setFont(font)
+
         tab = QtWidgets.QTabWidget()
         tab.addTab(w0, "xy chart")
         tab.addTab(w1, "detail chart")
 
- 
+
 
 
         self.fig_layout = QtWidgets.QVBoxLayout(self)
         self.fig_layout.addLayout(hbox)
         self.fig_layout.addLayout(hbox_st)
         self.fig_layout.addLayout(hbox2)
+        self.fig_layout.addWidget(self.result_label)
         self.fig_layout.addWidget(tab)
 
 if __name__ == '__main__':
