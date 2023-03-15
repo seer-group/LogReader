@@ -26,6 +26,7 @@ from ReadThread import ReadThread
 import logging
 from datetime import timedelta
 from loglibPlus import num2date, date2num
+from MapWidget import normalize_theta_deg
 class TargetPrecision(QtWidgets.QWidget):
     dropped = pyqtSignal('PyQt_PyObject')
     hiddened = pyqtSignal('PyQt_PyObject')
@@ -168,7 +169,7 @@ class TargetPrecision(QtWidgets.QWidget):
                     ydata.append(locy[loc_idx])
                     adata.append(loca[loc_idx])
                     tdata.append(loc_t[loc_idx])
-        if len(xdata) < 1:
+        if len(xdata) < 1 or len(ydata) < 1 or len(adata) < 1:
             title = "cannot find target name: {}".format(lm_id)
             logging.debug("cannot find target name: {}".format(lm_id))
             self.ax.set_title(title)
@@ -193,15 +194,29 @@ class TargetPrecision(QtWidgets.QWidget):
             if map_y != None:
                 out_y_off = (map_y[0] - out_ymid)*1000
             
-            out_amin = min(adata)
-            out_amax = max(adata)
-            out_arange = out_amax - out_amin
+
+            out_amax = adata[0]
+            out_amax = adata[0]
+            for i, a in enumerate(adata):
+                if i > 0:
+                    dtheta = normalize_theta_deg(a - adata[i-1])
+                    if dtheta < 0:
+                        out_amin = a
+                    if dtheta > 0:
+                        out_amax = a
+            out_arange = normalize_theta_deg(out_amax - out_amin)
             out_amid = 0
-            if len(adata) > 0:
-                out_amid = sum(adata)/len(adata)
+            suma = adata[0]
+            last_a = adata[0]
+            for i, a in enumerate(adata):
+                if i > 0:
+                    dtheta = normalize_theta_deg(a - last_a)
+                    last_a = dtheta + last_a
+                    suma += last_a
+            out_amid = suma /len(adata)
             out_a_off = 0
             if map_a != None:
-                out_a_off = map_a[0] - out_amid
+                out_a_off = normalize_theta_deg((map_a[0] - out_amid))
             self.result_label.setText("{}次到点{}\n 重复到点误差 x = {:4.1f} mm, y= {:4.1f} mm, theta = {:4.1f} ° \n 绝对到点误差 x = {:4.1f} mm, y= {:4.1f} mm, theta = {:4.1f} °".format\
                               (len(xdata), lm_name, out_xrange, out_yrange, out_arange,out_x_off, out_y_off, out_a_off))
 

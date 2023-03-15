@@ -63,6 +63,9 @@ def normalize_theta(theta):
         theta = theta + 2 * math.pi
     return theta
 
+def normalize_theta_deg(theta):
+    return normalize_theta(theta/180.0*math.pi)/math.pi*180.0
+
 
 class Readcp (QThread):
     signal = pyqtSignal('PyQt_PyObject')
