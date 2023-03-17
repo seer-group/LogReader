@@ -26,7 +26,7 @@ from ReadThread import ReadThread
 import logging
 from datetime import timedelta
 from loglibPlus import num2date, date2num
-from MapWidget import normalize_theta_deg
+from MapWidget import normalize_theta_deg, Pos2Base
 class TargetPrecision(QtWidgets.QWidget):
     dropped = pyqtSignal('PyQt_PyObject')
     hiddened = pyqtSignal('PyQt_PyObject')
@@ -69,7 +69,7 @@ class TargetPrecision(QtWidgets.QWidget):
         if 'LocationEachFrame' not in self.log_data.content:
             logging.debug("LocationEachFrame is not in the log")
             return
-        map_x = None
+        map_x = None # 地图点的坐标
         map_y = None
         map_a = None
         try:
@@ -145,7 +145,12 @@ class TargetPrecision(QtWidgets.QWidget):
             # 如果左边大于右边则忽略
             tl = None
             tr = None
-        print(len(data[1]), len(data[0]))
+        goal_pos = None  # 地图点的坐标
+        if map_a != None and map_x != None and map_y != None:
+            goal_pos = [copy.deepcopy(map_x[0]), copy.deepcopy(map_y[0]), copy.deepcopy(map_a[0])/180.0*math.pi]
+            map_x[0] = 0
+            map_y[0] = 0
+            map_a[0] = 0
         for ind, t in enumerate(data[1]):
             if self.targetName in data[0][ind]:
                 t = t + sleepTime
@@ -158,16 +163,23 @@ class TargetPrecision(QtWidgets.QWidget):
                 v_idx = (np.abs(vt - t)).argmin()
                 if v_idx + 1 < len(vt):
                     v_idx += 1
-                print(vx[v_idx], vy[v_idx], v_idx)
+                # print(vx[v_idx], vy[v_idx], v_idx)
                 if abs(vx[v_idx]) > 0.0001 or abs(vy[v_idx]) > 0.0001:
                     continue
                 loc_idx = (np.abs(loc_t - t)).argmin()
                 if loc_idx+1 < len(loc_t):
                     loc_idx += 1
                 if valid[loc_idx] > 0.1:
-                    xdata.append(locx[loc_idx])
-                    ydata.append(locy[loc_idx])
-                    adata.append(loca[loc_idx])
+                    if goal_pos != None:
+                        tmp_pos = [locx[loc_idx],locy[loc_idx],loca[loc_idx]/180.0*math.pi]
+                        pos2goal = Pos2Base(tmp_pos, goal_pos)  # 转换成地图点坐标系
+                        xdata.append(pos2goal[0])
+                        ydata.append(pos2goal[1])
+                        adata.append(pos2goal[2]/math.pi*180.0)
+                    else:
+                        xdata.append(locx[loc_idx])
+                        ydata.append(locy[loc_idx])
+                        adata.append(loca[loc_idx])
                     tdata.append(loc_t[loc_idx])
         if len(xdata) < 1 or len(ydata) < 1 or len(adata) < 1:
             title = "cannot find target name: {}".format(lm_id)
@@ -409,7 +421,7 @@ class TargetPrecision(QtWidgets.QWidget):
 
         self.result_label = QtWidgets.QLabel()
         self.result_label.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
-        self.result_label.setFixedHeight(60)
+        self.result_label.setWordWrap(True)  # 自动折叠文字，使文字全部显示
         self.result_label.setAlignment(Qt.AlignCenter)
         font = QtGui.QFont()
         font.setPointSize(12)
