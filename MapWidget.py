@@ -1038,11 +1038,11 @@ class MapWidget(QtWidgets.QWidget):
         if self.read_model.tail and self.read_model.head and self.read_model.width:
             xdata = [-self.read_model.tail,   -self.read_model.tail,     self.read_model.head,  
                      self.read_model.head, -self.read_model.tail, self.read_model.head, 
-                     0.0,self.read_model.head,0.0,self.read_model.head,
+                     0.0,0.0,self.read_model.head,
                      self.read_model.head, -self.read_model.tail]
             ydata = [self.read_model.width/2, -self.read_model.width/2, -self.read_model.width/2, 
                      0.0, 0.0, 0.0, 
-                     -self.read_model.width/2, 0.0,self.read_model.width/2,0.0,
+                     -self.read_model.width/2, self.read_model.width/2.0,0.0,
                      self.read_model.width/2, self.read_model.width/2]
             robot_shape = np.array([xdata, ydata])
 

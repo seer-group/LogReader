@@ -371,13 +371,17 @@
       { "index": 3, "name": "m_e", "type": "double"},
       { "index": 4, "name": "de", "type": "double"},
       { "index": 5, "name": "th_e", "type": "double"},
-      { "index": 6, "name": "lqr_mode", "type": "double" },
-      { "index": 7, "name": "speed", "type": "double" },
+      { "index": 6, "name": "ax", "type": "double" },
+      { "index": 7, "name": "max_ax", "type": "double" },
       { "index": 8, "name": "aheadDist", "type": "double" },
       { "index": 9, "name": "wKp", "type": "double" },
       { "index": 10, "name": "wKd", "type": "double" },
       { "index": 11, "name": "delay_dist", "type": "double" },
-      { "index": 12, "name": "fid", "type": "double" }
+      { "index": 12, "name": "fid", "type": "double" },
+      { "index": 13, "name": "curve", "type": "double" },
+      { "index": 14, "name": "temp_angle", "type": "double" },
+      { "index": 15, "name": "vw", "type": "double" },
+      { "index": 16, "name": "vx", "type": "double" }
     ]
   },
   "NearInd": {
