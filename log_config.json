@@ -371,7 +371,7 @@
       { "index": 3, "name": "m_e", "type": "double"},
       { "index": 4, "name": "de", "type": "double"},
       { "index": 5, "name": "th_e", "type": "double"},
-      { "index": 6, "name": "ax", "type": "double" },
+      { "index": 6, "name": "m_fid", "type": "double" },
       { "index": 7, "name": "max_ax", "type": "double" },
       { "index": 8, "name": "aheadDist", "type": "double" },
       { "index": 9, "name": "wKp", "type": "double" },
@@ -1231,6 +1231,17 @@
       {"index":1, "name":"action_time", "type":"double","description": "最大持续时间", "unit":"s"},
       {"index":2, "name":"count", "type":"double","description": "当前持续时间", "unit":"s"},
       {"index":3, "name":"charge_status", "type":"double","description": "充电桩状态, \n ,-2充电桩错误,-1网络错误, 0待机, 1准备充电, 2正在充电中", "unit":""}
+    ]        
+  },
+  "goodsDirChange":{
+    "type":"goodsDirChange",
+    "content":[
+      {"index":0, "name":"cur_goods_dir", "type":"rad","description": "当前线路终点是货物朝向", "unit":"deg" },
+      {"index":1, "name":"next_goods_dir", "type":"rad","description": "下一条线路起点货物朝向", "unit":"deg"},
+      {"index":2, "name":"next_has_goods_dir", "type":"bool","description": "下一条线路是否有goodsDir", "unit":""},
+      {"index":3, "name":"has_task_goods", "type":"bool","description": "当前线路是否有goodsDir", "unit":""},
+      {"index":4, "name":"has_spin", "type":"bool","description": "是否有随动", "unit":"s"},
+      {"index":5, "name":"back_ward", "type":"bool","description": "是否倒走", "unit":""}
     ]        
   }
 }

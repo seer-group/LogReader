@@ -208,7 +208,7 @@ class TargetPrecision(QtWidgets.QWidget):
             
 
             out_amax = adata[0]
-            out_amax = adata[0]
+            out_amin = adata[0]
             for i, a in enumerate(adata):
                 if i > 0:
                     dtheta = normalize_theta_deg(a - adata[i-1])
