@@ -643,6 +643,13 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             s.setRegion(lt, rt)
         self.static_canvas.figure.canvas.draw()
 
+    def getTimeStampValidInd(self, timestamp):
+        ind = 0
+        for t in timestamp:
+            if t > 0:
+                break
+            ind += 1
+        return ind
     def saveAllData(self, cur_ax):
         indx = self.axs.tolist().index(cur_ax)
         # print(xmin, xmax, time0, time1)
@@ -655,8 +662,9 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             tmpdata = self.read_thread.getData(xy.y_combo.currentText())
         elif xy.x_combo.currentText() == 'timestamp':
             org_t = self.read_thread.getData(group_name + '.timestamp')[0]
-            dt = [timedelta(seconds = (tmp_t/1e9 - org_t[0]/1e9)) for tmp_t in org_t]
-            t = [self.read_thread.getData(xy.y_combo.currentText())[1][0] + tmp for tmp in dt]
+            ind = self.getTimeStampValidInd(org_t)
+            dt = [timedelta(seconds = (tmp_t/1e9 - org_t[ind]/1e9)) for tmp_t in org_t]
+            t = [self.read_thread.getData(xy.y_combo.currentText())[1][ind] + tmp for tmp in dt]
             tmpdata = (self.read_thread.getData(xy.y_combo.currentText())[0], t)
         self.savePlotData(cur_ax, tmpdata[1][0], tmpdata[1][-1])
 
@@ -686,8 +694,9 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             tmpdata = self.read_thread.getData(xy.y_combo.currentText())
         elif xy.x_combo.currentText() == 'timestamp':
             org_t = self.read_thread.getData(group_name + '.timestamp')[0]
-            dt = [timedelta(seconds = (tmp_t/1e9 - org_t[0]/1e9)) for tmp_t in org_t]
-            t = [self.read_thread.getData(xy.y_combo.currentText())[1][0] + tmp for tmp in dt]
+            ind = self.getTimeStampValidInd(org_t)
+            dt = [timedelta(seconds = (tmp_t/1e9 - org_t[ind]/1e9)) for tmp_t in org_t]
+            t = [self.read_thread.getData(xy.y_combo.currentText())[1][ind] + tmp for tmp in dt]
             tmpdata = (self.read_thread.getData(xy.y_combo.currentText())[0], t)        
 
         outdata = []
@@ -727,10 +736,11 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         xy = self.xys[indx]        
         group_name = xy.y_combo.currentText().split('.')[0]
         org_t = self.read_thread.getData(group_name + '.timestamp')[0]
+        ind = self.getTimeStampValidInd(org_t)
         if xy.x_combo.currentText() == 'timestamp':
             if len(org_t) > 0:
-                dt = [timedelta(seconds = (tmp_t/1e9 - org_t[0]/1e9)) for tmp_t in org_t]
-                t = [self.read_thread.getData(xy.y_combo.currentText())[1][0] + tmp for tmp in dt]
+                dt = [timedelta(seconds = (tmp_t/1e9 - org_t[ind]/1e9)) for tmp_t in org_t]
+                t = [self.read_thread.getData(xy.y_combo.currentText())[1][ind] + tmp for tmp in dt]
                 tmpdata = [self.read_thread.getData(xy.y_combo.currentText())[0], t]
                 self.drawdata(cur_ax, tmpdata, self.read_thread.ylabel[xy.y_combo.currentText()], False)
                 return
@@ -743,9 +753,10 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         group_name = xy.y_combo.currentText().split('.')[0]
         list_tmpdata = []
         org_t = self.read_thread.getData(group_name + '.timestamp')[0]
+        ind = self.getTimeStampValidInd(org_t)
         if len(org_t) > 0:
-            dt = [timedelta(seconds = (tmp_t/1e9 - org_t[0]/1e9)) for tmp_t in org_t]
-            t = [self.read_thread.getData(xy.y_combo.currentText())[1][0] + tmp for tmp in dt]
+            dt = [timedelta(seconds = (tmp_t/1e9 - org_t[ind]/1e9)) for tmp_t in org_t]
+            t = [self.read_thread.getData(xy.y_combo.currentText())[1][ind] + tmp for tmp in dt]
             tmpdata = (self.read_thread.getData(xy.y_combo.currentText())[0], t)
             list_tmpdata = [(t,d) for t,d in zip(tmpdata[1], tmpdata[0])]
         else:
@@ -769,8 +780,9 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         if xy.x_combo.currentText() == 'timestamp':
             org_t = self.read_thread.getData(group_name + '.timestamp')[0]
             if len(org_t) > 0:
-                dt = [timedelta(seconds = (tmp_t/1e9 - org_t[0]/1e9)) for tmp_t in org_t]
-                t = [self.read_thread.getData(xy.y_combo.currentText())[1][0] + tmp for tmp in dt]
+                ind = self.getTimeStampValidInd(org_t)
+                dt = [timedelta(seconds = (tmp_t/1e9 - org_t[ind]/1e9)) for tmp_t in org_t]
+                t = [self.read_thread.getData(xy.y_combo.currentText())[1][ind] + tmp for tmp in dt]
                 tmpdata = [self.read_thread.getData(xy.y_combo.currentText())[0], t]
                 tmpdata[0] = [-a for a in tmpdata[0]]
                 self.drawdata(cur_ax, (tmpdata[0], tmpdata[1]), '-'+self.read_thread.ylabel[xy.y_combo.currentText()], False)
@@ -785,9 +797,10 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         group_name = xy.y_combo.currentText().split('.')[0]
         if xy.x_combo.currentText() == 'timestamp':
             org_t = self.read_thread.getData(group_name + '.timestamp')[0]
+            ind = self.getTimeStampValidInd(org_t)
             if len(org_t) > 0:
-                dt = [timedelta(seconds = (tmp_t/1e9 - org_t[0]/1e9)) for tmp_t in org_t]
-                t = [self.read_thread.getData(xy.y_combo.currentText())[1][0] + tmp for tmp in dt]
+                dt = [timedelta(seconds = (tmp_t/1e9 - org_t[ind]/1e9)) for tmp_t in org_t]
+                t = [self.read_thread.getData(xy.y_combo.currentText())[1][ind] + tmp for tmp in dt]
                 tmpdata = [self.read_thread.getData(xy.y_combo.currentText())[0], t]
                 tmpdata[0] = [a/np.pi*180.0 for a in tmpdata[0]]
                 self.drawdata(cur_ax, (tmpdata[0], tmpdata[1]), self.read_thread.ylabel[xy.y_combo.currentText()]+" deg", False)
@@ -803,8 +816,9 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         if xy.x_combo.currentText() == 'timestamp':
             org_t = self.read_thread.getData(group_name + '.timestamp')[0]
             if len(org_t) > 0:
-                dt = [timedelta(seconds = (tmp_t/1e9 - org_t[0]/1e9)) for tmp_t in org_t]
-                t = [self.read_thread.getData(xy.y_combo.currentText())[1][0] + tmp for tmp in dt]
+                ind = self.getTimeStampValidInd(org_t)
+                dt = [timedelta(seconds = (tmp_t/1e9 - org_t[ind]/1e9)) for tmp_t in org_t]
+                t = [self.read_thread.getData(xy.y_combo.currentText())[1][ind] + tmp for tmp in dt]
                 tmpdata = [self.read_thread.getData(xy.y_combo.currentText())[0], t]
                 tmpdata[0] = [a/180.0*np.pi for a in tmpdata[0]]
                 self.drawdata(cur_ax, (tmpdata[0], tmpdata[1]), self.read_thread.ylabel[xy.y_combo.currentText()]+" rad", False)
@@ -1133,9 +1147,9 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         elif text == 'timestamp':
             group_name = y_label.split('.')[0]
             org_t = self.read_thread.getData(group_name + '.timestamp')[0]
-            t = []
-            dt = [timedelta(seconds = (tmp_t/1e9 - org_t[0]/1e9)) for tmp_t in org_t]
-            t = [self.read_thread.getData(y_label)[1][0] + tmp for tmp in dt]
+            ind = self.getTimeStampValidInd(org_t)
+            dt = [timedelta(seconds = (tmp_t/1e9 - org_t[ind]/1e9)) for tmp_t in org_t]
+            t = [self.read_thread.getData(y_label)[1][ind] + tmp for tmp in dt]
             self.drawdata(ax, (self.read_thread.getData(y_label)[0], t), self.read_thread.ylabel[y_label], False)
 
     def cpunum_changed(self, action):
@@ -1193,9 +1207,9 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                                    self.read_thread.ylabel[xy.y_combo.currentText()], False)
                     elif xy.x_combo.currentText() == 'timestamp':
                         org_t = self.read_thread.getData(group_name + '.timestamp')[0]
-                        t = []
-                        dt = [timedelta(seconds = (tmp_t/1e9 - org_t[0]/1e9)) for tmp_t in org_t]
-                        t = [self.read_thread.getData(xy.y_combo.currentText())[1][0] + tmp for tmp in dt]
+                        ind = self.getTimeStampValidInd(org_t)
+                        dt = [timedelta(seconds = (tmp_t/1e9 - org_t[ind]/1e9)) for tmp_t in org_t]
+                        t = [self.read_thread.getData(xy.y_combo.currentText())[1][ind] + tmp for tmp in dt]
                         data = (self.read_thread.getData(xy.y_combo.currentText())[0], t)
                         self.drawdata(ax, data,
                                     self.read_thread.ylabel[xy.y_combo.currentText()], False)

@@ -64,7 +64,10 @@
       { "index": 9, "name": "dist2path", "type": "double"},
       { "index": 24, "name": "locx", "type": "double"},
       { "index": 25, "name": "locy", "type": "double"},
-      { "index": 26, "name": "loc_angle", "type": "rad"}
+      { "index": 26, "name": "loc_angle", "type": "rad"},
+      { "index": 27, "name": "loc_ts", "type": "int64"},
+      {"index": 28, "name": "stop_block", "type": "bool"},
+      {"index": 29, "name": "cur_block_id", "type": "str"}
     ]
   },
   "Odometer": {
@@ -335,13 +338,15 @@
       { "index": 4, "name": "dm_e", "type": "double" },
       { "index": 5, "name": "the", "type": "double"},
       { "index": 6, "name": "dthe", "type": "double"},
-      { "index": 7, "name": "cur_vx", "type": "double"},
-      { "index": 8, "name": "speed", "type": "double" },
+      { "index": 7, "name": "ax", "type": "double"},
+      { "index": 8, "name": "amax", "type": "double" },
       { "index": 9, "name": "aheadDist", "type": "double" },
       { "index": 10, "name": "Q", "type": "double" },
       { "index": 11, "name": "delay_dist", "type": "double" },
       { "index": 12, "name": "f_ind", "type": "double" },
-      { "index": 13, "name": "curve", "type": "double" }
+      { "index": 13, "name": "curve", "type": "double" },
+      { "index": 14, "name": "vw", "type": "double" },
+      { "index": 15, "name": "vx", "type": "double" }
     ]
   },
   "DPID": {
@@ -573,6 +578,28 @@
       {"index": 0, "name": "x", "type":"double","description": "PGV的反馈的x", "unit":"m"},
       {"index": 1, "name": "y", "type":"double","description": "PGV的反馈的y", "unit":"m"},
       {"index": 2, "name": "theta", "type": "rad","description": "PGV的反馈的theta", "unit":"degree"}
+    ]
+  },
+  "getAveragePGV":{
+    "type": "getAveragePGV",
+    "content": [
+      {"index": 0, "name": "r2w_x", "type":"double","unit":"m"},
+      {"index": 1, "name": "r2w_y", "type":"double", "unit":"m"},
+      {"index": 2, "name": "r2w_theta", "type": "rad","unit":"degree"},
+      {"index": 3, "name": "odo_x", "type": "double","unit":"m"},
+      {"index": 4, "name": "odo_y", "type": "double", "unit":"m"},
+      {"index": 5, "name": "odo_theta", "type": "rad","unit":"degree"},
+      {"index": 6, "name": "newW_x", "type": "double","unit":"m"},
+      {"index": 7, "name": "newW_y", "type": "double", "unit":"m"},
+      {"index": 8, "name": "newW_theta", "type": "rad","unit":"degree"}
+    ]
+  },
+  "averagePGV":{
+    "type": "averagePGV",
+    "content": [
+      {"index": 0, "name": "aver_count", "type":"double"},
+      {"index": 1, "name": "dt", "type":"double"},
+      {"index": 2, "name": "start_stop", "type": "bool"}
     ]
   },
   "code2world":{
@@ -901,7 +928,8 @@
     "content":[
       { "index":1, "name":"dist", "type":"double", "description": "距离", "unit":"" },
       { "index":2, "name":"rssi", "type":"int64", "description": "信号强度", "unit":"" },
-      { "index":3, "name":"valid", "type":"bool", "description": "是否有效", "unit":"" }
+      { "index":3, "name":"valid", "type":"bool", "description": "是否有效", "unit":"" },
+      { "index":4, "name": "timestamp", "type": "int64", "description": "里程时间戳", "unit":""  }
     ]
   },
   "DistanceNode1":{
@@ -909,7 +937,8 @@
     "content":[
       { "index":1, "name":"dist", "type":"double", "description": "距离", "unit":"" },
       { "index":2, "name":"rssi", "type":"int64", "description": "信号强度", "unit":"" },
-      { "index":3, "name":"valid", "type":"bool", "description": "是否有效", "unit":"" }
+      { "index":3, "name":"valid", "type":"bool", "description": "是否有效", "unit":"" },
+      { "index":4, "name": "timestamp", "type": "int64", "description": "里程时间戳", "unit":""  }
     ]
   },
   "DistanceNode2":{
@@ -917,7 +946,8 @@
     "content":[
       { "index":1, "name":"dist", "type":"double", "description": "距离", "unit":"" },
       { "index":2, "name":"rssi", "type":"int64", "description": "信号强度", "unit":"" },
-      { "index":3, "name":"valid", "type":"bool", "description": "是否有效", "unit":"" }
+      { "index":3, "name":"valid", "type":"bool", "description": "是否有效", "unit":"" },
+      { "index":4, "name": "timestamp", "type": "int64", "description": "里程时间戳", "unit":""  }
     ]
   },
   "DistanceNode3":{
@@ -925,7 +955,8 @@
     "content":[
       { "index":1, "name":"dist", "type":"double", "description": "距离", "unit":"" },
       { "index":2, "name":"rssi", "type":"int64", "description": "信号强度", "unit":"" },
-      { "index":3, "name":"valid", "type":"bool", "description": "是否有效", "unit":"" }
+      { "index":3, "name":"valid", "type":"bool", "description": "是否有效", "unit":"" },
+      { "index":4, "name": "timestamp", "type": "int64", "description": "里程时间戳", "unit":""  }
     ]
   },
   "DistanceNode4":{
@@ -933,7 +964,8 @@
     "content":[
       { "index":1, "name":"dist", "type":"double", "description": "距离", "unit":"" },
       { "index":2, "name":"rssi", "type":"int64", "description": "信号强度", "unit":"" },
-      { "index":3, "name":"valid", "type":"bool", "description": "是否有效", "unit":"" }
+      { "index":3, "name":"valid", "type":"bool", "description": "是否有效", "unit":"" },
+      { "index":4, "name": "timestamp", "type": "int64", "description": "里程时间戳", "unit":""  }
     ]
   },
   "manualSteer": {
@@ -1179,7 +1211,7 @@
   "PGVfilter":{
     "type":"PGVfilter",
     "content":[
-      {"index":0, "name":"data_nsec", "type":"double","unit":"rad"},
+      {"index":0, "name":"data_nsec", "type":"double"},
       {"index":1, "name":"filtered_out_angle", "type":"double"},
       {"index":2, "name":"pgv_diff_angle", "type":"double"},
       {"index":3, "name":"org_down_angle", "type":"double"},
@@ -1243,5 +1275,211 @@
       {"index":4, "name":"has_spin", "type":"bool","description": "是否有随动", "unit":"s"},
       {"index":5, "name":"back_ward", "type":"bool","description": "是否倒走", "unit":""}
     ]        
+  },
+  "VWFilter":{
+    "type":"VWFilter",
+    "content":[
+      {"index":0, "name":"outvw", "type":"rad","description": "滤波后的vw", "unit":"deg" },
+      {"index":1, "name":"vw", "type":"rad","description": "滤波前的vw", "unit":"deg"},
+      {"index":2, "name":"window_size", "type":"float","description": "平均滤波窗口", "unit":""}
+    ]     
+  },
+  "slowV":{
+    "type":"slowV",
+    "content":[
+      {"index":0, "name":"vx", "type":"double","description": "当前车子速度" },
+      {"index":1, "name":"vbest", "type":"double","description": "新速度"},
+      {"index":2, "name":"v1", "type":"double","description": "旧速度"}
+    ]     
+  },
+  "filterV":{
+    "type":"filterV",
+    "content":[
+      {"index":0, "name":"vout", "type":"double","description": "滤波前车速" },
+      {"index":1, "name":"v", "type":"double","description": "滤波后车速"},
+      {"index":2, "name":"ratio", "type":"double","description": "比例"}
+    ]     
+  },
+  "RecTargetObs":{
+    "type":"RecTargetObs",
+    "content":[
+      {"index":0, "name":"task_id", "type":"double","description": "识别任务id" },
+      {"index":1, "name":"reco_status", "type":"double","description": "识别状态.\n 0 None, 1 Running, 2 Failed, 3 Success"}
+    ]     
+  },
+  "SlipOdo":{
+    "type":"SlipOdo",
+    "content":[
+      {"index":0, "name":"timestamp", "type":"int64"},
+      {"index":1, "name":"x", "type":"double"},
+      {"index":2, "name":"y", "type":"double"},
+      {"index":3, "name":"angle", "type":"rad"},
+      {"index":4, "name":"vx", "type":"double"},
+      {"index":5, "name":"vy", "type":"double"}, 
+      {"index":6, "name":"vw", "type":"rad"},
+      {"index":7, "name":"odo_size", "type":"int64"}
+    ]     
+  },
+  "SlipIMU":{
+    "type":"SlipIMU",
+    "content":[
+      {"index":0, "name":"timestamp", "type":"int64"},
+      {"index":1, "name":"ax", "type":"double"},
+      {"index":2, "name":"ay", "type":"double"},
+      {"index":3, "name":"az", "type":"rad"},
+      {"index":4, "name":"vx", "type":"double"},
+      {"index":5, "name":"vy", "type":"double"}, 
+      {"index":6, "name":"vw", "type":"rad"},
+      {"index":7, "name":"x", "type":"double"},
+      {"index":8, "name":"y", "type":"double"}, 
+      {"index":9, "name":"theta", "type":"rad"},
+      {"index":10, "name":"yaw", "type":"rad"},
+      {"index":11, "name":"aver_vx", "type":"double"},
+      {"index":12, "name":"aver_vy", "type":"double"},
+      {"index":13, "name":"aver_vw", "type":"rad"},
+      {"index":14, "name":"slip_vw", "type":"rad"},
+      {"index":15, "name":"slip_vwt", "type":"double"},
+      {"index":16, "name":"imu_size", "type":"int64"},
+      {"index":17, "name":"speed_size", "type":"int64"},
+      {"index":18, "name":"loc_size", "type":"int64"}
+    ]     
+  },
+  "SlipLoc":{
+    "type":"SlipLoc",
+    "content":[
+      {"index":0, "name":"timestamp", "type":"int64"},
+      {"index":1, "name":"x", "type":"double"},
+      {"index":2, "name":"y", "type":"double"}, 
+      {"index":3, "name":"theta", "type":"rad"},
+      {"index":4, "name":"aver_vx", "type":"double"},
+      {"index":5, "name":"aver_vy", "type":"double"},
+      {"index":6, "name":"aver_vw", "type":"rad"},
+      {"index":7, "name":"slip_vx", "type":"double"},
+      {"index":8, "name":"slip_vxt", "type":"double"},
+      {"index":9, "name":"slip_vy", "type":"double"},
+      {"index":10, "name":"slip_vt", "type":"double"},
+      {"index":11, "name":"slip_vw", "type":"rad"},
+      {"index":12, "name":"slip_vwt", "type":"double"},
+      {"index":13, "name":"loc_size", "type":"int64"}
+    ]     
+  },
+  "SlipNav":{
+    "type":"SlipNav",
+    "content":[
+      {"index":0, "name":"timestamp", "type":"int64"},
+      {"index":1, "name":"vx", "type":"double"},
+      {"index":2, "name":"vy", "type":"double"}, 
+      {"index":3, "name":"vw", "type":"rad"},
+      {"index":4, "name":"x", "type":"double"},
+      {"index":5, "name":"y", "type":"double"}, 
+      {"index":6, "name":"theta", "type":"rad"},
+      {"index":7, "name":"aver_vx", "type":"double"},
+      {"index":8, "name":"aver_vy", "type":"double"},
+      {"index":9, "name":"aver_vw", "type":"rad"},
+      {"index":10, "name":"slip_vx", "type":"double"},
+      {"index":11, "name":"slip_vy", "type":"double"},
+      {"index":12, "name":"slip_vw", "type":"rad"},
+      {"index":13, "name":"nav_size", "type":"int64"},
+      {"index":14, "name":"loc_size", "type":"int64"}
+    ]     
+  },
+  "SlipOpt":{
+    "type":"SlipOpt",
+    "content":[
+      {"index":0, "name":"timestamp", "type":"int64"},
+      {"index":1, "name":"vx", "type":"double"},
+      {"index":2, "name":"vy", "type":"double"}, 
+      {"index":3, "name":"vw", "type":"rad"},
+      {"index":4, "name":"x", "type":"double"},
+      {"index":5, "name":"y", "type":"double"}, 
+      {"index":6, "name":"theta", "type":"rad"},
+      {"index":7, "name":"aver_vx", "type":"double"},
+      {"index":8, "name":"aver_vy", "type":"double"},
+      {"index":9, "name":"aver_vw", "type":"double"},
+      {"index":10, "name":"slip_vx", "type":"double"},
+      {"index":11, "name":"slip_vxt", "type":"double"},
+      {"index":12, "name":"slip_vy", "type":"double"},
+      {"index":13, "name":"slip_vyt", "type":"double"},
+      {"index":14, "name":"slip_vw", "type":"rad"},
+      {"index":15, "name":"slip_vwt", "type":"double"},
+      {"index":16, "name":"opt_size", "type":"int64"},
+      {"index":17, "name":"loc_size", "type":"int64"}
+    ]     
+  },
+  "SlipMotor":{
+    "type":"SlipMotor",
+    "content":[
+      {"index":0, "name":"motor0", "type":"string"},
+      {"index":1, "name":"imu0", "type":"double"}, 
+      {"index":2, "name":"imu0t", "type":"double"}, 
+      {"index":3, "name":"loc0", "type":"double"},
+      {"index":4, "name":"loc0t", "type":"double"},
+      {"index":5, "name":"optical0", "type":"double"},
+      {"index":6, "name":"optical0t", "type":"double"},
+      {"index":7, "name":"motor1", "type":"string"},
+      {"index":8, "name":"imu1", "type":"double"},
+      {"index":9, "name":"imu1t", "type":"double"},
+      {"index":10, "name":"loc1", "type":"double"},
+      {"index":11, "name":"loc1t", "type":"double"},
+      {"index":12, "name":"optical1", "type":"double"},
+      {"index":12, "name":"optica13t", "type":"double"}
+    ]     
+  },
+  "odoSlip":{
+    "type":"odoSlip",
+    "content":[
+      {"index":0, "name":"size", "type":"int64"},
+      {"index":1, "name":"type0", "type":"int64"}, 
+      {"index":2, "name":"vx_slip0", "type":"double"}, 
+      {"index":3, "name":"vx_slip0t", "type":"double"},
+      {"index":4, "name":"vy_stlip0", "type":"double"},
+      {"index":5, "name":"vy_slip0t", "type":"double"},
+      {"index":6, "name":"vw_slip0", "type":"rad"},
+      {"index":7, "name":"vw_slip0t", "type":"double"},
+      {"index":8, "name":"type1", "type":"int64"}, 
+      {"index":9, "name":"vx_slip1", "type":"double"}, 
+      {"index":10, "name":"vx_slip1t", "type":"double"},
+      {"index":11, "name":"vy_stlip1", "type":"double"},
+      {"index":12, "name":"vy_slip1t", "type":"double"},
+      {"index":13, "name":"vw_slip1", "type":"rad"},
+      {"index":14, "name":"vw_slip1t", "type":"double"},
+      {"index":15, "name":"type2", "type":"int64"}, 
+      {"index":16, "name":"vx_slip2", "type":"double"}, 
+      {"index":17, "name":"vx_slip2t", "type":"double"},
+      {"index":18, "name":"vy_stlip2", "type":"double"},
+      {"index":19, "name":"vy_slip2t", "type":"double"},
+      {"index":20, "name":"vw_slip2", "type":"rad"},
+      {"index":21, "name":"vw_slip2t", "type":"double"}
+    ]     
+  },
+  "OPT":{
+    "type":"OPT",
+    "content":[
+      {"index":0, "name":"timestamp", "type":"int64"},
+      {"index":1, "name":"valid", "type":"bool"}, 
+      {"index":2, "name":"vx", "type":"double"},
+      {"index":3, "name":"vy", "type":"double"},
+      {"index":4, "name":"vw", "type":"rad"},
+      {"index":5, "name":"winSize", "type":"double"},
+      {"index":6, "name":"use_optical", "type":"bool"}
+    ]     
+  },
+  "Reloc":{
+    "type":"Reloc",
+    "content":[
+      {"index":0, "name":"rec_loc", "type":"int64","description": "重定位状态.\n 0 失败, 1 成功, 2 进行中, 3 完成"},
+      {"index":1, "name":"rec_loc_state", "type":"int64","description": "重定位状态.\n 0 失败, 1 成功, 2 进行中, 3 完成"}
+    ]     
+  },
+  "SpinZero":{
+    "type":"SpinZero",
+    "content":[
+      {"index":0, "name":"global_spin_angle", "type":"rad","description": "托盘世界坐标下的目标角度","unit":"degree"},
+      {"index":1, "name":"cur_plate_global_angle", "type":"rad","description": "托盘世界坐标下的当前角度","unit":"degree"},
+      {"index":2, "name":"local_spin_angle", "type":"rad","description": "托盘小车坐标下的目标角度","unit":"degree"},
+      {"index":3, "name":"cur_plate_local_angle", "type":"rad","description": "托盘小车坐标下的当前角度","unit":"degree"},
+      {"index":4, "name":"wbest", "type":"rad","description": "下发角速度","unit":"degree/s"},
+      {"index":5, "name":"times", "type":"int64","description": "尝试次数"}
+    ]     
   }
 }

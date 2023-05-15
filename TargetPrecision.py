@@ -59,7 +59,7 @@ class TargetPrecision(QtWidgets.QWidget):
         self.setupUI()
 
     def analysis(self):
-        self.targetName = "Task finished : "+ self.find_edit.text()
+        self.targetName = "Task finished : "+ self.find_edit.text()+"]"
         sleepTime = float(self.st_edit.text())
         logging.debug("Analysis target: {}. Sleep Time {}".format(self.targetName, sleepTime))
         sleepTime = timedelta(seconds=sleepTime)
@@ -125,6 +125,9 @@ class TargetPrecision(QtWidgets.QWidget):
             valid = [1.0 for _ in loc_t]
         else:
             logging.debug("source name is wrong! {}".format(self.choose.currentText()))
+        if len(loc_t) < 1:
+            logging.debug("data time is emtpy {}".format(self.choose.currentText()))
+            return
         last_ind = 0
         mid_t = self.robot_log.mid_line_t # 中间线的时间
         tmid = None # 对应的序号
@@ -160,12 +163,14 @@ class TargetPrecision(QtWidgets.QWidget):
                 if tmid == None and mid_t != None and t > mid_t:
                     tmid = len(xdata) # 中间线的序号
                 # 如果到点的速度很大表示，这个是中间点
-                v_idx = (np.abs(vt - t)).argmin()
-                if v_idx + 1 < len(vt):
-                    v_idx += 1
-                # print(vx[v_idx], vy[v_idx], v_idx)
-                if abs(vx[v_idx]) > 0.0001 or abs(vy[v_idx]) > 0.0001:
-                    continue
+                if len(vt) > 0:
+                    v_idx = (np.abs(vt - t)).argmin()
+                    if v_idx + 1 < len(vt):
+                        v_idx += 1
+                    # print(vx[v_idx], vy[v_idx], v_idx)
+                    if abs(vx[v_idx]) > 0.0001 or abs(vy[v_idx]) > 0.0001:
+                        continue
+
                 loc_idx = (np.abs(loc_t - t)).argmin()
                 if loc_idx+1 < len(loc_t):
                     loc_idx += 1
@@ -211,11 +216,13 @@ class TargetPrecision(QtWidgets.QWidget):
             out_amin = adata[0]
             for i, a in enumerate(adata):
                 if i > 0:
-                    dtheta = normalize_theta_deg(a - adata[i-1])
-                    if dtheta < 0:
-                        out_amin = a
-                    if dtheta > 0:
+                    dtheta_max = normalize_theta_deg(out_amax - a)
+                    if dtheta_max < 0:
                         out_amax = a
+                    else:
+                        dtheta_min = normalize_theta_deg(out_amin- a)
+                        if dtheta_min > 0:
+                            out_amin = a
             out_arange = normalize_theta_deg(out_amax - out_amin)
             out_amid = 0
             suma = adata[0]
@@ -225,7 +232,7 @@ class TargetPrecision(QtWidgets.QWidget):
                     dtheta = normalize_theta_deg(a - last_a)
                     last_a = dtheta + last_a
                     suma += last_a
-            out_amid = suma /len(adata)
+            out_amid = suma /(len(adata) * 1.0)
             out_a_off = 0
             if map_a != None:
                 out_a_off = normalize_theta_deg((map_a[0] - out_amid))

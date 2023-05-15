@@ -64,6 +64,8 @@ class ReadLog:
                 except UnicodeDecodeError:
                     logging.debug("{}: {} {}".format(file, " Skipped due to decoding failure!", line))
                     continue
+            if "RoboKit Log Start" in line:
+                continue
             out = self.regex.match(line)
             if out:
                 return rbktimetodate(out.group(1))
@@ -79,6 +81,8 @@ class ReadLog:
                 except UnicodeDecodeError:
                     logging.debug("{}: {} {}".format(file, " Skipped due to decoding failure!", line))
                     continue
+            if "RoboKit Log Start" in line:
+                continue
             lines.append(line)
         for line in lines:
             out = self.regex.match(line)
