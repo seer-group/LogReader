@@ -5,7 +5,7 @@ import sys
 from PyQt5.QtCore import QAbstractItemModel, QModelIndex, Qt , QItemSelectionModel, \
     QDataStream, QByteArray, QJsonDocument, QVariant, QJsonValue, QJsonParseError, \
         pyqtSignal 
-from PyQt5.QtWidgets import QApplication, QTreeView, QStyledItemDelegate, QAbstractItemView
+from PyQt5.QtWidgets import QApplication, QTreeView, QStyledItemDelegate, QAbstractItemView, QMessageBox, QMenu
 import json
 from PyQt5 import QtCore, QtWidgets,QtGui
 from ExtendedComboBox import ExtendedComboBox
@@ -124,7 +124,6 @@ class QJsonModel(QAbstractItemModel):
 
         item = index.internalPointer()
         col = index.column()
-
         if role == Qt.DisplayRole or role == Qt.EditRole:
             if col == 0:
                 return str(item.key())
@@ -199,15 +198,24 @@ class JsonView(QTreeView):
     #     self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
     #     self.customContextMenuRequested.connect(self.showContextMenu)
 
-    # def showContextMenu(self, point):
-    #     ix = self.indexAt(point)
-    #     if ix.column() == 1:
-    #         menu = QtWidgets.QMenu()
-    #         menu.addAction("Plot")
-    #         action = menu.exec_(self.mapToGlobal(point))
-    #         if action:
-    #             if action.text() == "Plot":
-    #                 self.edit(ix)
+    def contextMenuEvent(self, event):
+        index = self.indexAt(event.pos())
+        print(index.column(), self.model.rowCount(index), self.model.rowCount(index.sibling(index.row(), 0)))
+        if index.column() == 1 and self.model.rowCount(index) == 0 and self.model.rowCount(index.sibling(index.row(), 0)) == 0:
+            if not index.isValid():
+                return
+            print(index.data(Qt.UserRole))
+            if index.data(Qt.UserRole) == "leaf":
+                menu = QMenu(self)
+                action1 = menu.addAction("Action 1")
+                action2 = menu.addAction("Action 2")
+
+                action = menu.exec_(self.mapToGlobal(event.pos()))
+
+                if action == action1:
+                    QMessageBox.information(self, "Action", "You triggered Action 1")
+                elif action == action2:
+                    QMessageBox.information(self, "Action", "You triggered Action 2")
 
     def loadJson(self, bytes_json):
         self.model.loadJson(bytes_json)
