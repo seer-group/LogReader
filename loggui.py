@@ -8,6 +8,7 @@ from matplotlib.backends.backend_qt5agg import (
     FigureCanvas, NavigationToolbar2QT as NavigationToolbar)
 from PyQt5 import QtCore, QtWidgets,QtGui
 from matplotlib.figure import Figure
+from matplotlib import pyplot as plt
 from datetime import datetime
 from datetime import timedelta
 import os, sys
@@ -555,9 +556,10 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                     self.popMenu.addAction('&reset Data', lambda:self.resetData(event.inaxes))
                     self.popMenu.addAction('&Diff Time', lambda:self.diffData(event.inaxes))
                     self.popMenu.addAction('&- Data', lambda:self.negData(event.inaxes))
-                    self.popMenu.addAction('& Rad2Deg', lambda:self.rad2Deg(event.inaxes))
-                    self.popMenu.addAction('& Deg2Rad', lambda:self.deg2Rad(event.inaxes))
+                    self.popMenu.addAction('&Rad2Deg', lambda:self.rad2Deg(event.inaxes))
+                    self.popMenu.addAction('&Deg2Rad', lambda:self.deg2Rad(event.inaxes))
                     self.popMenu.addAction('&Add Data', lambda:self.addData(event.inaxes))
+                    self.popMenu.addAction('&Statistic', lambda:self.statistic(event.inaxes))
                     cursor = QtGui.QCursor()
                     self.popMenu.exec_(cursor.pos())
                 # show info
@@ -832,6 +834,38 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.dataSelection.initForm(cur_ax, keys)
         self.dataSelection.show()
     
+    def statistic(self, cur_ax):
+        indx = self.axs.tolist().index(cur_ax)
+        xy = self.xys[indx]        
+        tmpdata = self.read_thread.getData(xy.y_combo.currentText())
+        l_indx = None
+        r_indx = None
+        if self.left_line_t != None:
+            l_indx = (np.abs(np.array(tmpdata[1])-self.left_line_t)).argmin()
+        if self.right_line_t != None:
+            r_indx = (np.abs(np.array(tmpdata[1])-self.right_line_t)).argmin()
+        datas = []
+        for indx, d in enumerate(tmpdata[0]):
+            if l_indx != None and indx < l_indx:
+                continue
+            if r_indx != None and indx > r_indx:
+                continue
+            if d != None:
+                datas.append(d)
+        max_data = max(datas)
+        min_data = min(datas)
+        average = 0.0
+        if len(datas) > 0:
+            for a in datas:
+                average += a
+            average = average/len(datas)
+        content = "{3} average: {0:.4}, max: {1:.4}, min: {2:.4}".format(average, max_data, min_data, xy.y_combo.currentText())
+        self.log_info.append(content)
+        plt.figure()
+        plt.hist(datas, 100, density=True)
+        plt.title("Statistic from {} to {} \n {}".format(self.left_line_t, self.right_line_t, content))
+        plt.show()
+    
     def addNewData(self, event):
         cur_ax = event[0]
         current_text = event[1]
@@ -1100,7 +1134,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.close()
 
     def about(self):
-        QtWidgets.QMessageBox.about(self, "关于", """Log Viewer V2.5.1.a""")
+        QtWidgets.QMessageBox.about(self, "关于", """Log Viewer V2.5.2.a""")
 
     def ycombo_onActivated(self):
         curcombo = self.sender()
@@ -1641,6 +1675,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 data_name = self.read_thread.ylabel[tmp_k]
                 if tmp_k in data_name:
                     data_name = k
+            # print("data_name", data_name, first_k, k, idx, len(self.read_thread.content[first_k].data[k]))
             j[data_name] = self.read_thread.content[first_k].data[k][idx]
         d.loadJson(j)
 

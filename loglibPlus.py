@@ -230,6 +230,8 @@ class Data:
         self.parsed_flag = False
         self.line_num = []
         for tmp in self.info:
+            if 'name' not in tmp:
+                continue
             self.data[tmp['name']] =  []
             if 'unit' in tmp:
                 self.unit[tmp['name']] = tmp['unit']
@@ -246,57 +248,58 @@ class Data:
                 self.description[tmp['name']] = self.type + '.' + tmp['name'] + " " + self.unit[tmp['name']]
 
     def _storeData(self, tmp, ind, values):
+        name = tmp['name']
         if tmp['type'] == 'double' or tmp['type'] == 'int64' or tmp['type'] == 'int':
             try:
-                self.data[tmp['name']].append(float(values[ind]))
+                self.data[name].append(float(values[ind]))
             except:
                 try:
                     d = "".join([i for i in values[ind] if i.isdigit() or i == "."])
-                    self.data[tmp['name']].append(float(d))
+                    self.data[name].append(float(d))
                 except:
-                    self.data[tmp['name']].append(0.0)
+                    self.data[name].append(0.0)
         elif tmp['type'] == 'mm':
             try:
-                self.data[tmp['name']].append(float(values[ind])/1000.0)
+                self.data[name].append(float(values[ind])/1000.0)
             except:
-                self.data[tmp['name']].append(0.0)
+                self.data[name].append(0.0)
         elif tmp['type'] == 'cm':
             try:
-                self.data[tmp['name']].append(float(values[ind])/100.0)
+                self.data[name].append(float(values[ind])/100.0)
             except:
-                self.data[tmp['name']].append(0.0)
+                self.data[name].append(0.0)
         elif tmp['type'] == 'rad':
             try:
-                self.data[tmp['name']].append(float(values[ind])/math.pi * 180.0)
+                self.data[name].append(float(values[ind])/math.pi * 180.0)
             except:
-                self.data[tmp['name']].append(0.0)
+                self.data[name].append(0.0)
         elif tmp['type'] == 'm':
             try:
-                self.data[tmp['name']].append(float(values[ind]))
+                self.data[name].append(float(values[ind]))
             except:
-                self.data[tmp['name']].append(0.0)
+                self.data[name].append(0.0)
         elif tmp['type'] == 'LSB':
             try:
-                self.data[tmp['name']].append(float(values[ind])/16.03556)
+                self.data[name].append(float(values[ind])/16.03556)
             except:
-                self.data[tmp['name']].append(0.0)                               
+                self.data[name].append(0.0)                               
         elif tmp['type'] == 'bool':
             try:
                 if values[ind] == "true" or values[ind] == "1":
-                    self.data[tmp['name']].append(1.0)
+                    self.data[name].append(1.0)
                 else:
-                    self.data[tmp['name']].append(0.0)
+                    self.data[name].append(0.0)
             except:
-                self.data[tmp['name']].append(0.0)  
+                self.data[name].append(0.0)  
         elif tmp['type'] == 'json':
             try:
-                self.data[tmp['name']].append(json.loads(values[ind]))
+                self.data[name].append(json.loads(values[ind]))
             except:
-                self.data[tmp['name']].append(values[ind])   
+                self.data[name].append(values[ind])   
         elif tmp['type'] == 'str':
-            self.data[tmp['name']].append(values[ind])
+            self.data[name].append(values[ind])
         else:
-            self.data[tmp['name']].append(values[ind])
+            self.data[name].append(values[ind])
 
     def parse(self, line, num):
         if self.short_regx in line:
@@ -307,29 +310,53 @@ class Data:
                 datas = out.groups()
                 values = datas[1].split('|')
                 self.data['t'].append(rbktimetodate(datas[0]))
-                for tmp in self.info:
+                info = self.info
+                if self.info == "key|value":
+                    info = []
+                    for d in range(int(len(values)/2)):
+                        try:
+                            _ = float(values[d*2])
+                            info.append({'name': "value_{}".format(d*2), "index": d*2, "type": "double"})
+                            info.append({'name': "value_{}".format(d*2+1), "index": d*2+1, "type": "double"})
+                        except:
+                            info.append({'name': values[d*2], "index": d * 2 + 1, "type": "double"})
+                for (ind, tmp) in enumerate(info):
+                    if 'index' not in tmp:
+                        tmp["index"] = ind
                     if 'type' in tmp and 'index' in tmp and 'name' in tmp:
-                        if type(self.description[tmp['name']]) is int:
-                            if 'description' in tmp:
-                                tmp_type = type(tmp['description'])
-                                description = ""
-                                has_description = False
-                                if tmp_type is str:
-                                    description = tmp['description']
-                                    has_description = True
-                                elif tmp_type is int:
-                                    if tmp['description'] < len(values) and tmp['index'] < len(values):
-                                        description = values[tmp['description']]
+                        index = int(tmp['index'])
+                        if index < 0:
+                            index = len(values) + index
+                        name = tmp['name']
+                        if name not in self.data:
+                            self.data[name] =[]
+                            if len(self.data['t']) > 0:
+                                for _ in range(len(self.data['t'])-1):
+                                    self.data[name].append(None)
+                        if name not in self.description:
+                            self.description[name] = name
+                        if name in self.description:
+                            if type(self.description[name]) is int:
+                                if 'description' in tmp:
+                                    tmp_type = type(tmp['description'])
+                                    description = ""
+                                    has_description = False
+                                    if tmp_type is str:
+                                        description = tmp['description']
                                         has_description = True
-                                if has_description:
-                                    self.description[tmp['name']] = description + " " + self.unit[tmp['name']]
-                                else:
-                                    self.description[tmp['name']] = tmp['name']
-
-                        if tmp['index'] < len(values):
-                            self._storeData(tmp, int(tmp['index']), values)
+                                    elif tmp_type is int:
+                                        if tmp['description'] < len(values) and index < len(values):
+                                            description = values[tmp['description']]
+                                            has_description = True
+                                    if has_description:
+                                        self.description[name] = description + " " + self.unit[name]
+                                    else:
+                                        self.description[name] = name
+                            
+                        if index < len(values) and index >=0 :
+                            self._storeData(tmp, index, values)
                         else:
-                            self.data[tmp['name']].append(None)
+                            self.data[name].append(None)
 
                     else:
                         if not self.parse_error:
@@ -349,11 +376,28 @@ class Data:
     def __setitem__(self,k,value):
         self.data[k] = value
     def insert_data(self, other):
+        org_len_t = len(self.data['t'])
         for key in other.data.keys():
             if key in self.data.keys():
                 self.data[key].extend(other.data[key])
             else:
-                self.data[key] = other.data[key]     
+                if self.info == "key|value":
+                    if key != 't':
+                        if org_len_t > 0:
+                            self.data[key] = [None] * org_len_t
+                        else:
+                            self.data[key] = []
+                    self.data[key].extend(other.data[key])
+                else:
+                    self.data[key] = other.data[key]
+        for key in self.data:
+            if key == 't':
+                continue
+            if len(self.data[key]) < len(self.data['t']):
+                self.data[key].extend([None] * (len(self.data['t']) - len(self.data[key])))
+        for key in other.description.keys():
+            if key not in self.description.keys():
+                self.description[key] = other.description[key]                 
         self.line_num.extend(other.line_num)
 
 class Laser:

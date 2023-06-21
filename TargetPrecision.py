@@ -154,9 +154,22 @@ class TargetPrecision(QtWidgets.QWidget):
             map_x[0] = 0
             map_y[0] = 0
             map_a[0] = 0
+        regex = None
+        if self.s_edit.text() != "":
+            regex = self.s_edit.text()+"]"
         for ind, t in enumerate(data[1]):
             if self.targetName in data[0][ind]:
+                ok_ind = False
+                if regex == None:
+                    ok_ind = True
+                else:
+                    if ind > 0:
+                        if regex in data[0][ind-1].split(" ")[-1]:
+                            ok_ind = True
+                if not ok_ind:
+                    continue
                 t = t + sleepTime
+
                 if tl is not None and tr is not None:
                     if t < tl or t > tr:
                         continue
@@ -165,12 +178,16 @@ class TargetPrecision(QtWidgets.QWidget):
                 # 如果到点的速度很大表示，这个是中间点
                 if len(vt) > 0:
                     v_idx = (np.abs(vt - t)).argmin()
-                    if v_idx + 1 < len(vt):
-                        v_idx += 1
-                    # print(vx[v_idx], vy[v_idx], v_idx)
-                    if abs(vx[v_idx]) > 0.0001 or abs(vy[v_idx]) > 0.0001:
+                    vl_idx = v_idx
+                    vr_idx = v_idx
+                    if vr_idx + 1 < len(vt):
+                        vr_idx += 1
+                    if vl_idx - 1 >= 0:
+                        vl_idx -= 1
+                    if (abs(vx[vl_idx]) > 0.0001 or abs(vy[vl_idx]) > 0.0001) \
+                        and (abs(vx[vr_idx]) > 0.0001 or abs(vy[vr_idx]) > 0.0001) \
+                            and (abs(vx[v_idx]) > 0.0001 or abs(vy[v_idx]) > 0.0001):
                         continue
-
                 loc_idx = (np.abs(loc_t - t)).argmin()
                 if loc_idx+1 < len(loc_t):
                     loc_idx += 1
@@ -383,7 +400,6 @@ class TargetPrecision(QtWidgets.QWidget):
         v1.addWidget(self.pstatic_canvas)
         w1.setLayout(v1)
 
-
         self.find_label = QtWidgets.QLabel("Target Name:")
         valid = QtGui.QIntValidator()
         self.find_edit = QtWidgets.QLineEdit()
@@ -439,12 +455,17 @@ class TargetPrecision(QtWidgets.QWidget):
         tab.addTab(w1, "detail chart")
 
 
-
+        self.s_label = QtWidgets.QLabel("PreTarget Name:")
+        self.s_edit = QtWidgets.QLineEdit()
+        sbox = QtWidgets.QHBoxLayout()
+        sbox.addWidget(self.s_label)
+        sbox.addWidget(self.s_edit)
 
         self.fig_layout = QtWidgets.QVBoxLayout(self)
         self.fig_layout.addLayout(hbox)
         self.fig_layout.addLayout(hbox_st)
         self.fig_layout.addLayout(hbox2)
+        self.fig_layout.addLayout(sbox)
         self.fig_layout.addWidget(self.result_label)
         self.fig_layout.addWidget(tab)
 

@@ -90,7 +90,7 @@ class ReadThread(QThread):
         content_delay = dict()
         for k in self.js:
             if "type" in self.js[k] and "content" in self.js[k]:
-                if k == "LocationEachFrame" or k == "StopPoints":
+                if k == "LocationEachFrame" or k == "StopPoints"  or k == "SlowDownPoints" or self.js[k]["content"] == "key|value":
                     self.content[self.js[k]["type"]] = Data(self.js[k], self.js[k]["type"])
                 else:
                     if isinstance(self.js[k]['type'], list):

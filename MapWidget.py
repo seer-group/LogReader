@@ -1524,24 +1524,31 @@ class MapWidget(QtWidgets.QWidget):
         content = self.robot_log.read_thread.content
         obs_pos = []
         obs_info = ''
+        stoppts = None
+        def update_obs_info(stoppts:dict):
+            obs_info = ''
+            obs_pos = []
+            if stoppts is not None:
+                stop_ts = np.array(stoppts['t'])
+                if len(stop_ts) > 0:
+                    stop_idx = (np.abs(stop_ts - mid_line_t)).argmin()
+                    dt = (stop_ts[stop_idx] - mid_line_t).total_seconds()
+                    if abs(dt) < 0.5:
+                        obs_pos = [stoppts['x'][stop_idx], stoppts['y'][stop_idx]]
+                        stop_type = ["Ultrasonic", "Laser", "Fallingdown", "CollisionBar" ,"Infrared",
+                        "VirtualPoint", "APIObstacle", "ReservedPoint", "DiUltrasonic", "DepthCamera", 
+                        "ReservedDepthCamera", "DistanceNode"]
+                        cur_type = "unknown"
+                        tmp_id = (int)(stoppts['category'][stop_idx])
+                        if tmp_id >= 0 and tmp_id < len(stop_type):
+                            cur_type = stop_type[(int)(stoppts['category'][stop_idx])]
+                        obs_info = "x: {} y: {} 类型: {} id:{} 距离: {}".format(stoppts['x'][stop_idx],
+                            stoppts['y'][stop_idx],cur_type,(int)(stoppts['ultra_id'][stop_idx]), stoppts['dist'][stop_idx])
+            return obs_info, obs_pos
         if 'StopPoints' in content:
-            stoppts = content['StopPoints']
-            stop_ts = np.array(stoppts['t'])
-            if len(stop_ts) > 0:
-                stop_idx = (np.abs(stop_ts - mid_line_t)).argmin()
-                dt = (stop_ts[stop_idx] - mid_line_t).total_seconds()
-                if abs(dt) < 0.5:
-                    obs_pos = [stoppts['x'][stop_idx], stoppts['y'][stop_idx]]
-                    stop_type = ["Ultrasonic", "Laser", "Fallingdown", "CollisionBar" ,"Infrared",
-                    "VirtualPoint", "APIObstacle", "ReservedPoint", "DiUltrasonic", "DepthCamera", 
-                    "ReservedDepthCamera", "DistanceNode"]
-                    cur_type = "unknown"
-                    tmp_id = (int)(stoppts['category'][stop_idx])
-                    if tmp_id >= 0 and tmp_id < len(stop_type):
-                        cur_type = stop_type[(int)(stoppts['category'][stop_idx])]
-                    obs_info = "x: {} y: {} 类型: {} id:{} 距离: {}".format(stoppts['x'][stop_idx],
-                        stoppts['y'][stop_idx],cur_type,(int)(stoppts['ultra_id'][stop_idx]), stoppts['dist'][stop_idx])
-
+            obs_info, obs_pos = update_obs_info(content['StopPoints'])
+        if obs_info == '' and 'SlowDownPoints' in content:
+                obs_info, obs_pos = update_obs_info(content['SlowDownPoints'])
         if obs_info != '':
             self.obs_lable.setText('障碍物信息: ' + obs_info)
             self.obs_lable.show()

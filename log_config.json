@@ -156,15 +156,7 @@
   },  
   "RTMotorCmd": {
     "type": "RTMotorCmd",
-    "content": [
-      { "index": 1, "name": "motor1", "type": "double", "description": "返回下发的电机1速度", "unit":"m/s" },
-      { "index": 3, "name": "motor2", "type": "double", "description": "返回下发的电机2速度", "unit":"m/s"  },
-      { "index": 5, "name": "motor3", "type": "double", "description": "返回下发的电机3速度", "unit":"m/s" },
-      { "index": 7, "name": "motor4", "type": "double", "description": "返回下发的电机4速度", "unit":"m/s"  },
-      { "index": 9, "name": "motor5", "type": "double", "description": "返回下发的电机5速度", "unit":"m/s" },
-      { "index": 11, "name": "motor6", "type": "double", "description": "返回下发的电机6速度", "unit":"m/s"  },
-      { "index": 13, "name": "motor7", "type": "double", "description": "返回下发的电机7速度", "unit":"m/s"  }
-    ]
+    "content": "key|value"
   },
   "Collision": {
     "type": "Collision",
@@ -323,9 +315,21 @@
       { "index": 7, "name": "th_e", "type": "double"},
       { "index": 8, "name": "dthe", "type": "double" },
       { "index": 9, "name": "cur_vx", "type": "double" },
-      { "index": 10, "name": "speed", "type": "double" },
-      { "index": 11, "name": "step_t", "type": "double" },
-      { "index": 12, "name": "Q", "type": "double" }
+      { "index": 10, "name": "ax", "type": "double" },
+      { "index": 11, "name": "aheadDist", "type": "double" },
+      { "index": 12, "name": "Q", "type": "double" },
+      { "index": 13, "name": "curve", "type": "double" },
+      { "index": 14, "name": "dcurve", "type": "double" }
+    ]
+  },
+  "forkPostCheck": {
+    "type": "forkPostCheck",
+    "content": [
+      { "index": 0, "name": "last_fork_speed", "type": "double" },
+      { "index": 1, "name": "fork_speed", "type": "double"  },
+      { "index": 2, "name": "last_fork_stop_height_init", "type": "double"},
+      { "index": 3, "name": "last_fork_stop_height", "type": "double" },
+      { "index": 4, "name": "fork_height", "type": "double" }
     ]
   },
   "SLQR": {
@@ -386,7 +390,8 @@
       { "index": 13, "name": "curve", "type": "double" },
       { "index": 14, "name": "temp_angle", "type": "double" },
       { "index": 15, "name": "vw", "type": "double" },
-      { "index": 16, "name": "vx", "type": "double" }
+      { "index": 16, "name": "vx", "type": "double" },
+      { "index": 17, "name": "dcurve", "type": "double" }
     ]
   },
   "NearInd": {
@@ -400,7 +405,9 @@
       { "index": 5, "name": "angle", "type": "double"},
       { "index": 6, "name": "near_dist", "type": "double"},
       { "index": 7, "name": "px", "type": "double"},
-      { "index": 8, "name": "py", "type": "double"}
+      { "index": 8, "name": "py", "type": "double"},
+      {  "name": "org_near_dist", "type": "double"},
+      {  "name": "e_mode", "type": "double"}
     ]
   },
   "SNearInd": {
@@ -769,17 +776,7 @@
   },
   "MotorCmd": {
     "type": "MotorCmd",
-    "content": [
-      { "index": 1, "name": "motor0", "type": "double", "description": 0, "unit":""},
-      { "index": 3, "name": "motor1", "type": "double", "description": 2, "unit":""},   
-      { "index": 5, "name": "motor2", "type": "double", "description": 4, "unit":""},
-      { "index": 7, "name": "motor3", "type": "double", "description": 6, "unit":""},
-      { "index": 9, "name": "motor4", "type": "double", "description": 8, "unit":""},
-      { "index": 11, "name": "motor5", "type": "double", "description": 10, "unit":""},
-      { "index": 13, "name": "motor6", "type": "double", "description": 12, "unit":""},
-      { "index": 15, "name": "motor7", "type": "double", "description": 14, "unit":""},
-      { "index": 17, "name": "motor8", "type": "double", "description": 16, "unit":""}
-    ]
+    "content": "key|value"
   },
 
   "ProbeCpu": {
@@ -805,30 +802,11 @@
   },
   "MotorSend": {
     "type": "MotorSend",
-    "content": [
-      { "index": 1, "name": "motor0", "type": "double", "description": 0, "unit":""},
-      { "index": 3, "name": "motor1", "type": "double", "description": 2, "unit":""},   
-      { "index": 5, "name": "motor2", "type": "double", "description": 4, "unit":""},
-      { "index": 7, "name": "motor3", "type": "double", "description": 6, "unit":""},
-      { "index": 9, "name": "motor4", "type": "double", "description": 8, "unit":""},
-      { "index": 11, "name": "motor5", "type": "double", "description": 10, "unit":""},
-      { "index": 13, "name": "motor6", "type": "double", "description": 12, "unit":""},
-      { "index": 15, "name": "motor7", "type": "double", "description": 14, "unit":""},
-      { "index": 17, "name": "motor8", "type": "double", "description": 16, "unit":""}
-    ]
+    "content": "key|value"
   },
   "MotorGet": {
     "type": "MotorGet",
-    "content": [
-      { "index": 1, "name": "motor0", "type": "double", "description": 0, "unit":""},
-      { "index": 3, "name": "motor1", "type": "double", "description": 2, "unit":""},   
-      { "index": 5, "name": "motor2", "type": "double", "description": 4, "unit":""},
-      { "index": 7, "name": "motor3", "type": "double", "description": 6, "unit":""},
-      { "index": 9, "name": "motor4", "type": "double", "description": 8, "unit":""},
-      { "index": 11, "name": "motor5", "type": "double", "description": 10, "unit":""},
-      { "index": 13, "name": "motor6", "type": "double", "description": 12, "unit":""},
-      { "index": 15, "name": "motor7", "type": "double", "description": 14, "unit":""}
-    ]
+    "content": "key|value"
   },
   "pgv0": {
     "type": "pgv0",
@@ -1002,7 +980,8 @@
       { "index": 1, "name": "speed", "type": "double"},
       { "index": 2, "name": "position", "type": "double"},
       { "index": 3, "name": "value", "type": "double"},
-      { "index": 4, "name": "goal", "type": "double"}
+      { "index": 4, "name": "goal", "type": "double"},
+      { "index": 5, "name": "reachGoal", "type": "bool"}
     ]
   },
   "GoodsStatus": {
@@ -1481,5 +1460,38 @@
       {"index":4, "name":"wbest", "type":"rad","description": "下发角速度","unit":"degree/s"},
       {"index":5, "name":"times", "type":"int64","description": "尝试次数"}
     ]     
+  },
+  "MFSlip":{
+    "type":"MFSlip",
+    "content":[
+      {"index":0, "name":"has_slip", "type":"bool","description": "是否打滑"},
+      {"index":1, "name":"slip_vx", "type":"double","description": "vx的打滑速度","unit":"m/s"},
+      {"index":2, "name":"slip_vw", "type":"rad","description": "vw的打滑速度","unit":"degree/s"},
+      {"index":3, "name":"vx", "type":"double","description": "修改后的 vx","unit":"m/s"},
+      {"index":4, "name":"vw", "type":"rad","description": "修改后的 vw","unit":"degree/s"},
+      {"index":5, "name":"cur_vx", "type":"double","description": "当前 vx","unit":"m/s"},
+      {"index":6, "name":"cur_vw", "type":"rad","description": "当前 vw","unit":"degree/s"},
+      {"index":7, "name":"warnTime", "type":"double","description": "报警时间","unit":"s"}
+    ]     
+  },
+  "TCost":{
+    "type":"TCost",
+    "content":"key|value"   
+  },
+  "updateControlTime":{
+    "type":"updateControlTime",
+    "content":[
+      {"name":"dt", "type":"double", "unit":"s"},
+      {"name":"control_time", "type":"double","description": "当前数据库中的controlTime","unit":"s"},
+      {"name":"control_time_size", "type":"double"}
+    ]    
+  },
+  "m_pgv2robot":{
+    "type":"m_pgv2robot",
+    "content":[
+      {"name":"x", "type":"double", "unit":"m"},
+      {"name":"y", "type":"double","unit":"m"},
+      {"name":"theta", "type":"rad", "unit":"degree"}
+    ]    
   }
 }
