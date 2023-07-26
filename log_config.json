@@ -62,12 +62,27 @@
       { "index": 7, "name": "cur_target_name", "type": "str"},
       { "index": 8, "name": "percentage", "type": "double"},
       { "index": 9, "name": "dist2path", "type": "double"},
+      { "index": 10, "name": "last_upl_start_id", "type": "double"},
+      { "index": 11, "name": "last_upl_end_id", "type": "double"},
+      { "index": 12, "name": "last_task_target", "type": "str"},
+      { "index": 13, "name": "msg_move_target_name", "type": "str"},
+      { "index": 14, "name": "msg_move_target_laebl", "type": "str"},
+      { "index": 15, "name": "package_source_label", "type": "str"},
+      { "index": 16, "name": "package_target_label", "type": "str"},
+      { "index": 17, "name": "last_hasLoadedGoods", "type": "bool"},
+      { "index": 18, "name": "goods_name", "type": "str"},
+      { "index": 19, "name": "move_pos_x", "type": "double"},
+      { "index": 20, "name": "move_pos_y", "type": "double"},
+      { "index": 21, "name": "move_pos_theta", "type": "double"},
+      { "index": 22, "name": "switchMap", "type": "bool"},
+      { "index": 23, "name": "org_task_list_size", "type": "double"},
       { "index": 24, "name": "locx", "type": "double"},
       { "index": 25, "name": "locy", "type": "double"},
       { "index": 26, "name": "loc_angle", "type": "rad"},
       { "index": 27, "name": "loc_ts", "type": "int64"},
       {"index": 28, "name": "stop_block", "type": "bool"},
-      {"index": 29, "name": "cur_block_id", "type": "str"}
+      {"index": 29, "name": "cur_block_id", "type": "str"},
+      {"index": 30, "name": "set_core_goods_id", "type": "str"}
     ]
   },
   "Odometer": {
@@ -1190,13 +1205,27 @@
   "PGVfilter":{
     "type":"PGVfilter",
     "content":[
-      {"index":0, "name":"data_nsec", "type":"double"},
-      {"index":1, "name":"filtered_out_angle", "type":"double"},
-      {"index":2, "name":"pgv_diff_angle", "type":"double"},
-      {"index":3, "name":"org_down_angle", "type":"double"},
-      {"index":4, "name":"tag_angle", "type":"double"},
-      {"index":5, "name":"2_pi", "type":"double"}
+      {"name":"data_nsec", "type":"double"},
+      {"name":"filtered_out_angle", "type":"rad", "unit":"deg"},
+      {"name":"pgv_diff_angle", "type":"rad", "unit":"deg"},
+      {"name":"org_angle", "type":"rad", "unit":"deg"},
+      {"name":"tag_angle", "type":"rad", "unit":"deg"},
+      {"name":"dtheta", "type":"rad"},
+      {"name":"is_dmt_detected", "type":"bool"},
+      {"name":"uprad", "type":"rad", "unit":"deg"}
     ]    
+  },
+  "PGVReach":{
+    "type":"PGVReach",
+    "content":[
+      {"name":"ds", "type":"double"},
+      {"name":"dtheta", "type":"double", "unit":"deg"},
+      {"name":"pgv_reachDist", "type":"double"},
+      {"name":"pgv_reachDistTor", "type":"double"},
+      {"name":"pgv_reachAngle", "type":"double", "unit":"deg"},
+      {"name":"pgv_reachAngleTor", "type":"doube", "unit":"deg"},
+      {"name":"pgv_adjust_time", "type":"bool"}
+    ]        
   },
   "ChargerBrandInfo":{
     "type":"ChargerBrandInfo",
@@ -1296,7 +1325,9 @@
       {"index":4, "name":"vx", "type":"double"},
       {"index":5, "name":"vy", "type":"double"}, 
       {"index":6, "name":"vw", "type":"rad"},
-      {"index":7, "name":"odo_size", "type":"int64"}
+      {"index":7, "name":"odo_size", "type":"int64"},
+      {"index":8, "name":"delay_time", "type":"double", "unit":"ms"},
+      {"index":9, "name":"cache_odo_size", "type":"int64"}
     ]     
   },
   "SlipIMU":{
@@ -1493,5 +1524,83 @@
       {"name":"y", "type":"double","unit":"m"},
       {"name":"theta", "type":"rad", "unit":"degree"}
     ]    
+  },
+  "wheelBaseShift":{
+    "type":"wheelBaseShift",
+    "content":[
+      {"name":"motor.name", "type":"double", "unit":"string"},
+      {"name":"dmax", "type":"double","unit":"m"},
+      {"name":"dmin", "type":"double", "unit":"m"},
+      {"name":"minLength", "type":"double", "unit":"m"},
+      {"name":"dtrans", "type":"double", "unit":"m"},
+      {"name":"wheel_base_shift_length", "type":"double", "unit":"m"},
+      {"name":"fork_height", "type":"double", "unit":"m"}
+    ]    
+  },
+  "NewSPID":{
+    "type":"NewSPID",
+    "content":[
+      {"name":"vw0", "type":"rad", "unit":"deg/s"},
+      {"name":"m_dvw", "type":"rad","unit":"deg"},
+      {"name":"temp_angle", "type":"rad", "unit":"deg"},
+      {"name":"e", "type":"double", "unit":"m"},
+      {"name":"de", "type":"double", "unit":"m"},
+      {"name":"the", "type":"rad", "unit":"deg"},
+      {"name":"wkp", "type":"double", "unit":""},
+      {"name":"wkd_dt", "type":"double", "unit":""},
+      {"name":"aheadDist", "type":"double", "unit":""},
+      {"name":"acc_lim_x", "type":"double", "unit":""},
+      {"name":"m_future_ind", "type":"double", "unit":""},
+      {"name":"future_ind", "type":"double", "unit":""},
+      {"name":"delay_dist", "type":"double", "unit":""},
+      {"name":"curve", "type":"double", "unit":""},
+      {"name":"ax", "type":"double", "unit":""},
+      {"name":"slow_down", "type":"bool", "unit":""},
+      {"name":"vw", "type":"rad", "unit":"deg/s"},
+      {"name":"vx", "type":"double", "unit":"m/s"},
+      {"name":"adjust_state", "type":"double", "unit":""}
+    ]    
+  },
+  "CalNear":{
+    "type":"CalNear",
+    "content":[
+      {"name":"near_ind", "type":"double", "unit":""},
+      {"name":"angle", "type":"rad", "unit":""},
+      {"name":"px", "type":"double", "unit":""},
+      {"name":"py", "type":"double", "unit":""},
+      {"name":"ptheta", "type":"rad", "unit":"deg"},
+      {"name":"ptheta", "type":"rad", "unit":"deg"},
+      {"name":"e", "type":"double", "unit":""},
+      {"name":"e0", "type":"double", "unit":""}
+    ]    
+  },
+  "SteerMove":{
+    "type":"SteerMove",
+    "content":[
+      {"name":"only_rotate", "type":"bool", "unit":""},
+      {"name":"start_to_rotate", "type":"bool", "unit":""},
+      {"name":"start_to_go", "type":"bool", "unit":""},
+      {"name":"all_stop", "type":"bool", "unit":""},
+      {"name":"steer_move_flag", "type":"bool", "unit":""},
+      {"name":"stop_flag", "type":"bool", "unit":""},
+      {"name":"to_move", "type":"bool", "unit":""}
+    ]    
+  },
+  "QuickGoState":{
+    "type":"QuickGoState",
+    "content":[
+      {"name":"m_state", "type":"int", "unit":""},
+      {"name":"m_move_status", "type":"int", "unit":""}
+    ]    
+  },
+  "OptLocation":{
+    "type":"OptLocation",
+    "content":[
+      {"name":"x", "type":"double", "unit":""},
+      {"name":"y", "type":"double", "unit":""},
+      {"name":"theta", "type":"double", "unit":"deg"},
+      {"name":"timestamp", "type":"int64", "unit":""}
+    ]    
   }
+
 }

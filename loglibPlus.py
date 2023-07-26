@@ -313,13 +313,18 @@ class Data:
                 info = self.info
                 if self.info == "key|value":
                     info = []
-                    for d in range(int(len(values)/2)):
+                    half_value = int(len(values)/2)
+                    for d in range(half_value):
                         try:
                             _ = float(values[d*2])
                             info.append({'name': "value_{}".format(d*2), "index": d*2, "type": "double"})
                             info.append({'name': "value_{}".format(d*2+1), "index": d*2+1, "type": "double"})
                         except:
                             info.append({'name': values[d*2], "index": d * 2 + 1, "type": "double"})
+                    if half_value *2  < len(values):
+                        # 对于奇数项的数据
+                        for d in range(half_value*2, len(values)):
+                            info.append({'name': "value_{}".format(d), "index": d, "type": "double"})
                 for (ind, tmp) in enumerate(info):
                     if 'index' not in tmp:
                         tmp["index"] = ind

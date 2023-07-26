@@ -26,7 +26,7 @@ from ReadThread import ReadThread
 import logging
 from datetime import timedelta
 from loglibPlus import num2date, date2num
-from MapWidget import normalize_theta_deg, Pos2Base
+from MapWidget import normalize_theta_deg, Pos2Base, GetGlobalPos
 class TargetPrecision(QtWidgets.QWidget):
     dropped = pyqtSignal('PyQt_PyObject')
     hiddened = pyqtSignal('PyQt_PyObject')
@@ -83,12 +83,13 @@ class TargetPrecision(QtWidgets.QWidget):
                 map_x = [m_xy[0]]
                 map_y = [m_xy[1]]
                 map_a = [m_xy[2]/math.pi *180.0]
+                print("map_a", map_a)
                 lm_name = m_xy[3]
                 self.ax.set_title(lm_name)
         except:
             pass
-
         data = self.log_data.taskfinish.content()
+        print("map_a", map_a, "finish data ", len(data[1]))
         valid = []
         vx = self.log_data.getData('Speed2DSP.vx')[0]
         vy = self.log_data.content['Speed2DSP']['vy']
@@ -123,6 +124,12 @@ class TargetPrecision(QtWidgets.QWidget):
             loca = self.log_data.content['SimLocation']['theta']
             loc_t = np.array(self.log_data.content['SimLocation']['t'])
             valid = [1.0 for _ in loc_t]
+        elif self.choose.currentText() == 'OptLocation':
+            locx = self.log_data.getData('OptLocation.x')[0]
+            locy = self.log_data.content['OptLocation']['y']
+            loca = self.log_data.content['OptLocation']['theta']
+            loc_t = np.array(self.log_data.content['OptLocation']['t'])
+            valid = [1.0 for _ in loc_t]            
         else:
             logging.debug("source name is wrong! {}".format(self.choose.currentText()))
         if len(loc_t) < 1:
@@ -208,12 +215,24 @@ class TargetPrecision(QtWidgets.QWidget):
             logging.debug("cannot find target name: {}".format(lm_id))
             self.ax.set_title(title)
         else:
+            mx = float(self.mx_edit.text())
+            my = float(self.my_edit.text())
+            new_xdata = []
+            new_ydata = []
+            for it in range(len(xdata)):
+                new_d = GetGlobalPos([mx, my], [xdata[it], ydata[it], adata[it]/180.0*math.pi])
+                new_xdata.append(new_d[0])
+                new_ydata.append(new_d[1])
+            org_xdata = xdata
+            org_ydata = ydata
+            xdata = new_xdata
+            ydata = new_ydata
             out_xmin = min(xdata)
             out_xmax = max(xdata)
             out_xrange = (out_xmax - out_xmin) *1000
             out_xmid = 0
-            if len(xdata) > 0:
-                out_xmid = sum(xdata)/len(xdata)
+            if len(org_xdata) > 0:
+                out_xmid = sum(org_xdata)/len(org_xdata)
             out_x_off = 0
             if map_x != None:
                 out_x_off = (map_x[0] - out_xmid)*1000
@@ -222,8 +241,8 @@ class TargetPrecision(QtWidgets.QWidget):
             out_ymax = max(ydata)
             out_yrange = (out_ymax-out_ymin)*1000
             out_ymid = 0
-            if len(ydata) > 0:
-                out_ymid = sum(ydata)/len(ydata)
+            if len(org_ydata) > 0:
+                out_ymid = sum(org_ydata)/len(org_ydata)
             out_y_off = 0
             if map_y != None:
                 out_y_off = (map_y[0] - out_ymid)*1000
@@ -439,6 +458,7 @@ class TargetPrecision(QtWidgets.QWidget):
         self.choose.addItem("pgv0")
         self.choose.addItem("pgv1")
         self.choose.addItem("SimLocation")
+        self.choose.addItem("OptLocation")
         hbox2 = QtWidgets.QFormLayout()
         hbox2.addRow(self.choose_msg, self.choose)
 
@@ -461,11 +481,25 @@ class TargetPrecision(QtWidgets.QWidget):
         sbox.addWidget(self.s_label)
         sbox.addWidget(self.s_edit)
 
+        self.mx_label = QtWidgets.QLabel("MeasurePoint x:")
+        self.mx_edit = QtWidgets.QLineEdit("0.0")
+        valid = QtGui.QDoubleValidator()
+        self.mx_edit.setValidator(valid)
+        mxbox = QtWidgets.QHBoxLayout()
+        mxbox.addWidget(self.mx_label)
+        mxbox.addWidget(self.mx_edit)
+        self.my_label = QtWidgets.QLabel("y:")
+        self.my_edit = QtWidgets.QLineEdit("0.0")
+        self.my_edit.setValidator(valid)
+        mxbox.addWidget(self.my_label)
+        mxbox.addWidget(self.my_edit)
+
         self.fig_layout = QtWidgets.QVBoxLayout(self)
         self.fig_layout.addLayout(hbox)
         self.fig_layout.addLayout(hbox_st)
         self.fig_layout.addLayout(hbox2)
         self.fig_layout.addLayout(sbox)
+        self.fig_layout.addLayout(mxbox)
         self.fig_layout.addWidget(self.result_label)
         self.fig_layout.addWidget(tab)
 

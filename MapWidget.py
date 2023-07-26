@@ -32,6 +32,14 @@ def GetGlobalPos(p2b, b2g):
     y = y + b2g[1]
     return np.array([x, y])
 
+def P2G(p2b, b2g):
+    x = p2b[0] * np.cos(b2g[2]) - p2b[1] * np.sin(b2g[2])
+    y = p2b[0] * np.sin(b2g[2]) + p2b[1] * np.cos(b2g[2])
+    x = x + b2g[0]
+    y = y + b2g[1]
+    a = p2b[2] + b2g[2]
+    return np.array([x, y, a])    
+
 def Pos2Base(pos2world, base2world):
     pos2base = [0,0,0]
     x = pos2world[0] - base2world[0]
@@ -609,6 +617,12 @@ class DataWidget(QtWidgets.QWidget):
         hbox3 = QtWidgets.QFormLayout()
         hbox3.addRow(self.m_msg, self.m)
 
+        self.b_msg = QtWidgets.QLabel("based:")
+        self.b = QtWidgets.QComboBox(self)
+        self.b.addItems(["None", "Loc"])
+        hbox4 = QtWidgets.QFormLayout()
+        hbox4.addRow(self.b_msg, self.b)
+
         self.btn = QtWidgets.QPushButton("Yes")
         self.btn.clicked.connect(self.getData)
         vbox = QtWidgets.QVBoxLayout(self)
@@ -616,13 +630,15 @@ class DataWidget(QtWidgets.QWidget):
         vbox.addLayout(hbox1)
         vbox.addLayout(hbox2)
         vbox.addLayout(hbox3)
+        vbox.addLayout(hbox4)
         vbox.addWidget(self.btn)
 
     def getData(self):
         self.getdata.emit([self.choose.currentText(),
         self.ls.currentText(),
         self.c.currentText(),
-        self.m.currentText()])
+        self.m.currentText(),
+        self.b.currentText()])
 
 class FindElement(QtWidgets.QWidget):
     """查找图元的对话窗口
@@ -1083,9 +1099,12 @@ class MapWidget(QtWidgets.QWidget):
     def getDataXYData(self, event):
         datax = event[0] + ".x"
         datay = event[0] + ".y"
-        print("getDataXYData", event, datax, datay)
+        datatheta = event[0] + ".theta"
+        based = event[4]
+        print("getDataXYData", event, datax, datay, datatheta, based)
         datax = self.robot_log.read_thread.getData(datax)
         datay = self.robot_log.read_thread.getData(datay)
+        datatheta = self.robot_log.read_thread.getData(datatheta)
         ts = np.array(datax[1])
         if len(ts) < 1:
             return
@@ -1093,8 +1112,41 @@ class MapWidget(QtWidgets.QWidget):
         right_idx = (np.abs(ts[left_idx::] - self.right_line_t)).argmin()   + left_idx
         if left_idx >= right_idx:
             return
-        x = datax[0][left_idx:right_idx]
-        y = datay[0][left_idx:right_idx]
+        x = np.array(datax[0][left_idx:right_idx])
+        y = np.array(datay[0][left_idx:right_idx])
+        theta = np.deg2rad(np.array(datatheta[0][left_idx:right_idx]))
+        if based == "Loc":
+            self2self = np.array([0., 0., 0.])
+            content = self.robot_log.read_thread.content
+            loc = content['LocationEachFrame']  
+            x0 = loc['x'][self.left_idx]
+            y0 = loc['y'][self.left_idx]
+            theta0 = np.deg2rad(loc['theta'][self.left_idx])
+            robot2map = np.array([x0,y0,theta0])
+            print("robot2map", robot2map)
+
+            pgv2tag = [x[0],y[0],theta[0]]
+            print("pgv2tag", pgv2tag)
+
+            _ = self.robot_log.read_thread.getData("m_pgv2robot.x")
+            p2r = content['m_pgv2robot']  
+            p2r_left_idx = (np.abs(np.array(p2r['t']) - self.left_line_t)).argmin()  
+            p2r_x0 = p2r['x'][p2r_left_idx]
+            p2r_y0 = p2r['y'][p2r_left_idx]
+            p2r_theta0 = np.deg2rad(p2r['theta'][p2r_left_idx])
+            pgv2robot = np.array([p2r_x0, p2r_y0, p2r_theta0])
+            print("pgv2robot", pgv2robot)
+    
+            robot2pgv = Pos2Base(self2self, pgv2robot)
+            map2robot = Pos2Base(self2self, robot2map)
+            tag2pgv = Pos2Base(self2self, pgv2tag)
+            tag2robot = Pos2Base(tag2pgv, robot2pgv)
+            tag2map = Pos2Base(tag2robot, map2robot)
+            pgv2tags = np.array([x, y , theta])
+            robot2tags = P2G(robot2pgv, pgv2tags) # coordinator transform
+            oPos = P2G(robot2tags, tag2map) # coordinator transform
+            x = oPos[0]
+            y = oPos[1]
         id = str(int(round(time.time()*1000)))
         l = lines.Line2D(x, y, linestyle = event[1], marker =event[3], markersize = 6, color= event[2])
         l.set_zorder(100.)

@@ -1073,31 +1073,31 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         if len(self.read_thread.fatal.t()) > max_line:
             logging.warning("FATALs are too much to be ploted. Max Number is " + str(max_line) + ". Current Number is " + str(len(self.read_thread.fatal.t())))
             self.log_info.append("FATALs are too much to be ploted. Max Number is "+ str(max_line) + ". Current Number is " + str(len(self.read_thread.fatal.t())))
-            self.read_thread.fatal = FatalLine()
+            # self.read_thread.fatal = FatalLine()
         if len(self.read_thread.err.t()) > max_line:
             logging.warning("ERRORs are too much to be ploted. Max Number is " + str(max_line) + ". Current Number is " + str(len(self.read_thread.err.t())))
             self.log_info.append("ERRORs are too much to be ploted. Max Number is " + str(max_line)+". Current Number is "+str(len(self.read_thread.err.t())))
-            self.read_thread.err = ErrorLine()
+            # self.read_thread.err = ErrorLine()
         if len(self.read_thread.war.t()) > max_line:
             logging.warning("WARNINGs are too much to be ploted. Max Number is " + str(max_line) + ". Current Number is " + str(len(self.read_thread.war.t())))
             self.log_info.append("WARNINGs are too much to be ploted. Max Number is " + str(max_line) +  ". Current Number is " + str(len(self.read_thread.war.t())))
-            self.read_thread.war = WarningLine()
+            # self.read_thread.war = WarningLine()
         if len(self.read_thread.notice.t()) > max_line:
             logging.warning("NOTICEs are too much to be ploted. Max Number is " + str(max_line) + ". Current Number is " + str(len(self.read_thread.notice.t())))
             self.log_info.append("NOTICEs are too much to be ploted. Max Number is " + str(max_line) + ". Current Number is " + str(len(self.read_thread.notice.t())))
-            self.read_thread.notice = NoticeLine()
+            # self.read_thread.notice = NoticeLine()
         if len(self.read_thread.taskstart.t()) > max_line:
             logging.warning("TASKSTART are too much to be ploted. Max Number is " + str(max_line) + ". Current Number is " + str(len(self.read_thread.taskstart.t())))
             self.log_info.append("TASKSTART are too much to be ploted. Max Number is " + str(max_line) + ". Current Number is " + str(len(self.read_thread.taskstart.t())))
-            self.read_thread.taskstart = TaskStart()
+            # self.read_thread.taskstart = TaskStart()
         if len(self.read_thread.taskfinish.t()) > max_line:
             logging.warning("TASKFINISH are too much to be ploted. Max Number is " + str(max_line) + ". Current Number is " + str(len(self.read_thread.taskfinish.t())))
             self.log_info.append("TASKFINISH are too much to be ploted. Max Number is " + str(max_line) + ". Current Number is " + str(len(self.read_thread.taskfinish.t())))
-            self.read_thread.taskfinish = TaskFinish()
+            # self.read_thread.taskfinish = TaskFinish()
         if len(self.read_thread.service.t()) > max_line:
             logging.warning("SERVICE are too much to be ploted. Max Number is " + str(max_line) +". Current Number is " + str(len(self.read_thread.service.t())))
             self.log_info.append("SERVICE are too much to be ploted. Max Number is " + str(max_line) + ". Current Number is " + str(len(self.read_thread.service.t())))
-            self.read_thread.service = Service()
+            # self.read_thread.service = Service()
         self.finishReadFlag = True
         self.setWindowTitle('Log分析器: {0}'.format([f.split('/')[-1] for f in self.filenames]))
         if self.read_thread.filenames:
@@ -1297,55 +1297,63 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         tsl, tfl, tse = None, None, None
         lw = 1.5
         ap = 0.8
-        for tmp in self.read_thread.taskstart.t():
-            tsl = ax.axvline(tmp, linestyle = '-', color = 'b', linewidth = lw, alpha = ap)
-            tsnum.append(line_num)
-            line_num = line_num + 1
-        if tsl:
-            legend_info.append(tsl)
-            legend_info.append('task start')
-        for tmp in self.read_thread.taskfinish.t():
-            tfl = ax.axvline(tmp, linestyle = '--', color = 'b', linewidth = lw, alpha = ap)
-            tfnum.append(line_num)
-            line_num = line_num + 1
-        if tfl:
-            legend_info.append(tfl)
-            legend_info.append('task finish')
-        for tmp in self.read_thread.service.t():
-            tse = ax.axvline(tmp, linestyle = '-', color = 'k', linewidth = lw, alpha = ap)
-            tsenum.append(line_num)
-            line_num = line_num + 1
-        if tse:
-            legend_info.append(tse)
-            legend_info.append('service')
-        for tmp in self.read_thread.fatal.t():
-            fl= ax.axvline(tmp, linestyle='-',color = 'm', linewidth = lw, alpha = ap)
-            fnum.append(line_num)
-            line_num = line_num + 1
-        if fl:
-            legend_info.append(fl)
-            legend_info.append('fatal')
-        for tmp in self.read_thread.err.t():
-            el= ax.axvline(tmp, linestyle = '-.', color='r', linewidth = lw, alpha = ap)
-            ernum.append(line_num)
-            line_num = line_num + 1
-        if el:
-            legend_info.append(el)
-            legend_info.append('error')
-        for tmp in self.read_thread.war.t():
-            wl = ax.axvline(tmp, linestyle = '--', color = 'y', linewidth = lw, alpha = ap)
-            wnum.append(line_num)
-            line_num = line_num + 1
-        if wl:
-            legend_info.append(wl)
-            legend_info.append('warning')
-        for tmp in self.read_thread.notice.t():
-            nl = ax.axvline(tmp, linestyle = ':', color = 'g', linewidth = lw, alpha = ap)
-            nnum.append(line_num)
-            line_num = line_num + 1
-        if nl:
-            legend_info.append(nl)
-            legend_info.append('notice')
+        max_line = 1000
+        if len(self.read_thread.taskstart.t()) <= max_line:
+            for tmp in self.read_thread.taskstart.t():
+                tsl = ax.axvline(tmp, linestyle = '-', color = 'b', linewidth = lw, alpha = ap)
+                tsnum.append(line_num)
+                line_num = line_num + 1
+            if tsl:
+                legend_info.append(tsl)
+                legend_info.append('task start')
+        if len(self.read_thread.taskfinish.t()) <= max_line:
+            for tmp in self.read_thread.taskfinish.t():
+                tfl = ax.axvline(tmp, linestyle = '--', color = 'b', linewidth = lw, alpha = ap)
+                tfnum.append(line_num)
+                line_num = line_num + 1
+            if tfl:
+                legend_info.append(tfl)
+                legend_info.append('task finish')
+        if len(self.read_thread.service.t()) <= max_line:
+            for tmp in self.read_thread.service.t():
+                tse = ax.axvline(tmp, linestyle = '-', color = 'k', linewidth = lw, alpha = ap)
+                tsenum.append(line_num)
+                line_num = line_num + 1
+            if tse:
+                legend_info.append(tse)
+                legend_info.append('service')
+        if len(self.read_thread.fatal.t()) <= max_line:
+            for tmp in self.read_thread.fatal.t():
+                fl= ax.axvline(tmp, linestyle='-',color = 'm', linewidth = lw, alpha = ap)
+                fnum.append(line_num)
+                line_num = line_num + 1
+            if fl:
+                legend_info.append(fl)
+                legend_info.append('fatal')
+        if len(self.read_thread.err.t()) <= max_line:
+            for tmp in self.read_thread.err.t():
+                el= ax.axvline(tmp, linestyle = '-.', color='r', linewidth = lw, alpha = ap)
+                ernum.append(line_num)
+                line_num = line_num + 1
+            if el:
+                legend_info.append(el)
+                legend_info.append('error')
+        if len(self.read_thread.war.t()) <= max_line:
+            for tmp in self.read_thread.war.t():
+                wl = ax.axvline(tmp, linestyle = '--', color = 'y', linewidth = lw, alpha = ap)
+                wnum.append(line_num)
+                line_num = line_num + 1
+            if wl:
+                legend_info.append(wl)
+                legend_info.append('warning')
+        if len(self.read_thread.notice.t()) <= max_line:
+            for tmp in self.read_thread.notice.t():
+                nl = ax.axvline(tmp, linestyle = ':', color = 'g', linewidth = lw, alpha = ap)
+                nnum.append(line_num)
+                line_num = line_num + 1
+            if nl:
+                legend_info.append(nl)
+                legend_info.append('notice')
         if legend_info:
             ax.legend(legend_info[0::2], legend_info[1::2], loc='upper right')
         self.lines_dict['fatal'] = fnum
