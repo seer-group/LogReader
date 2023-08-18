@@ -420,6 +420,7 @@ class Laser:
         """ max_dist 为激光点的最远距离，大于此距离激光点无效"""
         self.regex = re.compile('\[(.*?)\].*\[Laser:? ?(\d*?)\]\[(.*?)\]')
         self.regexV2 = re.compile('\[(.*?)\].*\[LaserWithRssi:? ?(\d*?)\]\[(.*?)\]')
+        self.regexV3 = re.compile('\[(.*?)\].*\[LaserWithRssiAndPose:? ?(\d*?)\]\[(.*?)\]')
         self.short_regx = "[Laser"
         #self.data = [[] for _ in range(7)]
         self.datas = dict()
@@ -433,7 +434,7 @@ class Laser:
                 if datas[1] != "":
                     laser_id =  int(datas[1])
                 if laser_id not in self.datas:
-                    self.datas[laser_id] = [[] for _ in range(8)]
+                    self.datas[laser_id] = [[] for _ in range(11)]
                 self.datas[laser_id][0].append(rbktimetodate(datas[0]))
                 tmp_datas = datas[2].split('|')
                 self.datas[laser_id][1].append(float(tmp_datas[0]))
@@ -454,38 +455,79 @@ class Laser:
                 self.datas[laser_id][5].append(y)
                 self.datas[laser_id][6].append(len(x))
                 self.datas[laser_id][7].append(rssi)
+                self.datas[laser_id][8].append(None)
+                self.datas[laser_id][9].append(None)
+                self.datas[laser_id][10].append(None)
                 return True
-            else:
-                out = self.regexV2.match(line)
-                if out:
-                    datas = out.groups()
-                    laser_id = 0
-                    if datas[1] != "":
-                        laser_id =  int(datas[1])
-                    if laser_id not in self.datas:
-                        self.datas[laser_id] = [[] for _ in range(8)]
-                    self.datas[laser_id][0].append(rbktimetodate(datas[0]))
-                    tmp_datas = datas[2].split('|')
-                    self.datas[laser_id][1].append(float(tmp_datas[0]))
-                    angle = [float(tmp)/180.0*math.pi for tmp in tmp_datas[4::3]]
-                    dist = [float(tmp) for tmp in tmp_datas[5::3]]
-                    rssi = [float(tmp) for tmp in tmp_datas[6::3]]
-                    tmp_a, tmp_d, tmp_r = [], [], []
-                    for a, d, r in zip(angle,dist, rssi):
-                        if d < self.max_dist and r >= 0:
-                            tmp_a.append(a)
-                            tmp_d.append(d)
-                            tmp_r.append(r)
-                    angle = tmp_a 
-                    dist = tmp_d
-                    self.datas[laser_id][2].append(angle)
-                    self.datas[laser_id][3].append(dist)
-                    x , y = polar2xy(angle, dist)
-                    self.datas[laser_id][4].append(x)
-                    self.datas[laser_id][5].append(y)
-                    self.datas[laser_id][6].append(len(x))
-                    self.datas[laser_id][7].append(tmp_r)
-                    return True
+            out = self.regexV2.match(line)
+            if out:
+                datas = out.groups()
+                laser_id = 0
+                if datas[1] != "":
+                    laser_id =  int(datas[1])
+                if laser_id not in self.datas:
+                    self.datas[laser_id] = [[] for _ in range(11)]
+                self.datas[laser_id][0].append(rbktimetodate(datas[0]))
+                tmp_datas = datas[2].split('|')
+                self.datas[laser_id][1].append(float(tmp_datas[0]))
+                angle = [float(tmp)/180.0*math.pi for tmp in tmp_datas[4::3]]
+                dist = [float(tmp) for tmp in tmp_datas[5::3]]
+                rssi = [float(tmp) for tmp in tmp_datas[6::3]]
+                tmp_a, tmp_d, tmp_r = [], [], []
+                for a, d, r in zip(angle,dist, rssi):
+                    if d < self.max_dist and r >= 0:
+                        tmp_a.append(a)
+                        tmp_d.append(d)
+                        tmp_r.append(r)
+                angle = tmp_a 
+                dist = tmp_d
+                self.datas[laser_id][2].append(angle)
+                self.datas[laser_id][3].append(dist)
+                x , y = polar2xy(angle, dist)
+                self.datas[laser_id][4].append(x)
+                self.datas[laser_id][5].append(y)
+                self.datas[laser_id][6].append(len(x))
+                self.datas[laser_id][7].append(tmp_r)
+                self.datas[laser_id][8].append(None)
+                self.datas[laser_id][9].append(None)
+                self.datas[laser_id][10].append(None)
+                return True
+            out = self.regexV3.match(line)
+            if out:
+                datas = out.groups()
+                laser_id = 0
+                if datas[1] != "":
+                    laser_id =  int(datas[1])
+                if laser_id not in self.datas:
+                    self.datas[laser_id] = [[] for _ in range(11)]
+                self.datas[laser_id][0].append(rbktimetodate(datas[0]))
+                tmp_datas = datas[2].split('|')
+                self.datas[laser_id][1].append(float(tmp_datas[0]))
+                loc_x = float(tmp_datas[4])
+                loc_y = float(tmp_datas[5])
+                loc_yaw = float(tmp_datas[6])
+                angle = [float(tmp)/180.0*math.pi for tmp in tmp_datas[7::3]]
+                dist = [float(tmp) for tmp in tmp_datas[8::3]]
+                rssi = [float(tmp) for tmp in tmp_datas[9::3]]
+                tmp_a, tmp_d, tmp_r = [], [], []
+                for a, d, r in zip(angle,dist, rssi):
+                    if d < self.max_dist and r >= 0:
+                        tmp_a.append(a)
+                        tmp_d.append(d)
+                        tmp_r.append(r)
+                angle = tmp_a 
+                dist = tmp_d
+                self.datas[laser_id][2].append(angle)
+                self.datas[laser_id][3].append(dist)
+                x , y = polar2xy(angle, dist)
+                self.datas[laser_id][4].append(x)
+                self.datas[laser_id][5].append(y)
+                self.datas[laser_id][6].append(len(x))
+                self.datas[laser_id][7].append(tmp_r)
+                self.datas[laser_id][8].append(loc_x)
+                self.datas[laser_id][9].append(loc_y)
+                self.datas[laser_id][10].append(loc_yaw)
+                return True                
             return False
         return False
     def t(self, laser_index):
@@ -504,6 +546,18 @@ class Laser:
         return self.datas[laser_index][6], self.datas[laser_index][0]
     def rssi(self, laser_index):
         return self.datas[laser_index][7], self.datas[laser_index][0]
+    def loc_x(self, laser_index):
+        if len(self.datas[laser_index]) == 11:
+            return self.datas[laser_index][8], self.datas[laser_index][0]
+        return None, None
+    def loc_y(self, laser_index):
+        if len(self.datas[laser_index]) == 11:
+            return self.datas[laser_index][9], self.datas[laser_index][0]
+        return None, None
+    def loc_yaw(self, laser_index):
+        if len(self.datas[laser_index]) == 11:
+            return self.datas[laser_index][10], self.datas[laser_index][0]
+        return None, None
     def insert_data(self, other):
         for key in other.datas.keys():
             if key in self.datas.keys():

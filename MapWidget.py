@@ -24,6 +24,7 @@ from matplotlib.patches import Circle
 from matplotlib.collections import PatchCollection
 import zipfile
 from ExtendedComboBox import ExtendedComboBox
+from datetime import datetime
 
 def GetGlobalPos(p2b, b2g):
     x = p2b[0] * np.cos(b2g[2]) - p2b[1] * np.sin(b2g[2])
@@ -595,7 +596,7 @@ class DataWidget(QtWidgets.QWidget):
         self.setWindowTitle("Data Input")
         self.choose_msg = QtWidgets.QLabel("Data:")
         self.choose = QtWidgets.QComboBox(self)
-        self.choose.addItems(["SimLocation", "LocationEachFrame", "LocalPos", "robot2world", "code2robot"])
+        self.choose.addItems(["SimLocation", "LocationEachFrame", "LocalPos", "robot2world", "code2robot", "TrackPath"])
         hbox0 = QtWidgets.QFormLayout()
         hbox0.addRow(self.choose_msg, self.choose)
 
@@ -756,6 +757,7 @@ class MapWidget(QtWidgets.QWidget):
         self.right_line_t = None
         self.left_idx = None
         self.right_idx = None
+        self.useLocChangeFlag = False
 
     def setupUI(self):
         self.static_canvas = FigureCanvas(Figure(figsize=(5,5)))
@@ -821,7 +823,11 @@ class MapWidget(QtWidgets.QWidget):
         self.userToolbar.addSeparator()
         self.find_element_bar = QtWidgets.QAction("FindElement", self.userToolbar)
         self.find_element_bar.triggered.connect(self.findElement)
-        self.userToolbar.addActions([self.draw_center, self.find_element_bar])
+        self.useLoc = QtWidgets.QAction("UseLoc", self.userToolbar)
+        self.useLoc.setCheckable(True)
+        self.useLoc.triggered.connect(self.useLocChange)
+        self.useLoc.setChecked(True)
+        self.userToolbar.addActions([self.draw_center, self.find_element_bar, self.useLoc])
 
         self.find_element = FindElement(self)
         self.find_element.getdata.connect(self.getElement)
@@ -1097,14 +1103,22 @@ class MapWidget(QtWidgets.QWidget):
             self.static_canvas.figure.canvas.draw()
 
     def getDataXYData(self, event):
-        datax = event[0] + ".x"
-        datay = event[0] + ".y"
-        datatheta = event[0] + ".theta"
+        datax = None
+        datay = None
+        datatheta = None
+        if event[0] == "TrackPath":
+            datax = "NearInd.px"
+            datay = "NearInd.py"
+        else:
+            datax = event[0] + ".x"
+            datay = event[0] + ".y"
+            datatheta = event[0] + ".theta"
         based = event[4]
         print("getDataXYData", event, datax, datay, datatheta, based)
         datax = self.robot_log.read_thread.getData(datax)
         datay = self.robot_log.read_thread.getData(datay)
-        datatheta = self.robot_log.read_thread.getData(datatheta)
+        if datatheta != None:
+            datatheta = self.robot_log.read_thread.getData(datatheta)
         ts = np.array(datax[1])
         if len(ts) < 1:
             return
@@ -1114,11 +1128,14 @@ class MapWidget(QtWidgets.QWidget):
             return
         x = np.array(datax[0][left_idx:right_idx])
         y = np.array(datay[0][left_idx:right_idx])
-        theta = np.deg2rad(np.array(datatheta[0][left_idx:right_idx]))
+        if datatheta != None:
+            theta = np.deg2rad(np.array(datatheta[0][left_idx:right_idx]))
         if based == "Loc":
             self2self = np.array([0., 0., 0.])
             content = self.robot_log.read_thread.content
-            loc = content['LocationEachFrame']  
+            loc = self.getLoc()
+            if loc == None:
+                return
             x0 = loc['x'][self.left_idx]
             y0 = loc['y'][self.left_idx]
             theta0 = np.deg2rad(loc['theta'][self.left_idx])
@@ -1681,6 +1698,31 @@ class MapWidget(QtWidgets.QWidget):
             self.particle_points.set_xdata([])
             self.particle_points.set_ydata([])
     
+    def useLocChange(self):
+        self.useLocChangeFlag = True
+
+    def getLoc(self):
+        content = self.robot_log.read_thread.content
+        loc = dict()
+        if 'moveTask' in content and not self.useLoc.isChecked():
+            loc['x'] = self.robot_log.read_thread.getData("moveTask.locx")[0]
+            loc['y'] = self.robot_log.read_thread.getData("moveTask.locy")[0]
+            loc['theta'] = self.robot_log.read_thread.getData("moveTask.loc_angle")[0]
+            loc['timestamp'] = self.robot_log.read_thread.getData("moveTask.loc_ts")[0]
+            loc['t'] = self.robot_log.read_thread.getData("moveTask.locx")[1]
+            if len(loc['x']) > 0:
+                for a in loc['x']:
+                    if a != None:
+                        return loc
+        if 'LocationEachFrame' not in content:
+            return None
+        loc = content['LocationEachFrame']  
+        if len(loc['x']) < 1:
+            return None
+        if len(loc['timestamp']) < 1:
+            return None
+        return loc
+                
     def updateLoc(self):
         if self.robot_log is None:
             return
@@ -1688,23 +1730,23 @@ class MapWidget(QtWidgets.QWidget):
             return
         mid_line_t = self.robot_log.mid_line_t
         content = self.robot_log.read_thread.content
-        if 'LocationEachFrame' not in content:
-            return
-        loc = content['LocationEachFrame']  
-        if len(loc['x']) < 1:
-            return
-        if len(loc['timestamp']) < 1:
+        loc = self.getLoc()
+        if loc == None:
             return
         loc_idx = self.robot_log.key_loc_idx
-        if loc_idx < 0:
+        if self.useLoc.isChecked():
+            if loc_idx < 0:
+                loc_ts = np.array(loc['t'])
+                loc_idx = (np.abs(loc_ts - mid_line_t)).argmin()
+            if loc_idx < 1:
+                loc_idx = 1
+            self.robot_log.key_loc_idx = loc_idx
+        else:
             loc_ts = np.array(loc['t'])
-            loc_idx = (np.abs(loc_ts - mid_line_t)).argmin()
-        if loc_idx < 1:
-            loc_idx = 1
-        self.robot_log.key_loc_idx = loc_idx
-
+            loc_idx = (np.abs(loc_ts - mid_line_t)).argmin()            
+        print(self.useLoc.isChecked(), loc_idx, loc['theta'][loc_idx])
         self.robot_loc_pos = [loc['x'][loc_idx],loc['y'][loc_idx],np.deg2rad(loc['theta'][loc_idx])]
-        loc_info = "{},{},{},{},{}".format(loc['t'][loc_idx], (int)(loc['timestamp'][loc_idx]), 
+        loc_info = "{},{},{},{},{}".format(loc['t'][loc_idx], int(loc['t'][loc_idx].timestamp() - mid_line_t.timestamp()), 
             loc['x'][loc_idx], loc['y'][loc_idx], loc['theta'][loc_idx])
         self.logt_lable.setText('当前时刻定位(虚框): '+ loc_info)
 
@@ -1733,20 +1775,21 @@ class MapWidget(QtWidgets.QWidget):
         if self.robot_log.mid_line_t is None:
             return
         mid_line_t = self.robot_log.mid_line_t
-        content = self.robot_log.read_thread.content
-        if 'LocationEachFrame' not in content:
-            return
-        loc = content['LocationEachFrame']      
-        if len(loc['x']) < 1:
-            return
-        if len(loc['timestamp']) < 1:
+        loc = self.getLoc()
+        if loc == None:
             return
         laser_data = self.robot_log.read_thread.laser
         if len(laser_data.datas) < 1:
             return
         loc_idx = self.robot_log.key_loc_idx
-        if loc_idx < 0:
-            return
+        if self.useLoc.isChecked():
+            if loc_idx < 0:
+                return
+            if loc_idx < 1:
+                loc_idx = 1
+        else:
+            loc_ts = np.array(loc['t'])
+            loc_idx = (np.abs(loc_ts - mid_line_t)).argmin()
         laser_idx = self.robot_log.key_laser_idx
         min_laser_channel = self.robot_log.key_laser_channel
         if laser_idx < 0 or min_laser_channel < 0:
@@ -1779,25 +1822,34 @@ class MapWidget(QtWidgets.QWidget):
         laser_y = laser_data.y(min_laser_channel)[0][laser_idx]
         laser_points = np.array([laser_x, laser_y])
         rssi = np.array(laser_data.rssi(min_laser_channel)[0][laser_idx])
-        #在一个区间内差找最小值
         ts = laser_data.ts(min_laser_channel)[0][laser_idx]
-
-        loc_min_ind = loc_idx - 200
-        loc_max_ind = loc_idx + 200
-        if loc_min_ind < 0:
-            loc_min_ind = 0
-        if loc_max_ind >= len(loc['timestamp']):
-            loc_max_ind = len(loc['timestamp']) - 1
-            if loc_max_ind < 0:
-                loc_max_ind = 0
-        pos_ts = np.array(loc['timestamp'][loc_min_ind:loc_max_ind])
-        pos_idx = (np.abs(pos_ts - ts)).argmin()
-        pos_idx = loc_min_ind + pos_idx
-        self.robot_pos = [loc['x'][pos_idx], loc['y'][pos_idx], np.deg2rad(loc['theta'][pos_idx])]
-        laser_info = "{},{},{},{},{}".format(loc['t'][pos_idx], (int)(loc['timestamp'][pos_idx]), 
-            loc['x'][pos_idx], loc['y'][pos_idx], loc['theta'][pos_idx])
-        self.timestamp_lable.setText('当前激光时刻定位（实框）: '+ laser_info)
-
+        if laser_data.loc_x(min_laser_channel)[0] == None\
+        or laser_data.loc_x(min_laser_channel)[0][laser_idx] == None\
+        or laser_data.loc_y(min_laser_channel)[0][laser_idx] == None\
+        or laser_data.loc_yaw(min_laser_channel)[0][laser_idx] == None:
+            #在一个区间内差找最小值
+            loc_min_ind = loc_idx - 200
+            loc_max_ind = loc_idx + 200
+            if loc_min_ind < 0:
+                loc_min_ind = 0
+            if loc_max_ind >= len(loc['timestamp']):
+                loc_max_ind = len(loc['timestamp']) - 1
+                if loc_max_ind < 0:
+                    loc_max_ind = 0
+            pos_ts = np.array(loc['timestamp'][loc_min_ind:loc_max_ind])
+            pos_idx = (np.abs(pos_ts - ts)).argmin()
+            pos_idx = loc_min_ind + pos_idx
+            self.robot_pos = [loc['x'][pos_idx], loc['y'][pos_idx], np.deg2rad(loc['theta'][pos_idx])]
+            laser_info = "{},{},{},{},{}".format(loc['t'][pos_idx], int(loc['timestamp'][pos_idx] - ts),
+                loc['x'][pos_idx], loc['y'][pos_idx], loc['theta'][pos_idx])
+            self.timestamp_lable.setText('当前激光时刻定位（实框）: '+ laser_info)
+        else:
+            self.robot_pos = [laser_data.loc_x(min_laser_channel)[0][laser_idx], 
+                              laser_data.loc_y(min_laser_channel)[0][laser_idx], 
+                              laser_data.loc_yaw(min_laser_channel)[0][laser_idx]]
+            laser_info = "{},{},{},{},{}".format(laser_data.t(min_laser_channel)[laser_idx], 0,
+                self.robot_pos[0], self.robot_pos[1],  np.rad2deg(self.robot_pos[2]))
+            self.timestamp_lable.setText('当前激光时刻定位（实框）: '+ laser_info)
         self.laser_org_data = laser_points
         laser_rssi = rssi
         if len(laser_rssi) == len(self.laser_org_data.T) and len(laser_rssi) > 0:
@@ -1906,23 +1958,23 @@ class MapWidget(QtWidgets.QWidget):
             return
         mid_line_t = self.robot_log.mid_line_t
         content = self.robot_log.read_thread.content
-        if 'LocationEachFrame' not in content:
-            return
-        loc = content['LocationEachFrame']  
-        if len(loc['x']) < 1:
-            return
-        if len(loc['timestamp']) < 1:
+        loc = self.getLoc()
+        if loc == None:
             return
         loc_idx = self.robot_log.key_loc_idx
-        if loc_idx < 0:
-            return
-        if loc_idx < 1:
-            loc_idx = 1
-        if self.left_line_t != self.robot_log.left_line_t:
+        if self.useLoc.isChecked():
+            if loc_idx < 0:
+                return
+            if loc_idx < 1:
+                loc_idx = 1
+        else:
+            loc_ts = np.array(loc['t'])
+            loc_idx = (np.abs(loc_ts - mid_line_t)).argmin()   
+        if self.left_line_t != self.robot_log.left_line_t or self.useLocChangeFlag:
             self.left_line_t = self.robot_log.left_line_t
             loc_ts = np.array(loc['t'])
             self.left_idx = (np.abs(loc_ts - self.left_line_t)).argmin()
-        if self.right_line_t != self.robot_log.right_line_t:
+        if self.right_line_t != self.robot_log.right_line_t or self.useLocChangeFlag:
             self.right_line_t = self.robot_log.right_line_t
             loc_ts = np.array(loc['t'][self.left_idx::])
             self.right_idx = (np.abs(loc_ts - self.right_line_t)).argmin() + self.left_idx            
@@ -2023,7 +2075,7 @@ class MapWidget(QtWidgets.QWidget):
 
     def updateRobotData(self):
         if self.robot_log is not None and not self.isHidden():
-            if self.mid_line_t != self.robot_log.mid_line_t:
+            if self.mid_line_t != self.robot_log.mid_line_t or self.useLocChangeFlag:
                 self.mid_line_t = self.robot_log.mid_line_t
                 self.updateMapAndShape()
                 self.updateObs()
@@ -2045,7 +2097,7 @@ class MapWidget(QtWidgets.QWidget):
                 or self.right_line_t != self.robot_log.right_line_t:
                 self.readtrajectory()
                 self.redraw()
-
+        self.useLocChangeFlag = False
     def redraw(self):
         self.static_canvas.figure.canvas.draw()
 

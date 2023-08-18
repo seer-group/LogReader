@@ -895,7 +895,12 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 if len(result) == 2:
                     data0 = self.read_thread.getData(result[0])
                     data1 = self.read_thread.getData(result[1])
-                    # print(len(data0[0]), len(data1[0]))
+                    print(len(data0[0]), len(data1[0]), result[0])
+                    if result[0] == '':
+                        tmpdata = [[],[]]
+                        tmpdata[1] = data1[1]
+                        for d0 in data1[0]:
+                            tmpdata[0].append(-d0)
                     if len(data0[0]) == len(data1[0]):
                         # 时间长度一样
                         tmpdata = [[],[]]
@@ -907,13 +912,14 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                                 # print("error", type(d0),type(d1))
                                 tmpdata[0].append(0)
                         print("-",len(tmpdata), len(tmpdata[0]), len(tmpdata[1]), len(data0[0]), len(data1[1]))
+
         else :
             tmpdata = self.read_thread.getData(current_text)
         # print(len(tmpdata), len(tmpdata[0]), len(tmpdata[1]), current_text in self.read_thread.ylabel)
         if current_text in self.read_thread.ylabel:
             self.drawdata(cur_ax, tmpdata, self.read_thread.ylabel[current_text], False, False)
         else:
-            self.drawdata(cur_ax, tmpdata, "", False, False)
+            self.drawdata(cur_ax, tmpdata, current_text, False, False)
         
 
     def keyPressEvent(self,event):
