@@ -82,7 +82,8 @@
       { "index": 27, "name": "loc_ts", "type": "int64"},
       {"index": 28, "name": "stop_block", "type": "bool"},
       {"index": 29, "name": "cur_block_id", "type": "str"},
-      {"index": 30, "name": "set_core_goods_id", "type": "str"}
+      {"index": 30, "name": "set_core_goods_id", "type": "str"},
+      {"index": 31, "name": "multirobots_type", "type": "double", "description": "0: None, 1: Leader, 2: Follower"}
     ]
   },
   "Odometer": {
@@ -524,6 +525,25 @@
       { "index": 11, "name": "steer_active", "type": "bool","description": "舵角值是否采用当前舵角值", "unit":""  }
     ]
   },
+  "MultiRobots": {
+    "type": "MultiRobots",
+    "content": [
+      {"name": "vxb", "type": "double","description": "下发的vx", "unit":"m/s"  },
+      {"name": "vyb", "type": "double","description": "下发的vy", "unit":"m/s"  },
+      {"name": "vwb", "type": "rad","description": "下发的vw", "unit":"degree/s"  },
+      {"name": "out_vf", "type": "double","description": "下发前舵角速度", "unit":"m/s"  },
+      {"name": "out_vr", "type": "double","description": "下发后舵角速度", "unit":"m/s"  },
+      {"name": "out_delta_f", "type": "rad","description": "下发前舵角角度", "unit":"degree"  },
+      {"name": "out_delta_r", "type": "rad","description": "下发后舵角角度", "unit":"degree"  },
+      {"name": "last_steerv0", "type": "double","description": "接收到的前舵角速度", "unit":"m/s"  },
+      {"name": "last_steerv1", "type": "double","description": "接收到的后舵角速度", "unit":"m/s"  },
+      {"name": "last_steer0", "type": "rad","description": "接收到的前舵舵角", "unit":"degree"  },
+      {"name": "last_steer1", "type": "rad","description": "接收到的后舵角", "unit":"degree"  },
+      {"name": "steer_active", "type": "bool","description": "舵角值是否采用当前舵角值", "unit":""  },
+      {"name": "to_move", "type": "bool","description": "准备出发", "unit":""  },
+      {"name": "stop_flag", "type": "bool","description": "停止", "unit":""  }
+    ]
+  },
   "DualDiff": {
     "type": "DualDiff",
     "content": [
@@ -539,6 +559,85 @@
       { "index": 9, "name": "last_steer0", "type": "rad","description": "接收到的前舵舵角", "unit":"degree"  },
       { "index": 10, "name": "last_steer1", "type": "rad","description": "接收到的后舵角", "unit":"degree"  },
       { "index": 11, "name": "steer_active", "type": "bool","description": "舵角值是否采用当前舵角值", "unit":""  }
+    ]
+  },
+  "followMode":{
+    "type":"followMode",
+    "content": [
+      {"name": "dtheta1", "type": "rad"},
+      {"name": "reach_angle", "type": "rad"},
+      {"name": "delta_vw1", "type": "rad"},
+      {"name": "m_last_delta_vw", "type": "rad"},
+      {"name": "vw", "type": "rad"},
+      {"name": "vx", "type": "double"},
+      {"name": "s_last_dsteer_angle", "type":"double"},
+      {"name": "last_cycle_stop_flag","type":"bool"},
+      {"name": "spinvw", "type":"rad"},
+      {"name": "jack_speed", "type":"double"},
+      {"name": "d_jack_speed", "type":"double"},
+      {"name": "dspin_vw", "type":"double"}
+    ]
+  },
+  "SendSubRobot0":{
+    "type":"SendSubRobot0",
+    "content": [
+      {"name": "name", "type": "str"},
+      {"name": "vx", "type": "double"},
+      {"name": "vw", "type": "rad"},
+      {"name": "angle", "type": "rad"},
+      {"name": "stop", "type": "bool"},
+      {"name": "jack_speed", "type": "double"},
+      {"name": "lead_jack_height", "type": "double"}
+    ]
+  },
+  "SendSubRobot1":{
+    "type":"SendSubRobot1",
+    "content": [
+      {"name": "name", "type": "str"},
+      {"name": "vx", "type": "double"},
+      {"name": "vw", "type": "rad"},
+      {"name": "angle", "type": "rad"},
+      {"name": "stop", "type": "bool"},
+      {"name": "jack_speed", "type": "double"},
+      {"name": "lead_jack_height", "type": "double"}
+    ]
+  },
+  "SendSubRobot2":{
+    "type":"SendSubRobot2",
+    "content": [
+      {"name": "name", "type": "str"},
+      {"name": "vx", "type": "double"},
+      {"name": "vw", "type": "rad"},
+      {"name": "angle", "type": "rad"},
+      {"name": "stop", "type": "bool"},
+      {"name": "jack_speed", "type": "double"},
+      {"name": "lead_jack_height", "type": "double"}
+    ]
+  },
+  "followCMD":{
+    "type":"followCMD",
+    "content": [
+      {"name": "vx", "type": "double"},
+      {"name": "vw", "type": "rad"},
+      {"name": "angle", "type": "rad"},
+      {"name": "stop", "type": "bool"},
+      {"name": "cur_angle", "type": "rad"},
+      {"name": "jack_speed", "type": "double"},
+      {"name": "lead_jack_height", "type": "double"},
+      {"name": "spin_angle", "type": "double"}
+    ]
+  },
+  "NewLoc":{
+    "type":"NewLoc",
+    "content": [
+      {"name": "group2robot_angle", "type": "rad"},
+      {"name": "m_loc_angle", "type": "rad"},
+      {"name": "group2leader_x", "type": "double"},
+      {"name": "group2leader_y", "type": "double"},
+      {"name": "group2leader_angle", "type": "rad"},
+      {"name": "group2map_x", "type": "double"},
+      {"name":"group2map_y", "type":"double"},
+      {"name":"group2map_angle","type":"rad"}
     ]
   },
   "DualDiffSend": {
@@ -640,9 +739,11 @@
   "code2world":{
     "type": "code2world",
     "content": [
-      {"index": 0, "name": "x", "type":"double","description": "二维码在世界坐标系下的位置x", "unit":"m"},
-      {"index": 1, "name": "y", "type":"double","description": "二维码在世界坐标系下的位置y", "unit":"m"},
-      {"index": 2, "name": "theta", "type": "rad","description": "二维码在世界坐标系下的位置theta", "unit":"degree"}
+      {"name": "x", "type":"double","description": "二维码在世界坐标系下的位置x", "unit":"m"},
+      {"name": "y", "type":"double","description": "二维码在世界坐标系下的位置y", "unit":"m"},
+      {"name": "theta", "type": "rad","description": "二维码在世界坐标系下的位置theta", "unit":"degree"},
+      {"name": "spin_zero_offset", "type": "rad","description": "零位漂移量", "unit":"degree"},
+      {"name": "goodsInitAngle", "type": "rad","description": "货物初始偏置", "unit":"degree"}
     ]
   },
   "robot2world":{
@@ -999,6 +1100,13 @@
       { "index": 2, "name": "position", "type": "double"},
       { "index": 3, "name": "value", "type": "double"},
       { "index": 4, "name": "goal", "type": "double"}
+    ]
+  },  
+  "updateCmdByPos0": {
+    "type": "updateCmdByPos0",
+    "content": [
+      { "name": "dvx", "type": "double"},
+      { "name": "dvw", "type": "double"}
     ]
   },  
   "ForkMotors": {
@@ -1531,6 +1639,69 @@
       {"name":"control_time", "type":"double","description": "当前数据库中的controlTime","unit":"s"},
       {"name":"control_time_size", "type":"double"}
     ]    
+  },
+  "MRobotStatus0":{
+    "type":"MRobotStatus0",
+    "content":[
+      {"name":"name", "type":"str"},
+      {"name":"x", "type":"double","description": "相对于整体的 x 位置","unit":"m"},
+      {"name":"y", "type":"double","description": "相对于整体的 y 位置","unit":"m"},
+      {"name":"angle", "type":"rad","description": "相对于整体的 angle 位置","unit":"deg"},
+      {"name":"org_angle", "type":"rad","description": "相对于整体的 原始angle 位置","unit":"deg"},
+      {"name":"2grouopx", "type":"double","description": "相对x","unit":"m"},
+      {"name":"2groupy", "type":"double","description": "相对","unit":"m"},
+      {"name":"2groupAng", "type":"rad","description": "相对theta","unit":"deg"},
+      {"name":"dist", "type":"double","description": "位置差","unit":"m"},
+      {"name":"idealx", "type":"double","description": "理想偏差x","unit":"m"},
+      {"name":"idealy", "type":"double","description": "理想偏差y","unit":"m"},
+      {"name":"idealAng", "type":"rad","description": "理想偏差theta","unit":"deg"}
+    ]    
+  },
+  "MRobotStatus1":{
+    "type":"MRobotStatus1",
+    "content":[
+      {"name":"name", "type":"str"},
+      {"name":"x", "type":"double","description": "相对于整体的 x 位置","unit":"m"},
+      {"name":"y", "type":"double","description": "相对于整体的 y 位置","unit":"m"},
+      {"name":"angle", "type":"rad","description": "相对于整体的 angle 位置","unit":"deg"},
+      {"name":"org_angle", "type":"rad","description": "相对于整体的 原始angle 位置","unit":"deg"},
+      {"name":"2groupx", "type":"double","description": "相对x","unit":"m"},
+      {"name":"2groupy", "type":"double","description": "相对y","unit":"m"},
+      {"name":"2groupAng", "type":"rad","description": "相对theta","unit":"deg"},
+      {"name":"dist", "type":"double","description": "位置差","unit":"m"},
+      {"name":"idealx", "type":"double","description": "理想偏差x","unit":"m"},
+      {"name":"idealy", "type":"double","description": "理想偏差y","unit":"m"},
+      {"name":"idealAng", "type":"rad","description": "理想偏差theta","unit":"deg"}
+    ]  
+  },
+  "MRobotStatus2":{
+    "type":"MRobotStatus2",
+    "content":[
+      {"name":"name", "type":"str"},
+      {"name":"x", "type":"double","description": "相对于整体的 x 位置","unit":"m"},
+      {"name":"y", "type":"double","description": "相对于整体的 y 位置","unit":"m"},
+      {"name":"angle", "type":"rad","description": "相对于整体的 angle 位置","unit":"deg"},
+      {"name":"org_angle", "type":"rad","description": "相对于整体的 原始angle 位置","unit":"deg"},
+      {"name":"2grouopx", "type":"double","description": "相对x","unit":"m"},
+      {"name":"2groupy", "type":"double","description": "相对","unit":"m"},
+      {"name":"2groupAng", "type":"rad","description": "相对theta","unit":"deg"},
+      {"name":"dist", "type":"double","description": "位置差","unit":"m"},
+      {"name":"idealx", "type":"double","description": "理想偏差x","unit":"m"},
+      {"name":"idealy", "type":"double","description": "理想偏差y","unit":"m"},
+      {"name":"idealAng", "type":"rad","description": "理想偏差theta","unit":"deg"}
+    ]   
+  },
+  "get_latency":{
+    "type":"get_latency",
+    "content":[
+      {"name":"delay", "type":"double", "unit":"ms"}
+    ]
+  },
+  "send_latency":{
+    "type":"send_latency",
+    "content":[
+      {"name":"delay", "type":"double", "unit":"ms"}
+    ]
   },
   "m_pgv2robot":{
     "type":"m_pgv2robot",

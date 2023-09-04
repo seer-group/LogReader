@@ -188,6 +188,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.dataViews = [] #显示特定数据框
         self.in_close = False
         self.setupUI()
+        self.ts2log_t = None
 
     def setupUI(self):
         """初始化窗口结构""" 
@@ -394,6 +395,16 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.dataViewNewOne(None)
 
 
+    def getTsFromT(self, datat):
+        ts = datat[0]
+        t = datat[1]
+        if self.ts2log_t == None:
+            ind = self.getTimeStampValidInd(ts)
+            self.ts2log_t = t[ind].timestamp() - ts[ind]/1e9
+        new_t= t
+        if self.ts2log_t != None:
+            new_t = [datetime.fromtimestamp(tmpt/1e9 + self.ts2log_t) for tmpt in ts]
+        return new_t
     def static_canvas_resizeEvent(self, event):
         self.static_canvas_ORG_resizeEvent(event)
         w = event.size().width()
@@ -663,11 +674,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         if xy.x_combo.currentText() == 't':
             tmpdata = self.read_thread.getData(xy.y_combo.currentText())
         elif xy.x_combo.currentText() == 'timestamp':
-            org_t = self.read_thread.getData(group_name + '.timestamp')[0]
-            ind = self.getTimeStampValidInd(org_t)
-            dt = [timedelta(seconds = (tmp_t/1e9 - org_t[ind]/1e9)) for tmp_t in org_t]
-            t = [self.read_thread.getData(xy.y_combo.currentText())[1][ind] + tmp for tmp in dt]
-            tmpdata = (self.read_thread.getData(xy.y_combo.currentText())[0], t)
+            org_t = self.getTsFromT(self.read_thread.getData(group_name + '.timestamp'))
+            tmpdata = (self.read_thread.getData(xy.y_combo.currentText())[0], org_t)
         self.savePlotData(cur_ax, tmpdata[1][0], tmpdata[1][-1])
 
     def saveViewData(self, cur_ax):
@@ -695,11 +703,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         if xy.x_combo.currentText() == 't':
             tmpdata = self.read_thread.getData(xy.y_combo.currentText())
         elif xy.x_combo.currentText() == 'timestamp':
-            org_t = self.read_thread.getData(group_name + '.timestamp')[0]
-            ind = self.getTimeStampValidInd(org_t)
-            dt = [timedelta(seconds = (tmp_t/1e9 - org_t[ind]/1e9)) for tmp_t in org_t]
-            t = [self.read_thread.getData(xy.y_combo.currentText())[1][ind] + tmp for tmp in dt]
-            tmpdata = (self.read_thread.getData(xy.y_combo.currentText())[0], t)        
+            org_t = self.getTsFromT(self.read_thread.getData(group_name + '.timestamp'))
+            tmpdata = (self.read_thread.getData(xy.y_combo.currentText())[0], org_t)        
 
         outdata = []
         # 对数据存之前进行处理
@@ -737,13 +742,10 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         indx = self.axs.tolist().index(cur_ax)
         xy = self.xys[indx]        
         group_name = xy.y_combo.currentText().split('.')[0]
-        org_t = self.read_thread.getData(group_name + '.timestamp')[0]
-        ind = self.getTimeStampValidInd(org_t)
+        org_t = self.getTsFromT(self.read_thread.getData(group_name + '.timestamp'))
         if xy.x_combo.currentText() == 'timestamp':
             if len(org_t) > 0:
-                dt = [timedelta(seconds = (tmp_t/1e9 - org_t[ind]/1e9)) for tmp_t in org_t]
-                t = [self.read_thread.getData(xy.y_combo.currentText())[1][ind] + tmp for tmp in dt]
-                tmpdata = [self.read_thread.getData(xy.y_combo.currentText())[0], t]
+                tmpdata = [self.read_thread.getData(xy.y_combo.currentText())[0], org_t]
                 self.drawdata(cur_ax, tmpdata, self.read_thread.ylabel[xy.y_combo.currentText()], False)
                 return
         tmpdata = self.read_thread.getData(xy.y_combo.currentText())
@@ -754,12 +756,9 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         xy = self.xys[indx]        
         group_name = xy.y_combo.currentText().split('.')[0]
         list_tmpdata = []
-        org_t = self.read_thread.getData(group_name + '.timestamp')[0]
-        ind = self.getTimeStampValidInd(org_t)
+        org_t = self.getTsFromT(self.read_thread.getData(group_name + '.timestamp'))
         if len(org_t) > 0:
-            dt = [timedelta(seconds = (tmp_t/1e9 - org_t[ind]/1e9)) for tmp_t in org_t]
-            t = [self.read_thread.getData(xy.y_combo.currentText())[1][ind] + tmp for tmp in dt]
-            tmpdata = (self.read_thread.getData(xy.y_combo.currentText())[0], t)
+            tmpdata = (self.read_thread.getData(xy.y_combo.currentText())[0], org_t)
             list_tmpdata = [(t,d) for t,d in zip(tmpdata[1], tmpdata[0])]
         else:
             tmpdata = self.read_thread.getData(xy.y_combo.currentText())
@@ -780,12 +779,9 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         xy = self.xys[indx]        
         group_name = xy.y_combo.currentText().split('.')[0]
         if xy.x_combo.currentText() == 'timestamp':
-            org_t = self.read_thread.getData(group_name + '.timestamp')[0]
+            org_t = self.getTsFromT(self.read_thread.getData(group_name + '.timestamp'))
             if len(org_t) > 0:
-                ind = self.getTimeStampValidInd(org_t)
-                dt = [timedelta(seconds = (tmp_t/1e9 - org_t[ind]/1e9)) for tmp_t in org_t]
-                t = [self.read_thread.getData(xy.y_combo.currentText())[1][ind] + tmp for tmp in dt]
-                tmpdata = [self.read_thread.getData(xy.y_combo.currentText())[0], t]
+                tmpdata = [self.read_thread.getData(xy.y_combo.currentText())[0], org_t]
                 tmpdata[0] = [-a for a in tmpdata[0]]
                 self.drawdata(cur_ax, (tmpdata[0], tmpdata[1]), '-'+self.read_thread.ylabel[xy.y_combo.currentText()], False)
                 return
@@ -798,17 +794,14 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         xy = self.xys[indx]        
         group_name = xy.y_combo.currentText().split('.')[0]
         if xy.x_combo.currentText() == 'timestamp':
-            org_t = self.read_thread.getData(group_name + '.timestamp')[0]
-            ind = self.getTimeStampValidInd(org_t)
+            org_t = self.getTsFromT(self.read_thread.getData(group_name + '.timestamp'))
             if len(org_t) > 0:
-                dt = [timedelta(seconds = (tmp_t/1e9 - org_t[ind]/1e9)) for tmp_t in org_t]
-                t = [self.read_thread.getData(xy.y_combo.currentText())[1][ind] + tmp for tmp in dt]
-                tmpdata = [self.read_thread.getData(xy.y_combo.currentText())[0], t]
+                tmpdata = [self.read_thread.getData(xy.y_combo.currentText())[0], org_t]
                 tmpdata[0] = [a/np.pi*180.0 for a in tmpdata[0]]
                 self.drawdata(cur_ax, (tmpdata[0], tmpdata[1]), self.read_thread.ylabel[xy.y_combo.currentText()]+" deg", False)
                 return
         tmpdata = self.read_thread.getData(xy.y_combo.currentText())
-        data = [a/np.pi*180.0 for a in tmpdata[0]]
+        data = [a/np.pi*180.0 if a != None else None for a in tmpdata[0]]
         self.drawdata(cur_ax, (data, tmpdata[1]), self.read_thread.ylabel[xy.y_combo.currentText()]+" deg", False)
 
     def deg2Rad(self, cur_ax):
@@ -816,12 +809,9 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         xy = self.xys[indx]        
         group_name = xy.y_combo.currentText().split('.')[0]
         if xy.x_combo.currentText() == 'timestamp':
-            org_t = self.read_thread.getData(group_name + '.timestamp')[0]
+            org_t = self.getTsFromT(self.read_thread.getData(group_name + '.timestamp'))
             if len(org_t) > 0:
-                ind = self.getTimeStampValidInd(org_t)
-                dt = [timedelta(seconds = (tmp_t/1e9 - org_t[ind]/1e9)) for tmp_t in org_t]
-                t = [self.read_thread.getData(xy.y_combo.currentText())[1][ind] + tmp for tmp in dt]
-                tmpdata = [self.read_thread.getData(xy.y_combo.currentText())[0], t]
+                tmpdata = [self.read_thread.getData(xy.y_combo.currentText())[0], org_t]
                 tmpdata[0] = [a/180.0*np.pi for a in tmpdata[0]]
                 self.drawdata(cur_ax, (tmpdata[0], tmpdata[1]), self.read_thread.ylabel[xy.y_combo.currentText()]+" rad", False)
                 return
@@ -1071,6 +1061,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             self.setWindowTitle('Loading')
 
     def readFinished(self, result):
+        self.ts2log_t = None
         for tmps in self.read_thread.log:
             self.log_info.append(tmps)
         logging.debug('read Finished')
@@ -1140,7 +1131,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.close()
 
     def about(self):
-        QtWidgets.QMessageBox.about(self, "关于", """Log Viewer V2.5.2.a""")
+        QtWidgets.QMessageBox.about(self, "关于", """Log Viewer V2.5.4.a""")
 
     def ycombo_onActivated(self):
         curcombo = self.sender()
@@ -1164,12 +1155,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             self.drawdata(ax, self.read_thread.getData(text), self.read_thread.ylabel[text], False)
         else:
             logging.info('Fig.' + str(index+1) + ' : ' + text + ' ' + 'timestamp')
-            org_t = self.read_thread.getData(group_name + '.timestamp')[0]
-            t = []
-            dt = [timedelta(seconds = (tmp_t/1e9 - org_t[0]/1e9)) for tmp_t in org_t]
-            t = [self.read_thread.getData(text)[1][0] + tmp for tmp in dt]
-            self.drawdata(ax, (self.read_thread.getData(text)[0], t), self.read_thread.ylabel[text], False)
-
+            org_t = self.getTsFromT(self.read_thread.getData(group_name + '.timestamp'))
+            self.drawdata(ax, (self.read_thread.getData(text)[0], org_t), self.read_thread.ylabel[text], False)
 
     def xcombo_onActivated(self):
         curcombo = self.sender()
@@ -1186,11 +1173,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             self.drawdata(ax, self.read_thread.getData(y_label), self.read_thread.ylabel[y_label], False)
         elif text == 'timestamp':
             group_name = y_label.split('.')[0]
-            org_t = self.read_thread.getData(group_name + '.timestamp')[0]
-            ind = self.getTimeStampValidInd(org_t)
-            dt = [timedelta(seconds = (tmp_t/1e9 - org_t[ind]/1e9)) for tmp_t in org_t]
-            t = [self.read_thread.getData(y_label)[1][ind] + tmp for tmp in dt]
-            self.drawdata(ax, (self.read_thread.getData(y_label)[0], t), self.read_thread.ylabel[y_label], False)
+            org_t = self.getTsFromT(self.read_thread.getData(group_name + '.timestamp'))
+            self.drawdata(ax, (self.read_thread.getData(y_label)[0], org_t), self.read_thread.ylabel[y_label], False)
 
     def cpunum_changed(self, action):
         self.read_thread.cpu_num = int(action.text())
@@ -1246,11 +1230,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                         self.drawdata(ax, self.read_thread.getData(xy.y_combo.currentText()),
                                    self.read_thread.ylabel[xy.y_combo.currentText()], False)
                     elif xy.x_combo.currentText() == 'timestamp':
-                        org_t = self.read_thread.getData(group_name + '.timestamp')[0]
-                        ind = self.getTimeStampValidInd(org_t)
-                        dt = [timedelta(seconds = (tmp_t/1e9 - org_t[ind]/1e9)) for tmp_t in org_t]
-                        t = [self.read_thread.getData(xy.y_combo.currentText())[1][ind] + tmp for tmp in dt]
-                        data = (self.read_thread.getData(xy.y_combo.currentText())[0], t)
+                        org_t = self.getTsFromT(self.read_thread.getData(group_name + '.timestamp'))
+                        data = (self.read_thread.getData(xy.y_combo.currentText())[0], org_t)
                         self.drawdata(ax, data,
                                     self.read_thread.ylabel[xy.y_combo.currentText()], False)
                 self.resetSelect()
