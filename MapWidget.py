@@ -1456,7 +1456,7 @@ class MapWidget(QtWidgets.QWidget):
                 text_path.set_zorder(19)
                 self.ax.add_patch(text_path)
                 if pt[2] != None:
-                    arrow = patches.Arrow(pt[0],pt[1], pr * np.cos(pt[2]), pr*np.sin(pt[2]), width=pr)
+                    arrow = patches.Arrow(pt[0],pt[1], pr * np.cos(pt[2]), pr*np.sin(pt[2]), pr)
                     arrow.set_zorder(19)
                     self.ax.add_patch(arrow)
             self.ruler.add_ruler(self.ax)
