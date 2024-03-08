@@ -3,7 +3,7 @@ import math
 from datetime import datetime, timezone
 import logging
 import gzip
-from multiprocessing import Pool, Manager
+from multiprocessing import Pool
 import json
 import matplotlib
 def date2num(d):
@@ -39,8 +39,26 @@ def polar2xy(angle, dist):
         y.append(d * math.sin(a))
     return x,y
 
-def sortFunc(ds):
-    return ds[0]
+def worker(args):
+    lines = args[0]
+    argv = args[1]
+    l0 = lines["l0"]
+    print("lines size", len(lines["data"]), "argv size", len(argv))
+    for ind, line in enumerate(lines["data"]):
+        break_flag = False
+        for data in argv:
+            if type(data).__name__ == 'dict':
+                for k in data.keys():
+                    data[k].parsed_flag = True
+                    if data[k].parse(line, ind + l0):
+                        break_flag = True
+                        break
+                if break_flag:
+                    break_flag = False
+                    break
+            elif data.parse(line):
+                break
+    return (l0, argv)
 class ReadLog:
     """ 读取Log """
     def __init__(self, filenames):
@@ -49,8 +67,6 @@ class ReadLog:
         self.lines = []
         self.lines_num = 0
         self.thread_num = 4
-        self.sum_argv = Manager().list()
-        self.argv = []
         self.tmin = None
         self.tmax = None
         self.regex = re.compile("\[(.*?)\].*")
@@ -104,28 +120,10 @@ class ReadLog:
                 break
         self.lines.extend(lines)
 
-    def _do(self, lines):
-        l0 = lines["l0"]
-        for ind, line in enumerate(lines["data"]):
-            break_flag = False
-            for data in self.argv:
-                if type(data).__name__ == 'dict':
-                    for k in data.keys():
-                        data[k].parsed_flag = True
-                        if data[k].parse(line, ind + l0):
-                            break_flag = True
-                            break
-                    if break_flag:
-                        break_flag = False
-                        break
-                elif data.parse(line):
-                    break
-        self.sum_argv.append((l0,self.argv))
-
     def _work(self, argv):
         self.lines_num = len(self.lines)
         al = int(self.lines_num/self.thread_num)
-        if al < 1000 or self.thread_num <= 1:
+        if al < 1000:
             for ind, line in enumerate(self.lines):
                 break_flag = False
                 for data in argv:
@@ -148,27 +146,38 @@ class ReadLog:
                     tmp = dict()
                     tmp['l0'] = i * al
                     tmp['data'] = self.lines[i*al:]
-                    line_caches.append(tmp)
+                    line_caches.append((tmp, argv))
                 else:
                     tmp = dict()
                     tmp['l0'] = i * al
                     tmp['data'] = self.lines[i*al:((i+1)*al)]
-                    line_caches.append(tmp)
-            pool = Pool(self.thread_num)
-            self.argv = argv
-            pool.map(self._do, line_caches)
-            self.sum_argv.sort(key = sortFunc)
-            for s in self.sum_argv:
+                    line_caches.append((tmp, argv))
+            result = []
+            with Pool(self.thread_num) as pool:
+                result = pool.map(worker, line_caches)
+            def sortFunc(ds):
+                return ds[0]
+            result.sort(key = sortFunc)
+            print("done!!!")
+            print("len(result): ", len(result))
+            for s in result:
                 for (a,b) in zip(argv,s[1]):
                     if type(a) is dict:
                         for k in a.keys():
                             a[k].insert_data(b[k])
                     else:
                         a.insert_data(b)
-            self.sum_argv = Manager().list()
+            for data in argv:
+                if type(data).__name__ == 'dict':
+                    for k in data.keys():
+                        data[k].parsed_flag = True
+                        print("content size:", len(data[k].data['t']))
 
     def parse(self,*argv):
         """依据输入的正则进行解析"""
+        self.lines = []
+        self.tmin = None
+        self.tmax = None
         file_ind = []
         file_stime = []
         for (ind,file) in enumerate(self.filenames):
@@ -216,11 +225,19 @@ class ReadLog:
 
 
 class Data:
-    def __init__(self, info, key_name:str):
-        self.type = key_name
-        self.regex = re.compile("\[(.*?)\].*\["+self.type+"\]\[(.*?)\]$")
-        self.regex2 = re.compile("\[(.*?)\].*\["+self.type+"\|(.*?)\]$")
-        self.short_regx = "["+self.type
+    def __init__(self, info, key_name:str, text_key:str = None):
+        if key_name == "Text":
+            self.type = text_key
+            self.text_key = text_key
+            self.regex = re.compile("\[(.*?)\].*\[Text\]\[(.*?)\]$")
+            self.regex2 = re.compile("\[(.*?)\].*\[Text\|(.*?)\]$")
+            self.short_regx = "["+"Text"
+        else:
+            self.type = key_name
+            self.text_key = None
+            self.regex = re.compile("\[(.*?)\].*\["+self.type+"\]\[(.*?)\]$")
+            self.regex2 = re.compile("\[(.*?)\].*\["+self.type+"\|(.*?)\]$")
+            self.short_regx = "["+self.type
         self.info = info['content']
         self.data = dict()
         self.data['t'] = []
@@ -302,75 +319,77 @@ class Data:
             self.data[name].append(values[ind])
 
     def parse(self, line, num):
-        if self.short_regx in line:
-            out = self.regex.match(line)
-            if not out:
-                out = self.regex2.match(line)
-            if out:
-                datas = out.groups()
-                values = datas[1].split('|')
-                self.data['t'].append(rbktimetodate(datas[0]))
-                info = self.info
-                if self.info == "key|value":
-                    info = []
-                    half_value = int(len(values)/2)
-                    for d in range(half_value):
-                        try:
-                            _ = float(values[d*2])
-                            info.append({'name': "value_{}".format(d*2), "index": d*2, "type": "double"})
-                            info.append({'name': "value_{}".format(d*2+1), "index": d*2+1, "type": "double"})
-                        except:
-                            info.append({'name': values[d*2], "index": d * 2 + 1, "type": "double"})
-                    if half_value *2  < len(values):
-                        # 对于奇数项的数据
-                        for d in range(half_value*2, len(values)):
-                            info.append({'name': "value_{}".format(d), "index": d, "type": "double"})
-                for (ind, tmp) in enumerate(info):
-                    if 'index' not in tmp:
-                        tmp["index"] = ind
-                    if 'type' in tmp and 'index' in tmp and 'name' in tmp:
-                        index = int(tmp['index'])
-                        if index < 0:
-                            index = len(values) + index
-                        name = tmp['name']
-                        if name not in self.data:
-                            self.data[name] =[]
-                            if len(self.data['t']) > 0:
-                                for _ in range(len(self.data['t'])-1):
-                                    self.data[name].append(None)
-                        if name not in self.description:
-                            self.description[name] = name
-                        if name in self.description:
-                            if type(self.description[name]) is int:
-                                if 'description' in tmp:
-                                    tmp_type = type(tmp['description'])
-                                    description = ""
-                                    has_description = False
-                                    if tmp_type is str:
-                                        description = tmp['description']
-                                        has_description = True
-                                    elif tmp_type is int:
-                                        if tmp['description'] < len(values) and index < len(values):
-                                            description = values[tmp['description']]
-                                            has_description = True
-                                    if has_description:
-                                        self.description[name] = description + " " + self.unit[name]
-                                    else:
-                                        self.description[name] = name
-                            
-                        if index < len(values) and index >=0 :
-                            self._storeData(tmp, index, values)
-                        else:
-                            self.data[name].append(None)
-
-                    else:
-                        if not self.parse_error:
-                            logging.error("Error in {} {} ".format(self.type, tmp.keys()))
-                            self.parse_error = True
-                self.line_num.append(num)
-                return True
+        if self.short_regx not in line:
             return False
-        return False
+        if self.isText() and self.text_key not in line:
+            return False
+        out = self.regex.match(line)
+        if not out:
+            out = self.regex2.match(line)
+        if not out:
+            return False
+        datas = out.groups()
+        values = datas[1].split('|')
+        self.data['t'].append(rbktimetodate(datas[0]))
+        info = self.info
+        if self.info == "key|value":
+            info = []
+            half_value = int(len(values)/2)
+            for d in range(half_value):
+                try:
+                    _ = float(values[d*2])
+                    info.append({'name': "value_{}".format(d*2), "index": d*2, "type": "double"})
+                    info.append({'name': "value_{}".format(d*2+1), "index": d*2+1, "type": "double"})
+                except:
+                    info.append({'name': values[d*2], "index": d * 2 + 1, "type": "double"})
+            if half_value *2  < len(values):
+                # 对于奇数项的数据
+                for d in range(half_value*2, len(values)):
+                    info.append({'name': "value_{}".format(d), "index": d, "type": "double"})
+        for (ind, tmp) in enumerate(info):
+            if 'index' not in tmp:
+                tmp["index"] = ind
+            if 'type' in tmp and 'index' in tmp and 'name' in tmp:
+                index = int(tmp['index'])
+                if index < 0:
+                    index = len(values) + index
+                name = tmp['name']
+                if name not in self.data:
+                    self.data[name] =[]
+                    if len(self.data['t']) > 0:
+                        for _ in range(len(self.data['t'])-1):
+                            self.data[name].append(None)
+                if name not in self.description:
+                    self.description[name] = name
+                if name in self.description:
+                    if type(self.description[name]) is int:
+                        if 'description' in tmp:
+                            tmp_type = type(tmp['description'])
+                            description = ""
+                            has_description = False
+                            if tmp_type is str:
+                                description = tmp['description']
+                                has_description = True
+                            elif tmp_type is int:
+                                if tmp['description'] < len(values) and index < len(values):
+                                    description = values[tmp['description']]
+                                    has_description = True
+                            if has_description:
+                                self.description[name] = description + " " + self.unit[name]
+                            else:
+                                self.description[name] = name
+                    
+                if index < len(values) and index >=0 :
+                    self._storeData(tmp, index, values)
+                else:
+                    self.data[name].append(None)
+
+            else:
+                if not self.parse_error:
+                    logging.error("Error in {} {} ".format(self.type, tmp.keys()))
+                    self.parse_error = True
+        self.line_num.append(num)
+        return True
     def parse_now(self, lines):
         if not self.parsed_flag:
             for ind, line in enumerate(lines):
@@ -404,7 +423,8 @@ class Data:
             if key not in self.description.keys():
                 self.description[key] = other.description[key]                 
         self.line_num.extend(other.line_num)
-
+    def isText(self):
+        return self.text_key != None
 class Laser:
     """  激光雷达的数据
     data[0]: t

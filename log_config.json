@@ -230,6 +230,14 @@
       { "index": 6, "name": "emc", "type": "false"}
     ]
   },
+  "EMStop": {
+    "type": "EMStop",
+    "content": [
+      {"name": "em_acc", "type": "double" },
+      {"name": "em_rot_acc", "type": "double"},
+      {"name": "last_time", "type": "double"}
+    ]
+  },
   "Controller": {
     "type": "Controller",
     "content": [
@@ -544,6 +552,23 @@
       {"name": "stop_flag", "type": "bool","description": "停止", "unit":""  }
     ]
   },
+  "DiffSteer": {
+    "type": "DiffSteer",
+    "content": [
+      {"name": "vx", "type": "double"},
+      {"name": "vy", "type": "double"},
+      {"name": "vw", "type": "rad","description": "下发的vw", "unit":"degree/s"  },
+      {"name": "steer_angle", "type": "rad","unit":"degree"  },
+      {"name": "steer_v", "type": "double", "unit":"m/s"  },
+      {"name": "steer_vw", "type": "rad", "unit":"degree/s"  },
+      {"name": "vL", "type": "double","unit":"m/s"  },
+      {"name": "vR", "type": "double","unit":"m/s"  },
+      {"name": "last_dsteer_angle", "type": "rad","unit":"degree"  },
+      {"name": "ratio", "type": "double", "unit":""  },
+      {"name": "delta_vw", "type": "rad", "unit":"degree/s"  },
+      {"name": "dtheta", "type": "rad", "unit":"degree"  }
+    ]
+  },
   "DualDiff": {
     "type": "DualDiff",
     "content": [
@@ -561,6 +586,25 @@
       { "index": 11, "name": "steer_active", "type": "bool","description": "舵角值是否采用当前舵角值", "unit":""  }
     ]
   },
+  "MultiDiff": {
+    "type": "MultiDiff",
+    "content": [
+      {"name": "vx", "type": "double","description": "下发的vx", "unit":"m/s"  },
+      {"name": "vy", "type": "double","description": "下发的vy", "unit":"m/s"  },
+      {"name": "vw", "type": "rad","description": "下发的vw", "unit":"degree/s"  },
+      {"name": "out_vf", "type": "double","description": "下发前舵角速度", "unit":"m/s"  },
+      {"name": "out_vr", "type": "double","description": "下发后舵角速度", "unit":"m/s"  },
+      {"name": "out_delta_f", "type": "rad","description": "下发前舵角角度", "unit":"degree"  },
+      {"name": "out_delta_r", "type": "rad","description": "下发后舵角角度", "unit":"degree"  },
+      {"name": "last_steerv0", "type": "double","description": "接收到的前舵角速度", "unit":"m/s"  },
+      {"name": "last_steerv1", "type": "double","description": "接收到的后舵角速度", "unit":"m/s"  },
+      {"name": "last_steer0", "type": "rad","description": "接收到的前舵舵角", "unit":"degree"  },
+      {"name": "last_steer1", "type": "rad","description": "接收到的后舵角", "unit":"degree"  },
+      {"name": "steer_active", "type": "bool","description": "舵角值是否采用当前舵角值", "unit":""  },
+      {"name": "to_move", "type": "bool","description": "舵角值是否采用当前舵角值", "unit":""  },
+      {"name": "stop_flag", "type": "bool","unit":""  }     
+    ]
+  },
   "followMode":{
     "type":"followMode",
     "content": [
@@ -570,7 +614,7 @@
       {"name": "m_last_delta_vw", "type": "rad"},
       {"name": "vw", "type": "rad"},
       {"name": "vx", "type": "double"},
-      {"name": "s_last_dsteer_angle", "type":"double"},
+      {"name": "m_last_dsteer_angle", "type":"rad"},
       {"name": "last_cycle_stop_flag","type":"bool"},
       {"name": "spinvw", "type":"rad"},
       {"name": "jack_speed", "type":"double"},
@@ -624,7 +668,18 @@
       {"name": "cur_angle", "type": "rad"},
       {"name": "jack_speed", "type": "double"},
       {"name": "lead_jack_height", "type": "double"},
-      {"name": "spin_angle", "type": "double"}
+      {"name": "spin_angle", "type": "double"},
+      {"name": "dts", "type": "double"},
+      {"name": "last_ts", "type": "double"},
+      {"name": "cur_ts", "type": "double"}
+    ]
+  },
+  "dspin_angle":{
+    "type":"dspin_angle",
+    "content": [
+      {"name": "dspin_angle", "type": "rad","unit":"deg"},
+      {"name": "cur_spin2world", "type": "rad","unit":"deg"},
+      {"name": "has_code", "type": "bool"}
     ]
   },
   "NewLoc":{
@@ -671,6 +726,19 @@
       { "index": 25, "name": "vR2", "type": "double"}
     ]
   },
+
+  "MultiDiffSend": {
+    "type": "MultiDiffSend",
+    "content": [
+      {"name": "last_vx", "type": "double" },
+      {"name": "last_vy", "type": "double"},
+      {"name": "last_vw", "type": "rad" },
+      {"name": "vx", "type": "double" },
+      {"name": "vy", "type": "double"},
+      {"name": "vw", "type": "rad" }
+    ]
+  },
+
   "DualDiffMid": {
     "type": "DualDiffMid",
     "content": [
@@ -757,13 +825,34 @@
   "OutputV":{
     "type": "OutputV",
     "content": [
-      {"index": 0, "name": "global_spin_anle", "type":"rad","description": "托盘在世界坐标下的目标角度", "unit":"degree"},
-      {"index": 1, "name": "cur_global_angle", "type":"rad","description": "托盘当前在世界坐标系下的角度", "unit":"degree"},
-      {"index": 2, "name": "local_spin_angle", "type": "rad","description": "托盘在agv坐标下的目标角度", "unit":"degree"},
-      {"index": 3, "name": "local_plate_angle", "type": "rad","description": "托盘在agv坐标下的当前角度", "unit":"degree"},
-      {"index": 4, "name": "vx", "type": "double","description": "agv当前下发vx", "unit":"m/s"},
-      {"index": 5, "name": "vw", "type": "rad","description": "agv当前下发vw", "unit":"degree/s"},
-      {"index": 6, "name": "spin_vw", "type": "rad","description": "agv当前下发托盘转速", "unit":"degree/s"}
+      {"name": "global_spin_angle", "type":"rad","description": "托盘在世界坐标下的目标角度", "unit":"degree"},
+      {"name": "cur_global_angle", "type":"rad","description": "托盘当前在世界坐标系下的角度", "unit":"degree"},
+      {"name": "local_spin_angle", "type": "rad","description": "托盘在agv坐标下的目标角度", "unit":"degree"},
+      {"name": "local_plate_angle", "type": "rad","description": "托盘在agv坐标下的当前角度", "unit":"degree"},
+      {"name": "vx", "type": "double","description": "agv当前下发vx", "unit":"m/s"},
+      {"name": "vw", "type": "rad","description": "agv当前下发vw", "unit":"degree/s"},
+      {"name": "spin_vw", "type": "rad","description": "agv当前下发托盘转速", "unit":"degree/s"},
+      {"name":"odo_vw", "type":"rad", "unit":"degree"},
+      {"name":"spin_odo_vw", "type":"rad","unit":"degree"},
+      {"name":"target_global_angle","type":"rad","unit":"degree"}
+    ]
+  },
+  "spinMotor":{
+    "type": "spinMotor",
+    "content": [
+      {"name": "cur_spin_angle", "type":"rad", "unit":"degree"},
+      {"name": "jack_state", "type":"double"},
+      {"name": "m_spin_zero_offset", "type": "rad","unit":"degree"},
+      {"name": "rot_flag", "type": "bool"}
+    ]
+  },
+  "SpinState":{
+    "type": "SpinState",
+    "content": [
+      {"name": "isGoalReach", "type":"bool", "unit":""},
+      {"name": "last_curve", "type":"bool"},
+      {"name": "spin_state", "type": "float"},
+      {"name": "org_spin_state", "type": "float"}
     ]
   },
   "code2robot":{
@@ -775,6 +864,7 @@
       { "index": 3, "name": "offset", "type": "rad","description": "二维码到agv坐标下零位的偏置", "unit":"degree" }
     ]
   },
+
   "DI": {
     "type": "DI",
     "content": [
@@ -895,12 +985,12 @@
   "LqrSpinData": {
     "type": "LqrSpinData",
     "content": [
-      {"name": "dw", "type": "rad", "description": "dw", "unit":"degree"},
-      { "index": 1, "name": "send_w", "type": "rad", "description": "", "unit":"degree"},
-      { "index": 2, "name": "base_w", "type": "rad", "description": "", "unit":"degree"},
-      { "index": 3, "name": "theta_e", "type": "rad", "description": "", "unit":"degree"},
-      { "index": 4, "name": "theta_pe", "type": "rad", "description": "", "unit":"degree"},
-      { "index": 5, "name": "sum_e", "type": "rad", "description": "", "unit":"degree"}
+      {"name": "dw", "type": "rad", "unit":"degree"},
+      {"name": "send_w", "type": "rad", "unit":"degree"},
+      {"name": "base_w", "type": "rad", "unit":"degree"},
+      {"name": "theta_e", "type": "rad", "unit":"degree"},
+      {"name": "theta_pe", "type": "rad", "unit":"degree"},
+      {"name": "sum_e", "type": "rad", "unit":"degree"}
     ]
   },
   "MotorCmd": {
@@ -931,6 +1021,10 @@
   },
   "MotorSend": {
     "type": "MotorSend",
+    "content": "key|value"
+  },
+  "MotorMoveType": {
+    "type": "MotorMoveType",
     "content": "key|value"
   },
   "MotorGet": {
@@ -980,6 +1074,21 @@
       { "index": 5, "name": "is_DMT_detected", "type": "bool", "description": "是否检测到Data Matrix", "unit":""  }
     ]
   },
+  "pgv_dmt":{
+    "type": "pgv_dmt",
+    "content": [
+      {"name": "device_address", "type": "int64", "description": "设备地址", "unit":""  },
+      { "name": "up_side", "type": "bool", "description": "上视"},
+      { "name": "is_DMT_detected", "type": "bool", "description": "是否检测到Data Matrix", "unit":""  },
+      { "name": "tag_x", "type": "double", "description": "x差值"},
+      { "name": "tag_y", "type": "double", "description": "y差值"},
+      { "name": "tag_angle", "type": "rad", "description": "angle差值", "unit":"degree"},
+      { "name": "xrange", "type": "double", "description": "x范围"},
+      { "name": "yrange", "type": "double", "description": "y范围"},
+      { "name": "data_nsec", "type": "double", "description": "data_time"},
+      { "name": "pub_nsec", "type": "double", "description": "pub_time"}
+    ]
+  },
   "CoupledMotor":{
     "type":"CoupledMotor",
     "content": [
@@ -1005,8 +1114,18 @@
     ]
   },
   
+  "spinRot": {
+    "type": "spinRot",
+    "content": [
+      {"name": "robot_rot", "type": "rad", "unit":"degree"  },
+      {"name": "odo_rot", "type": "rad", "unit":"degree"  },
+      {"name": "last_send_rot", "type": "rad", "unit":"degree" },
+      {"name": "send_rot", "type": "rad", "unit":"degree"}
+    ]
+  },
   "MotorInfo": {
-    "type": ["MotorInfo0", "MotorInfo1", "MotorInfo2", "MotorInfo3", "MotorInfo4", "MotorInfo5", "MotorInfo6"],
+    "type": ["MotorInfo0", "MotorInfo1", "MotorInfo2", "MotorInfo3", "MotorInfo4", "MotorInfo5", "MotorInfo6",
+    "MotorInfo7", "MotorInfo8", "MotorInfo9", "MotorInfo10", "MotorInfo11", "MotorInfo12", "MotorInfo13"],
     "content": [
       {"name": "timestamp", "type": "int64", "description": "里程时间戳", "unit":""  },
       { "index": 1, "name": "postion", "type": "double", "description": "位置", "unit":"" },
@@ -1021,6 +1140,45 @@
       { "index": 10, "name": "motorName", "type":"str", "description": "电机名称"},
       { "index": 11, "name": "errcode", "type": "int64", "description": "错误码", "unit":""  },
       { "index": 12, "name": "raw_position", "type": "double", "description": "原始位置", "unit":""  }
+    ]
+  },
+  "SendDiffSteers": {
+    "type": ["SendDiffSteers0", 
+             "SendDiffSteers1", 
+             "SendDiffSteers2", 
+             "SendDiffSteers3", 
+             "SendDiffSteers4", 
+             "SendDiffSteers5", 
+             "SendDiffSteers6"],
+    "content": [
+      {"name": "name", "type":"str", "description": "电机名称"},
+      {"name": "steer_angle", "type": "rad", "unit":"" },
+      {"name": "steer_vw", "type": "double", "unit":""  },
+      {"name": "steer_v", "type": "double"},
+      {"name": "vL", "type": "double", "unit":""  },
+      {"name": "vR", "type": "double", "unit":""  },
+      {"name": "last_dsteer_angle", "type": "double", "unit":""  },
+      {"name": "delta_vw", "type": "double", "unit":""  },
+      {"name": "real_steer_angle", "type": "rad", "unit":""  }
+    ]
+  },
+  "LastSendDiffSteers": {
+    "type": ["LastSendDiffSteers0", 
+             "LastSendDiffSteers1", 
+             "LastSendDiffSteers2", 
+             "LastSendDiffSteers3", 
+             "LastSendDiffSteers4", 
+             "LastSendDiffSteers5", 
+             "LastSendDiffSteers6"],
+    "content": [
+      {"name": "name", "type":"str", "description": "电机名称"},
+      {"name": "steer_angle", "type": "rad", "unit":"" },
+      {"name": "steer_vw", "type": "double", "description": "vw", "unit":""  },
+      {"name": "steer_v", "type": "double", "description": "v"},
+      {"name": "vL", "type": "double", "unit":""  },
+      {"name": "vR", "type": "double", "unit":""  },
+      {"name": "last_dsteer_angle", "type": "double", "unit":""  },
+      {"name": "delta_vw", "type": "double", "unit":""  }
     ]
   },
   "buzzer":{
@@ -1105,8 +1263,21 @@
   "updateCmdByPos0": {
     "type": "updateCmdByPos0",
     "content": [
+      { "name": "name", "type": "str"},
       { "name": "dvx", "type": "double"},
-      { "name": "dvw", "type": "double"}
+      { "name": "dvw", "type": "double"},
+      { "name": "real_dx", "type": "double"},
+      { "name": "real_dy", "type": "double"}    
+    ]
+  },  
+  "updateCmdByPos1": {
+    "type": "updateCmdByPos1",
+    "content": [
+      { "name": "name", "type": "str"},
+      { "name": "dvx", "type": "double"},
+      { "name": "dvw", "type": "double"},
+      { "name": "real_dx", "type": "double"},
+      { "name": "real_dy", "type": "double"}    
     ]
   },  
   "ForkMotors": {
@@ -1200,23 +1371,13 @@
       {"index":4, "name":"loc_dtheta", "type":"double"}
     ]
   },
-  "safeMoveStatus":{
-    "type":"safeMoveStatus",
-    "content":[
-      {"index":0, "name":"status", "type":"double"},
-      {"index":1, "name":"to_move", "type":"bool"},
-      {"index":2, "name":"in_runScript", "type":"bool"},
-      {"index":3, "name":"in_manual", "type":"bool"},
-      {"index":4, "name":"script_status", "type":"double"}      
-    ]
-  },
   "rec_list":{
     "type":"rec_list",
     "content":[
       {"index":0, "name":"x", "type":"double", "description": "识别x", "unit":"" },
       {"index":1, "name":"y", "type":"double", "description": "识别y", "unit":"" },
       {"index":2, "name":"z", "type":"double", "description": "识别z", "unit":"" },
-      {"index":3, "name":"yaw", "type":"rad", "description": "识别yaw", "unit":""}
+      {"index":3, "name":"yaw", "type":"rad", "description": "识别yaw", "unit":"deg"}
     ]
   },
   "RecPathPlan":{
@@ -1300,6 +1461,20 @@
       {"index":0, "name":"state", "type":"json"}
     ]
   },
+  "ForkLift":{
+    "type":"Text",
+    "textKey":"ForkLift",
+    "content":[
+      {"index":0, "name":"state", "type":"json"}
+    ]
+  },
+  "gantry_sensor_status":{
+    "type":"Text",
+    "textKey":"gantry_sensor_status",
+    "content":[
+      {"index":0, "name":"state", "type":"json"}
+    ]
+  },
   "SimLocation":{
     "type":"SimLocation",
     "content":[
@@ -1348,6 +1523,29 @@
       {"name":"pgv_adjust_time", "type":"double"}
     ]        
   },
+  "MagNode":{
+    "type":"MagNode",
+    "content":[
+      {"name":"mag_id", "type":"double"},
+      {"name":"node_x", "type":"double"},
+      {"name":"node_y", "type":"double"},
+      {"name":"node_yaw", "type":"double"},
+      {"name":"node_step", "type":"double", "unit":"deg"},
+      {"name":"node_res", "type":"doube", "unit":"deg"}
+    ]        
+  },  
+  "MagCurve":{
+    "type":"MagCurve",
+    "content":[
+      {"name":"dir_state", "type":"double", "desc": "磁导航行走方向,1:R, 2: L, 3:M, 4:K"},
+      {"name":"shift_dist", "type":"double", "desc": "侧向偏差 mm"},
+      {"name":"curvature", "type":"double", "desc": "偏差曲率 mm^-1"},
+      {"name":"delta_curvature", "type":"double", "desc": "曲率变化率"},
+      {"name":"mag_x", "type":"double", "desc": "磁条传感器在里程中心的x位置 mm"},
+      {"name":"wkp", "type":"double"},
+      {"name":"wkd", "type":"double"}
+    ]        
+  },  
   "ChargerBrandInfo":{
     "type":"ChargerBrandInfo",
     "content":[
@@ -1625,7 +1823,9 @@
       {"name":"cur_vw", "type":"rad","description": "当前 vw","unit":"degree/s"},
       {"name":"warnTime", "type":"double","description": "报警时间","unit":"s"},
       {"name":"dv_ratio", "type":"double","description": "打滑速度和下发速度比例","unit":""},
-      {"name":"dw_ratio", "type":"double","description": "打滑角速度和下发速度比例","unit":""}
+      {"name":"dw_ratio", "type":"double","description": "打滑角速度和下发速度比例","unit":""},
+      {"name":"slip_vx_stop_flag", "type":"bool"},
+      {"name":"slip_vw_stop_flag", "type":"bool"}
     ]     
   },
   "TCost":{
@@ -1671,7 +1871,13 @@
       {"name":"dist", "type":"double","description": "位置差","unit":"m"},
       {"name":"idealx", "type":"double","description": "理想偏差x","unit":"m"},
       {"name":"idealy", "type":"double","description": "理想偏差y","unit":"m"},
-      {"name":"idealAng", "type":"rad","description": "理想偏差theta","unit":"deg"}
+      {"name":"idealAng", "type":"rad","description": "理想偏差theta","unit":"deg"},
+      {"name":"2mapx", "type":"double","description": "地图下x","unit":"m"},
+      {"name":"2mapy", "type":"double","description": "地图下y","unit":"m"},
+      {"name":"2mapAng", "type":"rad","description": "地图下theta","unit":"deg"},
+      {"name":"init", "type":"bool","description": "是否变为从车"},
+      {"name":"ts", "type":"double","description": "数据时间", "unit":"ns"},
+      {"name":"delayt", "type":"double","description": "延迟时间", "unit":"ms"}
     ]  
   },
   "MRobotStatus2":{
@@ -1688,7 +1894,13 @@
       {"name":"dist", "type":"double","description": "位置差","unit":"m"},
       {"name":"idealx", "type":"double","description": "理想偏差x","unit":"m"},
       {"name":"idealy", "type":"double","description": "理想偏差y","unit":"m"},
-      {"name":"idealAng", "type":"rad","description": "理想偏差theta","unit":"deg"}
+      {"name":"idealAng", "type":"rad","description": "理想偏差theta","unit":"deg"},
+      {"name":"2mapx", "type":"double","description": "地图下x","unit":"m"},
+      {"name":"2mapy", "type":"double","description": "地图下y","unit":"m"},
+      {"name":"2mapAng", "type":"rad","description": "地图下theta","unit":"deg"},
+      {"name":"init", "type":"bool","description": "是否变为从车"},
+      {"name":"ts", "type":"double","description": "数据时间", "unit":"ns"},
+      {"name":"delayt", "type":"double","description": "延迟时间", "unit":"ms"}
     ]   
   },
   "get_latency":{
@@ -1745,15 +1957,36 @@
       {"name":"vx", "type":"double", "unit":"m/s"}
     ]    
   },
+  "trackWalkMotor":{
+    "type":"trackWalkMotor",
+    "content":[
+      {"name":"name", "type":"str"},
+      {"name":"e", "type":"double"},
+      {"name":"sume","type":"double"},
+      {"name":"kp","type":"double"},
+      {"name":"ki","type":"double"},
+      {"name":"min_speed","type":"double"},
+      {"name":"dv","type":"double"},
+      {"name":"ideal_v","type":"double"},
+      {"name":"real_send_v","type":"double"},
+      {"name":"vout","type":"double"},
+      {"name":"vodo","type":"double"},
+      {"name":"stop","type":"bool"},
+      {"name":"last_idea_vel", "type":"double"},
+      {"name":"observerK","type":"double" }
+    ]
+  },
   "NewSPID":{
     "type":"NewSPID",
     "content":[
-      {"name":"vw0", "type":"rad", "unit":"deg/s"},
-      {"name":"m_dvw", "type":"rad","unit":"deg"},
-      {"name":"temp_angle", "type":"rad", "unit":"deg"},
+      {"name":"vw0", "type":"double", "unit":"rad/s"},
+      {"name":"dvw", "type":"rad","unit":"deg"},
+      {"name":"org_dvw", "type":"double","unit":"rad"},
+      {"name":"temp_angle", "type":"double", "unit":"rad"},
       {"name":"e", "type":"double", "unit":"m"},
       {"name":"de", "type":"double", "unit":"m"},
       {"name":"the", "type":"rad", "unit":"deg"},
+      {"name":"dthe", "type":"rad", "unit":"deg"},
       {"name":"wkp", "type":"double", "unit":""},
       {"name":"wkd_dt", "type":"double", "unit":""},
       {"name":"aheadDist", "type":"double", "unit":""},
@@ -1764,12 +1997,22 @@
       {"name":"curve", "type":"double", "unit":""},
       {"name":"ax", "type":"double", "unit":""},
       {"name":"slow_down", "type":"bool", "unit":""},
-      {"name":"vw", "type":"rad", "unit":"deg/s"},
+      {"name":"vw", "type":"double", "unit":"rad/s"},
       {"name":"vx", "type":"double", "unit":"m/s"},
-      {"name":"adjust_state", "type":"double", "unit":""},
-      {"name":"adjust_first", "type":"bool", "unit":""},
+      {"name":"thetaKd", "type":"double", "unit":""},
       {"name":"delay_time", "type":"double", "unit":""}
     ]    
+  },
+  "safeMoveStatus":{
+    "type":"safeMoveStatus",
+    "content":[
+      {"name":"safeStatus", "type":"double","description": "0: NONE, 1:RUN, 3: FINISH"},
+      {"name":"toMove", "type":"bool"},
+      {"name":"in_runScript_task", "type":"bool"},
+      {"name":"in_manual_safeMove", "type":"bool"},
+      {"name":"runScriptStatus", "type":"double","description": "0: NONE, 1:RUN, 3: FINISH"},
+      {"name":"toMove2", "type":"bool"}
+    ]
   },
   "CalNear":{
     "type":"CalNear",
@@ -1778,7 +2021,6 @@
       {"name":"angle", "type":"rad", "unit":""},
       {"name":"px", "type":"double", "unit":""},
       {"name":"py", "type":"double", "unit":""},
-      {"name":"ptheta", "type":"rad", "unit":"deg"},
       {"name":"ptheta", "type":"rad", "unit":"deg"},
       {"name":"e", "type":"double", "unit":""},
       {"name":"e0", "type":"double", "unit":""}
@@ -1810,6 +2052,21 @@
       {"name":"y", "type":"double", "unit":""},
       {"name":"theta", "type":"double", "unit":"deg"},
       {"name":"timestamp", "type":"int64", "unit":""}
+    ]    
+  },
+  "testAdjust":{
+    "type":"testAdjust",
+    "content":[
+      {"name":"org_e", "type":"double", "unit":""},
+      {"name":"org_dvw", "type":"double", "unit":""},
+      {"name":"third_condition", "type":"bool"},
+      {"name":"condition1", "type":"bool", "unit":""},
+      {"name":"condition2", "type":"bool", "unit":""},
+      {"name":"condition3", "type":"bool", "unit":""},
+      {"name":"condition4", "type":"bool", "unit":""},
+      {"name":"dvw", "type":"double", "unit":""},
+      {"name":"delay_dist", "type":"double", "unit":""},
+      {"name":"compensate_dist", "type":"double", "unit":""}
     ]    
   }
 

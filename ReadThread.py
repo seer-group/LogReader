@@ -1,4 +1,3 @@
-from tokenize import Double
 from PyQt5.QtCore import QThread, pyqtSignal
 from loglibPlus import Data, Laser, ErrorLine, WarningLine, ReadLog, FatalLine, NoticeLine, TaskStart, TaskFinish, Service, ParticleState
 from loglibPlus import Memory, DepthCamera, RobotStatus
@@ -78,11 +77,11 @@ class ReadThread(QThread):
         """读取log"""
         #初始化log数据
         try:
-            f = open(self.log_config,encoding= 'UTF-8')
-            self.js = js.load(f)
-            f.close()
-            logging.error("Load {}".format(self.log_config))
-            self.log.append("Load {}".format(self.log_config))
+            with open(self.log_config,encoding= 'UTF-8') as f:
+                self.js = js.load(f)
+                f.close()
+                logging.info("Load {}".format(self.log_config))
+                self.log.append("Load {}".format(self.log_config))
         except FileNotFoundError:
             logging.error("Failed to open {}".format(self.log_config))
             self.log.append("Failed to open {}".format(self.log_config))
@@ -97,9 +96,10 @@ class ReadThread(QThread):
                         for type in self.js[k]["type"]:
                             content_delay[type] = Data(self.js[k], type)
                     elif isinstance(self.js[k]['type'], str):
-                        content_delay[self.js[k]['type']] = Data(self.js[k], self.js[k]['type'])
-
-        self.laser = Laser(1000.0)
+                        if self.js[k]['type'] == "Text" and isinstance(self.js[k].get("textKey", None), str):
+                            content_delay[self.js[k]['textKey']] = Data(self.js[k], self.js[k]['type'], self.js[k]['textKey'])
+                        else:
+                            content_delay[self.js[k]['type']] = Data(self.js[k], self.js[k]['type'], None)
         self.err = ErrorLine()
         self.war = WarningLine()
         self.fatal = FatalLine()
@@ -115,14 +115,17 @@ class ReadThread(QThread):
         self.log =  []
         self.output_fname = ""
         if self.filenames:
-            self.reader = ReadLog(self.filenames)
+            if self.reader == None:
+                self.reader = ReadLog(self.filenames)
+            else:
+                self.reader.filenames = self.filenames
             self.reader.thread_num = self.cpu_num
             time_start=time.time()
             self.reader.parse(self.content, self.laser, self.err, 
-                              self.war, self.fatal, self.notice, 
-                              self.taskstart, self.taskfinish, self.service, 
-                              self.memory, self.depthcamera, self.particle,
-                              self.rstatus)
+                            self.war, self.fatal, self.notice, 
+                            self.taskstart, self.taskfinish, self.service, 
+                            self.memory, self.depthcamera, self.particle,
+                            self.rstatus)
             time_end=time.time()
             self.log.append('read time cost: ' + str(time_end-time_start))
             self.content.update(content_delay)
@@ -199,11 +202,11 @@ class ReadThread(QThread):
             self.data_org_key["IMU.org_gz"] = "IMU"
 
         self.data.update({"memory.used_sys":self.memory.used_sys(), "memory.free_sys":self.memory.free_sys(), "memory.rbk_phy": self.memory.rbk_phy(),
-                     "memory.rbk_vir":self.memory.rbk_vir(),"memory.rbk_max_phy":self.memory.rbk_max_phy(),"memory.rbk_max_vir":self.memory.rbk_max_vir(),
-                     "memory.cpu":self.memory.rbk_cpu(),"memory.sys_cpu":self.memory.sys_cpu()})
+                    "memory.rbk_vir":self.memory.rbk_vir(),"memory.rbk_max_phy":self.memory.rbk_max_phy(),"memory.rbk_max_vir":self.memory.rbk_max_vir(),
+                    "memory.cpu":self.memory.rbk_cpu(),"memory.sys_cpu":self.memory.sys_cpu()})
         self.ylabel.update({"memory.used_sys": "used_sys MB", "memory.free_sys":"free_sys MB", "memory.rbk_phy": "rbk_phy MB",
-                     "memory.rbk_vir":"rbk_vir MB","memory.rbk_max_phy":"rbk_max_phy MB","memory.rbk_max_vir":"rbk_max_vir MB",
-                     "memory.cpu":"cpu %", "memory.sys_cpu":"sys_cpu %"})
+                    "memory.rbk_vir":"rbk_vir MB","memory.rbk_max_phy":"rbk_max_phy MB","memory.rbk_max_vir":"rbk_max_vir MB",
+                    "memory.cpu":"cpu %", "memory.sys_cpu":"sys_cpu %"})
 
         for k in self.laser.datas.keys():
             self.data["laser"+str(k)+'.'+"ts"] = self.laser.ts(k)

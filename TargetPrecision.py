@@ -26,7 +26,7 @@ from ReadThread import ReadThread
 import logging
 from datetime import timedelta
 from loglibPlus import num2date, date2num
-from MapWidget import normalize_theta_deg, Pos2Base, GetGlobalPos
+from MapWidget import normalize_theta_deg, Pos2Base, GetGlobalPos, P2G
 class TargetPrecision(QtWidgets.QWidget):
     dropped = pyqtSignal('PyQt_PyObject')
     hiddened = pyqtSignal('PyQt_PyObject')
@@ -57,6 +57,34 @@ class TargetPrecision(QtWidgets.QWidget):
         self.py_data = lines.Line2D([],[], marker = '.', linestyle = '', markersize=10)
         self.pa_data = lines.Line2D([],[], marker = '.', linestyle = '', markersize=10)
         self.setupUI()
+
+    def mouse_press(self, event):
+        if not event.inaxes:
+            return
+        if event.button == 3:
+            self.popMenu = QtWidgets.QMenu(self)
+            self.popMenu.addAction('&Save Data',lambda:self.saveData())
+            cursor = QtGui.QCursor()
+            self.popMenu.exec_(cursor.pos())
+
+    def saveData(self):
+        fname, _ = QtWidgets.QFileDialog.getSaveFileName(self,"选取log文件", "","PY Files (*.py)")
+        # 获取数据
+        outdata = []
+        xdata = 'x='+str(self.xdata)
+        ydata = 'y='+str(self.ydata)
+        adata = "a="+str(self.adata)
+        outdata.append(xdata)
+        outdata.append(ydata)
+        outdata.append(adata)
+        # 写数据
+        if fname:
+            try:
+                with open(fname, 'w') as fn:
+                    for d in outdata:
+                        fn.write(d+'\n')
+            except:
+                pass
 
     def analysis(self):
         self.targetName = "Task finished : "+ self.find_edit.text()+"]"
@@ -201,6 +229,7 @@ class TargetPrecision(QtWidgets.QWidget):
                 if valid[loc_idx] > 0.1:
                     if goal_pos != None:
                         tmp_pos = [locx[loc_idx],locy[loc_idx],loca[loc_idx]/180.0*math.pi]
+
                         pos2goal = Pos2Base(tmp_pos, goal_pos)  # 转换成地图点坐标系
                         xdata.append(pos2goal[0])
                         ydata.append(pos2goal[1])
@@ -236,6 +265,7 @@ class TargetPrecision(QtWidgets.QWidget):
             out_x_off = 0
             if map_x != None:
                 out_x_off = (map_x[0] - out_xmid)*1000
+            print("x", out_xmid, out_x_off, map_x[0])
 
             out_ymin = min(ydata)
             out_ymax = max(ydata)
@@ -246,7 +276,7 @@ class TargetPrecision(QtWidgets.QWidget):
             out_y_off = 0
             if map_y != None:
                 out_y_off = (map_y[0] - out_ymid)*1000
-            
+            print("y",out_ymid, out_y_off, map_y[0])
 
             out_amax = adata[0]
             out_amin = adata[0]
@@ -272,8 +302,16 @@ class TargetPrecision(QtWidgets.QWidget):
             out_a_off = 0
             if map_a != None:
                 out_a_off = normalize_theta_deg((map_a[0] - out_amid))
-            self.result_label.setText("{}次到点{}\n 重复到点误差 x = {:4.1f} mm, y= {:4.1f} mm, theta = {:4.1f} ° \n 绝对到点误差 x = {:4.1f} mm, y= {:4.1f} mm, theta = {:4.1f} °".format\
-                              (len(xdata), lm_name, out_xrange, out_yrange, out_arange,out_x_off, out_y_off, out_a_off))
+                print("a",out_amid, out_a_off, map_a[0])
+            result_str = "{}次到点{}\n".format(len(xdata), lm_name)
+            result_str += "重复到点误差 x = {:4.1f} mm, y= {:4.1f} mm, theta = {:4.1f} ° \n".format( out_xrange, out_yrange, out_arange)
+            result_str += "绝对到点误差 x = {:4.1f} mm, y= {:4.1f} mm, theta = {:4.1f} ° \n".format(out_x_off, out_y_off, out_a_off)
+            if goal_pos != None:
+                pos2map = P2G([out_xmid, out_ymid, out_amid/180.0*math.pi], goal_pos)  # 转换成地图点坐标系
+                result_str += "平均坐标 {:4.3f}, {:4.3f}, {:4.3f} °".format(pos2map[0], pos2map[1], pos2map[2]/math.pi*180.0)
+            else:
+                result_str += "平均坐标 {:4.3f}, {:4.3f}, {:4.3f} °".format(out_xmid, out_ymid, out_amid)
+            self.result_label.setText(result_str)
 
             self.xdata = xdata
             self.ydata = ydata
@@ -502,6 +540,7 @@ class TargetPrecision(QtWidgets.QWidget):
         self.fig_layout.addLayout(mxbox)
         self.fig_layout.addWidget(self.result_label)
         self.fig_layout.addWidget(tab)
+        self.static_canvas.mpl_connect('button_press_event', self.mouse_press)
 
 if __name__ == '__main__':
     import sys

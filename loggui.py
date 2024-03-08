@@ -400,7 +400,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         t = datat[1]
         if self.ts2log_t == None:
             ind = self.getTimeStampValidInd(ts)
-            self.ts2log_t = t[ind].timestamp() - ts[ind]/1e9
+            if ind >= 0:
+                self.ts2log_t = t[ind].timestamp() - ts[ind]/1e9
         new_t= t
         if self.ts2log_t != None:
             new_t = [datetime.fromtimestamp(tmpt/1e9 + self.ts2log_t) for tmpt in ts]
@@ -495,46 +496,11 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.updateDataViews()
 
     def updateJsonView(self):
-        map_name = None
         if len(self.read_thread.rstatus.chassis()[1]) > 0:
             ts = np.array(self.read_thread.rstatus.chassis()[1])
             idx = (np.abs(ts - self.mid_line_t)).argmin()
-            j = json.loads(self.read_thread.rstatus.chassis()[0][idx])   
-            map_name = j.get("CURRENT_MAP",None)
-            if map_name:
-                map_name = map_name + ".smap"
             if self.sts_widget:
-                if idx < len(self.read_thread.rstatus.version()[0]) and  "ROBOKIT_VERSION_REDISTRIBUTE" in j:
-                    j["ROBOKIT_VERSION_REDISTRIBUTE"] = "{}.{}".format(self.read_thread.rstatus.version()[0][idx],
-                                                                        j["ROBOKIT_VERSION_REDISTRIBUTE"])
-                if idx < len(self.read_thread.rstatus.fatalNum()[0]):
-                    j["fatalNums"] = self.read_thread.rstatus.fatalNum()[0][idx]
-                if idx < len(self.read_thread.rstatus.fatals()[0]):
-                    try:
-                        j["fatals"] = json.loads(self.read_thread.rstatus.fatals()[0][idx])
-                    except:
-                        j["fatals"] = self.read_thread.rstatus.fatals()[0][idx]
-                if idx < len(self.read_thread.rstatus.errorNum()[0]):
-                    j["errorNums"] = self.read_thread.rstatus.errorNum()[0][idx]
-                if idx < len(self.read_thread.rstatus.errors()[0]):
-                    try:
-                        j["errors"] = json.loads(self.read_thread.rstatus.errors()[0][idx])
-                    except:
-                        j["errors"] = self.read_thread.rstatus.errors()[0][idx]
-                if idx < len(self.read_thread.rstatus.warningNum()[0]):
-                    j["warningNum"] = self.read_thread.rstatus.warningNum()[0][idx]
-                if idx < len(self.read_thread.rstatus.warnings()[0]):
-                    try:
-                        j["warnings"] = json.loads(self.read_thread.rstatus.warnings()[0][idx])
-                    except:
-                        j["warnings"] = self.read_thread.rstatus.warnings()[0][idx]
-                if idx < len(self.read_thread.rstatus.noticeNum()[0]):
-                    j["noticeNum"] = self.read_thread.rstatus.noticeNum()[0][idx]
-                if idx < len(self.read_thread.rstatus.notices()[0]):
-                    try:
-                        j["notices"] = json.loads(self.read_thread.rstatus.notices()[0][idx])
-                    except:
-                        j["notices"] = self.read_thread.rstatus.notices()[0][idx]
+                j = self.getRStatusJson(idx, self.read_thread.rstatus.chassis()[0][idx])
                 self.sts_widget.loadJson(j)    
 
     def updateSelection(self):
@@ -565,7 +531,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                     self.popMenu.addAction('&Move Here',lambda:self.moveHere(event.xdata))
                     self.popMenu.addAction('&resize Region',lambda:self.resizeRegion())
                     self.popMenu.addAction('&reset Data', lambda:self.resetData(event.inaxes))
-                    self.popMenu.addAction('&Diff Time', lambda:self.diffData(event.inaxes))
+                    self.popMenu.addAction('&dData/dt', lambda:self.diffData(event.inaxes))
+                    self.popMenu.addAction('&data period', lambda:self.dataPeriod(event.inaxes))
                     self.popMenu.addAction('&- Data', lambda:self.negData(event.inaxes))
                     self.popMenu.addAction('&Rad2Deg', lambda:self.rad2Deg(event.inaxes))
                     self.popMenu.addAction('&Deg2Rad', lambda:self.deg2Rad(event.inaxes))
@@ -657,6 +624,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.static_canvas.figure.canvas.draw()
 
     def getTimeStampValidInd(self, timestamp):
+        if len(timestamp) <= 0:
+            return -1
         ind = 0
         for t in timestamp:
             if t > 0:
@@ -774,6 +743,24 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         except ZeroDivisionError:
             pass
 
+    def dataPeriod(self, cur_ax):
+        indx = self.axs.tolist().index(cur_ax)
+        xy = self.xys[indx]        
+        group_name = xy.y_combo.currentText().split('.')[0]
+        list_tmpdata = []
+        org_t = self.getTsFromT(self.read_thread.getData(group_name + '.timestamp'))
+        if len(org_t) > 0:
+            tmpdata = (self.read_thread.getData(xy.y_combo.currentText())[0], org_t)
+            list_tmpdata = [(t,d) for t,d in zip(tmpdata[1], tmpdata[0])]
+        else:
+            tmpdata = self.read_thread.getData(xy.y_combo.currentText())
+            list_tmpdata = [(t,d) for t,d in zip(tmpdata[1], tmpdata[0])]
+        if len(list_tmpdata) < 2:
+            return
+        list_tmpdata.sort(key=lambda d: d[0])
+        dts = [(a[0]-b[0]).total_seconds() for a, b in zip(list_tmpdata[1::], list_tmpdata[0:-1])]
+        self.drawdata(cur_ax, (dts, list_tmpdata[1::]), 'dataPeriod_'+self.read_thread.ylabel[xy.y_combo.currentText()], False)       
+    
     def negData(self, cur_ax):
         indx = self.axs.tolist().index(cur_ax)
         xy = self.xys[indx]        
@@ -786,7 +773,10 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 self.drawdata(cur_ax, (tmpdata[0], tmpdata[1]), '-'+self.read_thread.ylabel[xy.y_combo.currentText()], False)
                 return
         tmpdata = self.read_thread.getData(xy.y_combo.currentText())
-        data = [-a for a in tmpdata[0]]
+        data = []
+        for a in tmpdata[0]:
+            if isinstance(a, int) or isinstance(a, float):
+                data.append(-a)
         self.drawdata(cur_ax, (data, tmpdata[1]), '-'+self.read_thread.ylabel[xy.y_combo.currentText()], False)
 
     def rad2Deg(self, cur_ax):
@@ -816,7 +806,12 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 self.drawdata(cur_ax, (tmpdata[0], tmpdata[1]), self.read_thread.ylabel[xy.y_combo.currentText()]+" rad", False)
                 return
         tmpdata = self.read_thread.getData(xy.y_combo.currentText())
-        data = [a/180.0*np.pi for a in tmpdata[0]]
+        data = []
+        for a in tmpdata[0]:
+            if isinstance(a, float) == True:
+                data.append(a/180.0*np.pi)
+            else:
+                data.append(a)
         self.drawdata(cur_ax, (data, tmpdata[1]), self.read_thread.ylabel[xy.y_combo.currentText()]+" rad", False)
 
     def addData(self, cur_ax):
@@ -827,7 +822,17 @@ class ApplicationWindow(QtWidgets.QMainWindow):
     def statistic(self, cur_ax):
         indx = self.axs.tolist().index(cur_ax)
         xy = self.xys[indx]        
-        tmpdata = self.read_thread.getData(xy.y_combo.currentText())
+        lines = cur_ax.get_lines()
+        wanted_line = None
+        for line in lines:
+            if line.get_label() == "data":
+                wanted_line = line
+                break
+        print("wanted_line", wanted_line)
+        if wanted_line == None:
+            tmpdata = self.read_thread.getData(xy.y_combo.currentText())
+        else:
+            tmpdata =(wanted_line.get_ydata(), wanted_line.get_xdata())
         l_indx = None
         r_indx = None
         if self.left_line_t != None:
@@ -849,7 +854,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             for a in datas:
                 average += a
             average = average/len(datas)
-        content = "{3} average: {0:.4}, max: {1:.4}, min: {2:.4}".format(average, max_data, min_data, xy.y_combo.currentText())
+        content = "{3} average: {0:.4}, max: {1:.4}, min: {2:.4}, num: {4}".format(average, max_data, min_data, xy.y_combo.currentText(), len(datas))
         self.log_info.append(content)
         plt.figure()
         plt.hist(datas, 100, density=True)
@@ -861,28 +866,36 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         current_text = event[1]
         current_text = current_text.replace(" ", "")
         tmpdata = None
-        if "+" in current_text or "-" in current_text:
+        print("*" in current_text, current_text)
+        if "+" in current_text or "-" in current_text or "*" in current_text:
             if "+" in current_text:
                 result = current_text.split("+")
-                # print(result, len(result))
-                if len(result) == 2:
-                    data0 = self.read_thread.getData(result[0])
-                    data1 = self.read_thread.getData(result[1])
-                    if len(data0[0]) == len(data1[0]):
-                        # 时间长度一样
-                        tmpdata = [[],[]]
-                        tmpdata[1] = data0[1] # 时间在 1 号元素中
-                        for (d0, d1) in zip(data0[0], data1[0]):
-                            if type(d0) is float and type(d1) is float:
-                                tmpdata[0].append(d0 + d1)
-                            else:
-                                # print("error", type(d0),type(d1))
-                                tmpdata[0].append(0)
-                        print("-",len(tmpdata), len(tmpdata[0]), len(tmpdata[1]), len(data0[0]), len(data1[1]))
+                if len(result) != 2:
+                    return
+                data0 = self.read_thread.getData(result[0])
+                data1 = self.read_thread.getData(result[1])
+                if len(data0[0]) != len(data1[0]):
+                    return
+                # 时间长度一样
+                tmpdata = [[],[]]
+                tmpdata[1] = data0[1] # 时间在 1 号元素中
+                for (d0, d1) in zip(data0[0], data1[0]):
+                    if type(d0) is float and type(d1) is float:
+                        tmpdata[0].append(d0 + d1)
+                    else:
+                        # print("error", type(d0),type(d1))
+                        tmpdata[0].append(0)
+                print("-",len(tmpdata), len(tmpdata[0]), len(tmpdata[1]), len(data0[0]), len(data1[1]))
             elif "-" in current_text:
                 result = current_text.split("-")
-                print(result)
-                if len(result) == 2:
+                if len(result) == 1:
+                    data0 = self.read_thread.getData(result[0])
+                    tmpdata = [[],[]]
+                    tmpdata[1] = data0[1]
+                    for d0 in data0[0]:
+                        tmpdata[0].append(-d0)
+                    print("-",len(tmpdata), len(tmpdata[0]), len(tmpdata[1]), len(data0[0]))
+                elif len(result) == 2:
                     data0 = self.read_thread.getData(result[0])
                     data1 = self.read_thread.getData(result[1])
                     print(len(data0[0]), len(data1[0]), result[0])
@@ -891,17 +904,42 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                         tmpdata[1] = data1[1]
                         for d0 in data1[0]:
                             tmpdata[0].append(-d0)
-                    if len(data0[0]) == len(data1[0]):
-                        # 时间长度一样
-                        tmpdata = [[],[]]
-                        tmpdata[1] = data0[1] # 时间在 1 号元素中
-                        for (d0, d1) in zip(data0[0], data1[0]):
-                            if type(d0) is float and type(d1) is float:
-                                tmpdata[0].append(d0 - d1)
-                            else:
-                                # print("error", type(d0),type(d1))
-                                tmpdata[0].append(0)
-                        print("-",len(tmpdata), len(tmpdata[0]), len(tmpdata[1]), len(data0[0]), len(data1[1]))
+                    if len(data0[0]) != len(data1[0]):
+                        return
+                    # 时间长度一样
+                    tmpdata = [[],[]]
+                    tmpdata[1] = data0[1] # 时间在 1 号元素中
+                    for (d0, d1) in zip(data0[0], data1[0]):
+                        if type(d0) is float and type(d1) is float:
+                            tmpdata[0].append(d0 - d1)
+                        else:
+                            # print("error", type(d0),type(d1))
+                            tmpdata[0].append(0)
+                    print("-",len(tmpdata), len(tmpdata[0]), len(tmpdata[1]), len(data0[0]), len(data1[1]))
+            elif "*" in current_text:
+                result = current_text.split("*")
+                if len(result) != 2:
+                    return
+                data0 = self.read_thread.getData(result[0])
+                data1 = self.read_thread.getData(result[1])
+                print(len(data0[0]), len(data1[0]), result[0])
+                if result[0] == '':
+                    tmpdata = [[],[]]
+                    tmpdata[1] = data1[1]
+                    for d0 in data1[0]:
+                        tmpdata[0].append(d0)
+                if len(data0[0]) != len(data1[0]):
+                    return
+                # 时间长度一样
+                tmpdata = [[],[]]
+                tmpdata[1] = data0[1] # 时间在 1 号元素中
+                for (d0, d1) in zip(data0[0], data1[0]):
+                    if type(d0) is float and type(d1) is float:
+                        tmpdata[0].append(d0 * d1)
+                    else:
+                        # print("error", type(d0),type(d1))
+                        tmpdata[0].append(0)
+                print("*",len(tmpdata), len(tmpdata[0]), len(tmpdata[1]), len(data0[0]), len(data1[1]))        
 
         else :
             tmpdata = self.read_thread.getData(current_text)
@@ -1244,12 +1282,14 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             ax.cla()
             self.drawFEWN(ax)
             if data[1] and data[0]:
-                ax.plot(data[1], data[0], '.', url = ylabel)
-                if isinstance(data[0][0], float):
+                ax.plot(data[1], data[0], '.', url = ylabel, label = "data")
+                if isinstance(data[0][0], float) or isinstance(data[0][0], int):
                     tmpd = np.array(data[0], dtype=float)
                     tmpd = tmpd[~np.isnan(tmpd)]
+                    print("len(tmpd)", len(tmpd))
                     if len(tmpd) > 0:
-                        max_range = max(max(tmpd) - min(tmpd), 1.0)
+                        max_range = (max(tmpd) + min(tmpd))/2.0
+                        print("max_range:", max_range)
                         ax.set_ylim(min(tmpd) - 0.05 * max_range, max(tmpd) + 0.05 * max_range)
             if resize:
                 ax.set_xlim(self.read_thread.tlist[0], self.read_thread.tlist[-1])
@@ -1263,7 +1303,13 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             self.ruler.add_ruler(ax)
         else:
             if data[1] and data[0]:
-                ax.plot(data[1], data[0], '.', url = ylabel)
+                lines = ax.get_lines()
+                label_name = "data"
+                for line in lines:
+                    if line.get_label() == "data":
+                        label_name = "data2"
+                        break
+                ax.plot(data[1], data[0], '.', url = ylabel, label = label_name)
                 #用于遍历绘制的数据的特定artist
                 art_list = [[],[]]
                 for art in ax.get_children():
@@ -1487,6 +1533,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 self.log_widget.hiddened.connect(self.viewerClosed)
                 self.log_widget.moveHereSignal.connect(self.moveHere)
             if self.read_thread.reader:
+                print("lines:", len(self.read_thread.reader.lines))
                 self.log_widget.setText(self.read_thread.reader.lines)
             self.log_widget.show()
             self.updateLogView()
@@ -1500,6 +1547,9 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 and self.read_thread.reader is not None:
             if self.key_loc_idx < 0:
                 t = np.array(self.read_thread.content['LocationEachFrame']['t'])
+                print("t", len(t), len(self.read_thread.content['LocationEachFrame']['t']), len(self.read_thread.content['LocationEachFrame'].data['t']))
+                print(self.read_thread.content['LocationEachFrame'].data.keys())
+                print(self.read_thread.getData('LocationEachFrame.t'))
                 self.key_loc_idx = (np.abs(t-self.mid_line_t)).argmin()
             label = ''
             if 'LocationEachFrame' in self.read_thread.content:
@@ -1532,6 +1582,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 self.sts_widget = JsonView()
                 self.sts_widget.setWindowIcon(QtGui.QIcon('rbk.ico'))
                 self.sts_widget.hiddened.connect(self.jsonViewerClosed)
+                self.sts_widget.plotAction.connect(self.plotJsonAction)
             self.sts_widget.show()
             self.updateJsonView()
         else:
@@ -1670,7 +1721,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 data_name = self.read_thread.ylabel[tmp_k]
                 if tmp_k in data_name:
                     data_name = k
-            # print("data_name", data_name, first_k, k, idx, len(self.read_thread.content[first_k].data[k]))
+            print("data_name", data_name, first_k, k, idx, len(self.read_thread.content[first_k].data[k]))
             j[data_name] = self.read_thread.content[first_k].data[k][idx]
         d.loadJson(j)
 
@@ -1691,6 +1742,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         dataView.newOneMsg.connect(self.dataViewNewOne)
         dataView.dataViewMsg.connect(self.updateDataView)
         dataView.setGeometry(850,50,400,900)
+        dataView.plotMsg.connect(self.plotDataView)
         dataView.show()
         self.initDataView(dataView)
         self.dataViews.append(dataView)  
@@ -1699,6 +1751,108 @@ class ApplicationWindow(QtWidgets.QMainWindow):
     def initDataView(self, d:DataView):
         d.setSelectionItems(list(self.read_thread.content.keys())) 
 
+    def plotDataView(self, event):
+        print("plotDataView:", event[0], event[1], event[2])
+        index = event[2]
+        ax = self.axs[index]
+        key1 = event[0]
+        key2 = ""
+        select_key = event[1][0]
+        for k in self.read_thread.ylabel.keys():
+            if key1 not in k:
+                continue
+            if self.read_thread.ylabel[k] == select_key:
+                key2 = k.split(".")[1]
+                break
+        y_label = key1+"."+key2
+        logging.info('Fig.' + str(index+1) + ' : ' + y_label)
+
+        if self.read_thread.content[key1].isText():
+            ts = []
+            values = []
+            datas = self.read_thread.getData(y_label)
+            for k in event[1][1:]:
+                y_label = y_label + "." +  k
+            for (v, t) in zip (datas[0], datas[1]):
+                cur_v = v
+                for k in event[1][1:]:
+                    if isinstance(cur_v, list) and isinstance(k, int):
+                        cur_v = cur_v[k]
+                    elif k in cur_v:
+                        cur_v = cur_v[k]
+                    else:
+                        cur_v = None
+                        break
+                if cur_v != None:
+                    ts.append(t)
+                    values.append(cur_v)
+            if len(values) > 0:
+                print("values", values[0], len(values))
+                self.drawdata(ax, (values, ts), y_label, False)
+            else:
+                print("no values", len(values), y_label, )
+        else:
+            self.xys[index].y_combo.setCurrentText(y_label)
+            self.drawdata(ax, self.read_thread.getData(y_label), self.read_thread.ylabel[y_label], False)
+    def getRStatusJson(self, idx, chassis):
+        j = json.loads(chassis)   
+        if idx < len(self.read_thread.rstatus.version()[0]) and  "ROBOKIT_VERSION_REDISTRIBUTE" in j:
+            j["ROBOKIT_VERSION_REDISTRIBUTE"] = "{}.{}".format(self.read_thread.rstatus.version()[0][idx],
+                                                                j["ROBOKIT_VERSION_REDISTRIBUTE"])
+        if idx < len(self.read_thread.rstatus.fatalNum()[0]):
+            j["fatalNums"] = self.read_thread.rstatus.fatalNum()[0][idx]
+        if idx < len(self.read_thread.rstatus.fatals()[0]):
+            try:
+                j["fatals"] = json.loads(self.read_thread.rstatus.fatals()[0][idx])
+            except:
+                j["fatals"] = self.read_thread.rstatus.fatals()[0][idx]
+        if idx < len(self.read_thread.rstatus.errorNum()[0]):
+            j["errorNums"] = self.read_thread.rstatus.errorNum()[0][idx]
+        if idx < len(self.read_thread.rstatus.errors()[0]):
+            try:
+                j["errors"] = json.loads(self.read_thread.rstatus.errors()[0][idx])
+            except:
+                j["errors"] = self.read_thread.rstatus.errors()[0][idx]
+        if idx < len(self.read_thread.rstatus.warningNum()[0]):
+            j["warningNum"] = self.read_thread.rstatus.warningNum()[0][idx]
+        if idx < len(self.read_thread.rstatus.warnings()[0]):
+            try:
+                j["warnings"] = json.loads(self.read_thread.rstatus.warnings()[0][idx])
+            except:
+                j["warnings"] = self.read_thread.rstatus.warnings()[0][idx]
+        if idx < len(self.read_thread.rstatus.noticeNum()[0]):
+            j["noticeNum"] = self.read_thread.rstatus.noticeNum()[0][idx]
+        if idx < len(self.read_thread.rstatus.notices()[0]):
+            try:
+                j["notices"] = json.loads(self.read_thread.rstatus.notices()[0][idx])
+            except:
+                j["notices"] = self.read_thread.rstatus.notices()[0][idx]
+        return j
+    
+    def plotJsonAction(self, event):
+        print("plotJsonAction:", event[0], event[1])
+        if len(self.read_thread.rstatus.chassis()[1]) < 0:
+            return
+        index = event[1]
+        ax = self.axs[index]
+        keys = event[0]
+        ts = []
+        values = []
+        y_label = '.'.join(k for k in keys)
+        for (idx, chassis)  in enumerate(self.read_thread.rstatus.chassis()[0]):
+            tmpj = self.getRStatusJson(idx, chassis)
+            for key in keys:
+                if key in tmpj:
+                    tmpj = tmpj[key]
+                else:
+                    tmpj = None
+                    break
+            if tmpj != None and \
+                (isinstance(tmpj, str) or isinstance(tmpj, int) or isinstance(tmpj, float)):
+                values.append(tmpj)
+                ts.append(self.read_thread.rstatus.chassis()[1][idx])
+        self.drawdata(ax, (values, ts), y_label, False)
+            
 
 if __name__ == "__main__":
     freeze_support()
@@ -1723,4 +1877,5 @@ if __name__ == "__main__":
         sys.exit(qapp.exec_())
     except:
         logging.error(traceback.format_exc())
+
 

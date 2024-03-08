@@ -186,6 +186,7 @@ class QJsonModel(QAbstractItemModel):
 
 class JsonView(QTreeView):
     hiddened = pyqtSignal('PyQt_PyObject')
+    plotAction = pyqtSignal('PyQt_PyObject')
     def __init__(self, parent =None):
         super().__init__(parent)
         self.model = QJsonModel()
@@ -201,21 +202,29 @@ class JsonView(QTreeView):
     def contextMenuEvent(self, event):
         index = self.indexAt(event.pos())
         print(index.column(), self.model.rowCount(index), self.model.rowCount(index.sibling(index.row(), 0)))
-        if index.column() == 1 and self.model.rowCount(index) == 0 and self.model.rowCount(index.sibling(index.row(), 0)) == 0:
-            if not index.isValid():
-                return
-            print(index.data(Qt.UserRole))
-            if index.data(Qt.UserRole) == "leaf":
-                menu = QMenu(self)
-                action1 = menu.addAction("Action 1")
-                action2 = menu.addAction("Action 2")
-
-                action = menu.exec_(self.mapToGlobal(event.pos()))
-
-                if action == action1:
-                    QMessageBox.information(self, "Action", "You triggered Action 1")
-                elif action == action2:
-                    QMessageBox.information(self, "Action", "You triggered Action 2")
+        if not index.isValid():
+            return
+        kindex = index.sibling(index.row(), 0)
+        keys = [kindex.data()]
+        pindex = index.parent()
+        while pindex.data() != None:
+            keys.insert(0, pindex.data())
+            print(pindex.row(),pindex.column(), pindex.data())
+            pindex = pindex.parent()
+        print("keys", keys)
+        print("role", index.data(Qt.UserRole))
+        if index.column() == 1 and self.model.rowCount(index.sibling(index.row(), 0)) == 0:
+            menu = QMenu(self)
+            action0 = menu.addAction("plot in figure 1")
+            action1 = menu.addAction("plot in figure 2")
+            action2 = menu.addAction("plot in figure 3")
+            action = menu.exec_(self.mapToGlobal(event.pos()))
+            if action == action0:
+                self.plotAction.emit([keys, 0])
+            elif action == action1:
+                self.plotAction.emit([keys, 1])
+            elif action == action2:
+                self.plotAction.emit([keys, 2])
 
     def loadJson(self, bytes_json):
         self.model.loadJson(bytes_json)
@@ -239,6 +248,7 @@ class DataView(QtWidgets.QMainWindow):
     closeMsg = pyqtSignal('PyQt_PyObject')
     newOneMsg = pyqtSignal('PyQt_PyObject')
     dataViewMsg = pyqtSignal('PyQt_PyObject')
+    plotMsg = pyqtSignal('PyQt_PyObject')
     def __init__(self, parent =None):
         self.parent = parent
         super().__init__(parent)
@@ -254,6 +264,7 @@ class DataView(QtWidgets.QMainWindow):
         self.jsonView = JsonView()
         self.layout.addWidget(self.jsonView)
         self.selection.y_combo.activated.connect(self.dataViewUpdate)
+        self.jsonView.plotAction.connect(self.plotAction)
 
     def loadJson(self, data):
         self.jsonView.loadJson(data)
@@ -281,6 +292,10 @@ class DataView(QtWidgets.QMainWindow):
     def closeEvent(self, a0: QtGui.QCloseEvent) -> None:
         self.closeMsg.emit(self)
         return super().closeEvent(a0)
+
+    def plotAction(self, event):
+        print("plotAction:", self.selection.y_combo.currentText(),)
+        self.plotMsg.emit([self.selection.y_combo.currentText(),  event[0], event[1]])
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

@@ -194,6 +194,8 @@ class Readmap(QThread):
         self.js = dict()
         self.map_x = []
         self.map_y = []
+        self.rssi_map_x = []
+        self.rssi_map_y = []
         self.lines = []
         self.circles = []
         self.points = dict()
@@ -269,6 +271,15 @@ class Readmap(QThread):
                 self.map_y.append(float(pos['y']))
             else:
                 self.map_y.append(0.0)
+        for pos in self.js.get('rssiPosList',[]):
+            if 'x' in pos:
+                self.rssi_map_x.append(float(pos['x']))
+            else:
+                self.rssi_map_x.append(0.0)
+            if 'y' in pos:
+                self.rssi_map_y.append(float(pos['y']))
+            else:
+                self.rssi_map_y.append(0.0)
         def f3order(p0, p1, p2, p3):
             dt = 0.001
             t = 0
@@ -687,7 +698,9 @@ class MapWidget(QtWidgets.QWidget):
         self.readingModelFlag = False
         self.draw_size = [] #xmin xmax ymin ymax
         self.map_data = lines.Line2D([],[], marker = '.', linestyle = '', markersize = 1.0,color="gray")
+        self.rssi_map_data = lines.Line2D([],[], marker = '.', linestyle = '', markersize = 1.0,color="red")
         self.map_data.set_zorder(12)
+        self.rssi_map_data.set_zorder(12)
         self.laser_data = LineCollection([], linewidths=3, linestyle='solid')
         self.laser_data_points = PatchCollection([])
         self.org_laser_data = [] # 激光的原始数据，用于提取出来保存
@@ -771,6 +784,7 @@ class MapWidget(QtWidgets.QWidget):
         self.static_canvas.figure.colorbar(matplotlib.cm.ScalarMappable(norm=norm, cmap=self.cm),
              cax=self.color_ax)
         self.ax.add_line(self.map_data)
+        self.ax.add_line(self.rssi_map_data)
         self.ax.add_patch(self.cur_arrow)
         self.ax.add_line(self.robot_data)
         self.ax.add_line(self.robot_data_c0)
@@ -1257,6 +1271,7 @@ class MapWidget(QtWidgets.QWidget):
             self.cur_arrow.set_visible(cur_check.isChecked())
         elif cur_check is self.check_map:
             self.map_data.set_visible(cur_check.isChecked())
+            self.rssi_map_data.set_visible(cur_check.isChecked())
         elif cur_check is self.check_partical:
             self.particle_points.set_visible(cur_check.isChecked())
         elif cur_check is self.check_3dObs:
@@ -1414,6 +1429,8 @@ class MapWidget(QtWidgets.QWidget):
         if len(self.read_map.map_x) > 0:
             self.map_data.set_xdata(self.read_map.map_x)
             self.map_data.set_ydata(self.read_map.map_y)
+            self.rssi_map_data.set_xdata(self.read_map.rssi_map_x)
+            self.rssi_map_data.set_ydata(self.read_map.rssi_map_y)
             self.ax.grid(True)
             self.ax.axis('auto')
             xmin = min(self.read_map.map_x)
